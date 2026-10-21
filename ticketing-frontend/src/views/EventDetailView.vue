@@ -271,7 +271,10 @@ function goToPurchase(fn: EventFunction) {
               <span class="inline-block px-3 py-1 bg-[#141e2e] text-[#86cffb] border border-[#23354d] font-mono text-xs font-semibold rounded-md tracking-wide uppercase">
                 {{ event.category || 'Música & Conciertos' }}
               </span>
-              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#00688f]/80 text-[#86cffb] border border-[#86cffb]/30 font-mono text-xs font-bold shadow-sm">
+              <span
+                data-testid="inline-min-price-badge"
+                class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-[#00688f]/80 text-[#86cffb] border border-[#86cffb]/30 font-mono text-xs font-bold shadow-sm"
+              >
                 <span>Entradas desde</span>
                 <span class="text-white">${{ minPrice }} {{ primaryCurrency }}</span>
               </span>
@@ -540,9 +543,13 @@ function goToPurchase(fn: EventFunction) {
             </div>
 
             <!-- Sections C & D: Radix Vue Accordion (Payment Methods & Parking) -->
-            <AccordionRoot type="multiple" class="w-full space-y-3">
+            <AccordionRoot type="multiple" :default-value="['payment-methods', 'venue-parking']" class="w-full space-y-3">
               <!-- Section C: Payment Methods Accordion -->
-              <AccordionItem value="payment-methods" class="bg-[#141e2e] border border-[#23354d] rounded-xl overflow-hidden shadow-md">
+              <AccordionItem
+                value="payment-methods"
+                data-testid="payment-methods-accordion"
+                class="bg-[#141e2e] border border-[#23354d] rounded-xl overflow-hidden shadow-md"
+              >
                 <AccordionHeader class="flex">
                   <AccordionTrigger
                     class="w-full flex items-center justify-between p-4 font-display text-sm font-bold text-[#f1f5f9] hover:bg-[#1a293e] transition-colors group cursor-pointer outline-none"
@@ -562,7 +569,7 @@ function goToPurchase(fn: EventFunction) {
                   </AccordionTrigger>
                 </AccordionHeader>
 
-                <AccordionContent class="p-4 pt-1 border-t border-[#23354d]/50 bg-[#101825]/60 text-sm">
+                <AccordionContent :force-mount="true" class="p-4 pt-1 border-t border-[#23354d]/50 bg-[#101825]/60 text-sm">
                   <div class="space-y-3 pt-2">
                     <!-- Dynamic Bank Promotions -->
                     <div
@@ -594,7 +601,11 @@ function goToPurchase(fn: EventFunction) {
               </AccordionItem>
 
               <!-- Section D: Parking Accordion -->
-              <AccordionItem value="venue-parking" class="bg-[#141e2e] border border-[#23354d] rounded-xl overflow-hidden shadow-md">
+              <AccordionItem
+                value="venue-parking"
+                data-testid="venue-parking-accordion"
+                class="bg-[#141e2e] border border-[#23354d] rounded-xl overflow-hidden shadow-md"
+              >
                 <AccordionHeader class="flex">
                   <AccordionTrigger
                     class="w-full flex items-center justify-between p-4 font-display text-sm font-bold text-[#f1f5f9] hover:bg-[#1a293e] transition-colors group cursor-pointer outline-none"
@@ -616,7 +627,7 @@ function goToPurchase(fn: EventFunction) {
                   </AccordionTrigger>
                 </AccordionHeader>
 
-                <AccordionContent class="p-4 pt-1 border-t border-[#23354d]/50 bg-[#101825]/60 text-sm">
+                <AccordionContent :force-mount="true" class="p-4 pt-1 border-t border-[#23354d]/50 bg-[#101825]/60 text-sm">
                   <div class="space-y-3 pt-2">
                     <div class="flex flex-col gap-1">
                       <h4 class="font-display text-sm font-bold text-[#f1f5f9]">{{ parkingInfo.title }}</h4>

@@ -253,6 +253,7 @@ const promotions = [
           <article
             v-for="event in recentEvents"
             :key="event.id"
+            data-testid="event-card"
             @click="goToEvent(event.id)"
             class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-md overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#86cffb]/50 transition-all duration-300 relative cursor-pointer"
           >
@@ -327,6 +328,7 @@ const promotions = [
           <article
             v-for="event in upcomingEvents"
             :key="event.id"
+            data-testid="event-card"
             @click="goToEvent(event.id)"
             class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-md overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#4fdbc8]/50 transition-all duration-300 relative cursor-pointer"
           >

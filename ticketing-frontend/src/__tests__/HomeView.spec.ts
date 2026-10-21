@@ -91,7 +91,7 @@ describe('HomeView.spec.ts - Landing Page & Catalog Sections', () => {
     })
 
     const catalog = useCatalogStore()
-    const articles = wrapper.findAll('article')
+    const articles = wrapper.findAll('[data-testid="event-card"]')
     // 3 cards in Recientemente Agregados + 3 cards in Próximos a Ocurrir = 6 cards
     expect(articles).toHaveLength(6)
 

@@ -197,8 +197,8 @@ describe('EventsCatalogView.spec.ts - Catalog Shows & Filters Experience', () =>
       })
 
       const searchInput = wrapper.find('input[type="text"]')
-      // Subtitle of symphony-of-lights is "Concierto Sinfónico & Show Lumínico Inmersivo"
-      await searchInput.setValue('Lumínico')
+      // Subtitle of symphony-of-lights contains "orquestación clásica"
+      await searchInput.setValue('orquestación')
 
       vi.advanceTimersByTime(300)
       await wrapper.vm.$nextTick()
@@ -220,8 +220,8 @@ describe('EventsCatalogView.spec.ts - Catalog Shows & Filters Experience', () =>
       })
 
       const searchInput = wrapper.find('input[type="text"]')
-      // Lineup of river-stadium-rockfest is "Foo Fighters, Queens of the Stone Age"
-      await searchInput.setValue('Foo Fighters')
+      // Lineup of river-stadium-rockfest is "Divididos, La Renga, Ciro y los Persas, Airbag"
+      await searchInput.setValue('Divididos')
 
       vi.advanceTimersByTime(300)
       await wrapper.vm.$nextTick()

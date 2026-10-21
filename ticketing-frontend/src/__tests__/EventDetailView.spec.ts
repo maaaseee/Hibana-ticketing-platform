@@ -72,8 +72,10 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
       expect(bannerBadge.text()).toContain('USD')
 
       // Also verify complementary inline badge in title area
-      const inlineBadge = wrapper.findAll('span').find(s => s.text().includes(`Entradas desde $${minPrice} USD`))
-      expect(inlineBadge).toBeDefined()
+      const inlineBadge = wrapper.find('[data-testid="inline-min-price-badge"]')
+      expect(inlineBadge.exists()).toBe(true)
+      expect(inlineBadge.text()).toContain('Entradas desde')
+      expect(inlineBadge.text()).toContain(`$${minPrice}`)
     })
   })
 
@@ -219,17 +221,21 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
         }
       })
 
-      const paymentAccordion = wrapper.find('[value="payment-methods"]')
+      const paymentAccordion = wrapper.find('[data-testid="payment-methods-accordion"]')
       expect(paymentAccordion.exists()).toBe(true)
 
       // Trigger headline
       expect(paymentAccordion.text()).toContain('Medios de Pago y Financiación')
       expect(paymentAccordion.text()).toContain('Hasta 6 cuotas sin interés')
 
+      const trigger = paymentAccordion.find('button')
+      await trigger.trigger('click')
+      await wrapper.vm.$nextTick()
+
       // Promotions content
       expect(paymentAccordion.text()).toContain('Santander')
-      expect(paymentAccordion.text()).toContain('Galicia')
-      expect(paymentAccordion.text()).toContain('MODO')
+      expect(paymentAccordion.text()).toContain('BBVA')
+      expect(paymentAccordion.text()).toContain('Mercado Pago')
       expect(paymentAccordion.text()).toContain('Tarjetas y Billeteras Aceptadas')
     })
   })
@@ -245,12 +251,16 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
         }
       })
 
-      const parkingAccordion = wrapper.find('[value="venue-parking"]')
+      const parkingAccordion = wrapper.find('[data-testid="venue-parking-accordion"]')
       expect(parkingAccordion.exists()).toBe(true)
 
       // Trigger headline
       expect(parkingAccordion.text()).toContain('Estacionamiento Oficial y Accesos')
       expect(parkingAccordion.text()).toContain('Estacionamiento disponible')
+
+      const trigger = parkingAccordion.find('button')
+      await trigger.trigger('click')
+      await wrapper.vm.$nextTick()
 
       // Parking content
       expect(parkingAccordion.text()).toContain('Estacionamiento Oficial')
