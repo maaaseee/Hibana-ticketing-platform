@@ -1,8 +1,11 @@
 graphify-out
 node_modules
 
-# Gemini
+# Gemini / Agents
 .agents/skills
+.agents/teamwork/
+TEST_READY.md
+PROJECT.md
 
 # Session Temporary Documentation (outside of repository scope)
 .vscode/
