@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
-import { useCatalogStore } from '../stores/catalog'
+import { useCatalogStore, getMinEventPrice } from '../stores/catalog'
 
 const catalog = useCatalogStore()
 const router = useRouter()
@@ -272,10 +272,16 @@ const promotions = [
               />
             </div>
 
-            <div class="p-5 flex flex-col flex-1 gap-1.5">
-              <span class="font-mono text-xs text-[#86cffb] font-semibold">
-                {{ event.date }}
-              </span>
+            <div class="p-5 flex flex-col flex-1 gap-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-xs text-[#86cffb] font-semibold">
+                  {{ event.date }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#00688f]/90 text-[#86cffb] border border-[#86cffb]/30 font-mono text-xs font-bold shadow-sm backdrop-blur-md">
+                  <span>Entradas desde</span>
+                  <span class="text-white">${{ getMinEventPrice(event) }}</span>
+                </span>
+              </div>
               <h3 class="font-display text-base text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#86cffb] transition-colors font-bold">
                 {{ event.title }}
               </h3>
@@ -340,10 +346,16 @@ const promotions = [
               />
             </div>
 
-            <div class="p-5 flex flex-col flex-1 gap-1.5">
-              <span class="font-mono text-xs text-[#4fdbc8] font-semibold">
-                {{ event.date }}
-              </span>
+            <div class="p-5 flex flex-col flex-1 gap-2">
+              <div class="flex items-center justify-between gap-2">
+                <span class="font-mono text-xs text-[#4fdbc8] font-semibold">
+                  {{ event.date }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#00688f]/90 text-[#86cffb] border border-[#86cffb]/30 font-mono text-xs font-bold shadow-sm backdrop-blur-md">
+                  <span>Entradas desde</span>
+                  <span class="text-white">${{ getMinEventPrice(event) }}</span>
+                </span>
+              </div>
               <h3 class="font-display text-base text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#4fdbc8] transition-colors font-bold">
                 {{ event.title }}
               </h3>

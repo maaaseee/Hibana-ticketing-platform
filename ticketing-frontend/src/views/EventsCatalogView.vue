@@ -1,78 +1,179 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useCatalogStore } from '../stores/catalog'
+import { useCatalogStore, getMinEventPrice } from '../stores/catalog'
 import type { EventItem } from '../types'
 
 const catalog = useCatalogStore()
 const router = useRouter()
 const route = useRoute()
 
-// 1. Buscador por nombre
+// 1. Search state (raw input + 300ms debounced value)
 const searchName = ref('')
-// 2. Filtro por fecha (solo meses del año)
+const debouncedQuery = ref('')
+let debounceTimer: ReturnType<typeof setTimeout> | null = null
+
+// 2. Month filter state ('all' or 'Octubre 2026', 'Noviembre 2026', etc.)
 const selectedMonth = ref<string>('all')
-// 3. Filtro por estadios / recintos
+
+// 3. Venue filter state ('all' or canonical venue name)
 const selectedVenue = ref<string>('all')
 
+// Spanish month names for formatting & dateIso extraction
+const SPANISH_MONTHS = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+]
+
+// Canonical Buenos Aires venues filter options
+const venueOptions = [
+  { label: 'Todos los recintos', value: 'all' },
+  { label: 'Estadio Monumental (Buenos Aires)', value: 'Estadio Monumental (Buenos Aires)' },
+  { label: 'Arena Buenos Aires (Buenos Aires)', value: 'Arena Buenos Aires (Buenos Aires)' },
+  { label: 'Teatro Rex (Buenos Aires)', value: 'Teatro Rex (Buenos Aires)' }
+]
+
+// Dynamic list of upcoming months up to 8 months into future (Octubre 2026 to Mayo 2027)
+const availableMonths = computed(() => {
+  const baseYear = 2026
+  const baseMonth = 9 // October (0-indexed)
+  const list: { label: string; value: string }[] = []
+
+  for (let i = 0; i < 8; i++) {
+    const totalMonths = baseMonth + i
+    const year = baseYear + Math.floor(totalMonths / 12)
+    const monthIndex = totalMonths % 12
+    const monthName = SPANISH_MONTHS[monthIndex]
+    const label = `${monthName} ${year}`
+    list.push({ label, value: label })
+  }
+
+  return list
+})
+
+// Debounced search handler (300ms)
+function handleSearchInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  searchName.value = target.value
+  if (debounceTimer) clearTimeout(debounceTimer)
+  debounceTimer = setTimeout(() => {
+    debouncedQuery.value = searchName.value.trim()
+    updateRouteQuery()
+  }, 300)
+}
+
+function clearSearch() {
+  if (debounceTimer) clearTimeout(debounceTimer)
+  searchName.value = ''
+  debouncedQuery.value = ''
+  updateRouteQuery()
+}
+
+// Two-way URL synchronization
+function syncFromRoute() {
+  const q = typeof route.query.q === 'string' ? route.query.q : ''
+  const month = typeof route.query.month === 'string' ? route.query.month : 'all'
+  const venue = typeof route.query.venue === 'string' ? route.query.venue : 'all'
+
+  if (searchName.value !== q) searchName.value = q
+  if (debouncedQuery.value !== q) debouncedQuery.value = q
+  if (selectedMonth.value !== month) selectedMonth.value = month
+  if (selectedVenue.value !== venue) selectedVenue.value = venue
+}
+
+function updateRouteQuery() {
+  const query: Record<string, string> = {}
+  if (debouncedQuery.value) {
+    query.q = debouncedQuery.value
+  }
+  if (selectedMonth.value && selectedMonth.value !== 'all') {
+    query.month = selectedMonth.value
+  }
+  if (selectedVenue.value && selectedVenue.value !== 'all') {
+    query.venue = selectedVenue.value
+  }
+
+  const currentQ = typeof route.query.q === 'string' ? route.query.q : ''
+  const currentMonth = typeof route.query.month === 'string' ? route.query.month : 'all'
+  const currentVenue = typeof route.query.venue === 'string' ? route.query.venue : 'all'
+
+  const targetQ = query.q || ''
+  const targetMonth = query.month || 'all'
+  const targetVenue = query.venue || 'all'
+
+  if (currentQ !== targetQ || currentMonth !== targetMonth || currentVenue !== targetVenue) {
+    router.replace({ query })
+  }
+}
+
+// Watch dropdown changes to synchronize to URL query
+watch([selectedMonth, selectedVenue], () => {
+  updateRouteQuery()
+})
+
+// Watch route.query changes (e.g. back/forward navigation or external links)
+watch(
+  () => route.query,
+  () => {
+    syncFromRoute()
+  },
+  { deep: true }
+)
+
 onMounted(() => {
-  if (route.query.q && typeof route.query.q === 'string') {
-    searchName.value = route.query.q
+  syncFromRoute()
+})
+
+onUnmounted(() => {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
   }
 })
 
-// Meses disponibles extraídos de las fechas de los eventos ("Mes Año", ej. "Octubre 2026")
-const availableMonths = computed(() => {
-  const monthsSet = new Set<string>()
-  catalog.events.forEach((event: EventItem) => {
-    const parts = event.date.split(' de ')
-    if (parts.length >= 3) {
-      monthsSet.add(`${parts[1]} ${parts[2]}`)
-    }
-  })
-  return Array.from(monthsSet)
-})
-
-// Estadios y recintos que maneja la ticketera
-const availableVenues = computed(() => {
-  const venuesSet = new Set<string>()
-  catalog.events.forEach((event: EventItem) => {
-    if (event.venue) {
-      venuesSet.add(event.venue)
-    }
-  })
-  return Array.from(venuesSet).sort()
-})
-
-// Listado simple: ordenado inicialmente por proximidad a su realización (upcomingEvents)
-// y filtrado reactivamente por nombre, mes y estadio
+// Filtered events: starts from upcomingEvents (chronologically sorted)
 const filteredEvents = computed(() => {
   return catalog.upcomingEvents.filter((event: EventItem) => {
-    // 1. Filtro por nombre / artista
-    const query = searchName.value.trim().toLowerCase()
+    // 1. Text Search matching title, subtitle, lineup (or artist)
+    const query = debouncedQuery.value.toLowerCase().trim()
     if (query) {
       const titleMatch = event.title.toLowerCase().includes(query)
-      const subtitleMatch = event.subtitle?.toLowerCase().includes(query) || false
-      const lineupMatch = event.lineup?.toLowerCase().includes(query) || false
+      const subtitleMatch = event.subtitle ? event.subtitle.toLowerCase().includes(query) : false
+      const lineupMatch = event.lineup ? event.lineup.toLowerCase().includes(query) : false
       if (!titleMatch && !subtitleMatch && !lineupMatch) {
         return false
       }
     }
 
-    // 2. Filtro por fecha (meses del año)
+    // 2. Month Filter matching event.dateIso (or formatted event.date)
     if (selectedMonth.value !== 'all') {
-      const parts = event.date.split(' de ')
-      if (parts.length >= 3) {
-        const eventMonthYear = `${parts[1]} ${parts[2]}`.toLowerCase()
-        if (eventMonthYear !== selectedMonth.value.toLowerCase()) {
-          return false
+      let matchesMonth = false
+      if (event.dateIso) {
+        const d = new Date(event.dateIso)
+        if (!isNaN(d.getTime())) {
+          const eventMonthName = SPANISH_MONTHS[d.getMonth()]
+          const eventYear = d.getFullYear()
+          const eventMonthLabel = `${eventMonthName} ${eventYear}`
+          if (eventMonthLabel.toLowerCase() === selectedMonth.value.toLowerCase()) {
+            matchesMonth = true
+          }
         }
-      } else if (!event.date.toLowerCase().includes(selectedMonth.value.toLowerCase())) {
+      }
+      if (!matchesMonth && event.date) {
+        // Fallback for "15 de Octubre de 2026"
+        const parts = event.date.split(' de ')
+        if (parts.length >= 3 && parts[1] && parts[2]) {
+          const fallbackMonthLabel = `${parts[1]} ${parts[2]}`.toLowerCase()
+          if (fallbackMonthLabel === selectedMonth.value.toLowerCase()) {
+            matchesMonth = true
+          }
+        }
+      }
+      if (!matchesMonth) {
         return false
       }
     }
 
-    // 3. Filtro por estadios
+    // 3. Venue Filter comparing event.venue === selectedVenue
     if (selectedVenue.value !== 'all') {
       if (event.venue.toLowerCase() !== selectedVenue.value.toLowerCase()) {
         return false
@@ -88,9 +189,14 @@ function goToEvent(id: string) {
 }
 
 function resetFilters() {
+  if (debounceTimer) {
+    clearTimeout(debounceTimer)
+  }
   searchName.value = ''
+  debouncedQuery.value = ''
   selectedMonth.value = 'all'
   selectedVenue.value = 'all'
+  updateRouteQuery()
 }
 </script>
 
@@ -118,7 +224,8 @@ function resetFilters() {
           <!-- 1. Buscador por Nombre -->
           <div class="relative w-full md:flex-1">
             <input
-              v-model="searchName"
+              :value="searchName"
+              @input="handleSearchInput"
               type="text"
               placeholder="Buscar por show o artista..."
               class="w-full bg-[#141e2e]/90 backdrop-blur-md border border-[#23354d] text-[#f1f5f9] placeholder-[#64748b] rounded-xl py-2.5 pl-10 pr-9 font-mono text-xs focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] outline-none transition-all shadow-inner"
@@ -128,7 +235,7 @@ function resetFilters() {
             </span>
             <button
               v-if="searchName"
-              @click="searchName = ''"
+              @click="clearSearch"
               class="absolute right-3 top-2.5 text-[#94a3b8] hover:text-white transition-colors cursor-pointer"
               title="Limpiar búsqueda"
             >
@@ -143,8 +250,8 @@ function resetFilters() {
               class="w-full bg-[#141e2e]/90 backdrop-blur-md border border-[#23354d] text-[#f1f5f9] rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] outline-none transition-all cursor-pointer appearance-none shadow-inner"
             >
               <option value="all">Todos los meses</option>
-              <option v-for="month in availableMonths" :key="month" :value="month">
-                {{ month }}
+              <option v-for="month in availableMonths" :key="month.value" :value="month.value">
+                {{ month.label }}
               </option>
             </select>
             <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
@@ -161,9 +268,8 @@ function resetFilters() {
               v-model="selectedVenue"
               class="w-full bg-[#141e2e]/90 backdrop-blur-md border border-[#23354d] text-[#f1f5f9] rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] outline-none transition-all cursor-pointer appearance-none shadow-inner"
             >
-              <option value="all">Todos los estadios</option>
-              <option v-for="venue in availableVenues" :key="venue" :value="venue">
-                {{ venue }}
+              <option v-for="venue in venueOptions" :key="venue.value" :value="venue.value">
+                {{ venue.label }}
               </option>
             </select>
             <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
@@ -214,8 +320,9 @@ function resetFilters() {
               <span class="font-mono text-xs text-[#86cffb] font-semibold">
                 {{ event.date }}
               </span>
-              <span class="font-mono text-xs text-[#cbd5e1] font-semibold">
-                Desde ${{ event.price }}
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#00688f]/90 text-[#86cffb] border border-[#86cffb]/30 font-mono text-xs font-bold shadow-sm backdrop-blur-md">
+                <span>Entradas desde</span>
+                <span class="text-white">${{ getMinEventPrice(event) }}</span>
               </span>
             </div>
 
