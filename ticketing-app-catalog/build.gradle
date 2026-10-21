@@ -1,0 +1,68 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.aieta.ticketing_app_catalog'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springAiVersion', "2.0.1")
+	set('cucumberVersion', "7.20.1")
+	set('awaitilityVersion', "4.2.2")
+}
+
+dependencies {
+	// Web, Validation & Actuator
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+	// Persistence: PostgreSQL + pgvector
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
+	runtimeOnly 'org.postgresql:postgresql'
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// Testing suite
+	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testImplementation 'org.junit.platform:junit-platform-suite'
+
+	// BDD Gherkin (Milestone 5a)
+	testImplementation "io.cucumber:cucumber-java:${cucumberVersion}"
+	testImplementation "io.cucumber:cucumber-spring:${cucumberVersion}"
+	testImplementation "io.cucumber:cucumber-junit-platform-engine:${cucumberVersion}"
+
+	// Concurrency & Idempotency Testing (Milestone 5d & 5e)
+	testImplementation "org.awaitility:awaitility:${awaitilityVersion}"
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.compilerArgs.add("-parameters")
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

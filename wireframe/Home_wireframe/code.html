@@ -1,0 +1,420 @@
+<!DOCTYPE html><html class="dark" lang="es"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Amaryllis Software - Home &amp; Catalog</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "border-subtle": "#23354d",
+          "teal-accent": "#004d6b",
+          "surface-bright": "#323a46",
+          "secondary-container": "#04b4a2",
+          "tertiary-container": "#00688d",
+          "border-focus": "#86cffb",
+          "ocean-on-primary-container": "#b7e2ff",
+          "inverse-primary": "#00658b",
+          "on-secondary-container": "#003f38",
+          "on-surface-variant": "#94a3b8",
+          "outline": "#899299",
+          "tertiary-fixed": "#c4e7ff",
+          "secondary": "#4fdbc8",
+          "surface-dim": "#0c141f",
+          "on-surface": "#f1f5f9",
+          "surface-variant": "#2d3541",
+          "surface-tint": "#86cffb",
+          "surface-container": "#18202b",
+          "surface": "#0c141f",
+          "on-primary-fixed-variant": "#004c6a",
+          "background": "#0c141f",
+          "surface-crisp": "#141e2e",
+          "secondary-fixed": "#71f8e4",
+          "primary": "#86cffb",
+          "on-background": "#f1f5f9",
+          "on-tertiary-fixed": "#001e2c",
+          "tertiary-fixed-dim": "#7bd0ff",
+          "on-secondary-fixed-variant": "#005048",
+          "on-error-container": "#ffdad6",
+          "primary-container": "#00688f",
+          "on-tertiary-fixed-variant": "#004c69",
+          "tertiary": "#7bd0ff",
+          "inverse-on-surface": "#29313d",
+          "surface-container-highest": "#2d3541",
+          "ocean-primary": "#00688f",
+          "surface-card": "#141e2e",
+          "on-tertiary": "#00354a",
+          "primary-fixed": "#c5e7ff",
+          "surface-container-low": "#101825",
+          "inverse-surface": "#dbe3f3",
+          "on-secondary-fixed": "#00201c",
+          "slate-teal": "#2c637a",
+          "secondary-fixed-dim": "#4fdbc8",
+          "surface-container-lowest": "#070f19",
+          "error-container": "#93000a",
+          "on-primary-fixed": "#001e2d",
+          "surface-container-high": "#1a293e",
+          "on-primary-container": "#ffffff",
+          "outline-variant": "#23354d",
+          "error": "#ffb4ab",
+          "on-error": "#690005",
+          "on-tertiary-container": "#b5e2ff",
+          "ocean-primary-container": "#00688f",
+          "on-secondary": "#003731",
+          "primary-fixed-dim": "#86cffb",
+          "on-primary": "#00344a"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "gutter": "1.5rem",
+          "space-xs": "0.25rem",
+          "margin": "2.5rem",
+          "margin-mobile": "1rem",
+          "gutter-sm": "1rem",
+          "space-md": "1rem",
+          "space-xl": "2.5rem",
+          "space-lg": "1.5rem",
+          "space-sm": "0.5rem"
+        },
+        "fontFamily": {
+          "headline-lg-mobile": [
+            "Space Grotesk"
+          ],
+          "headline-lg": [
+            "Space Grotesk"
+          ],
+          "label-sm": [
+            "JetBrains Mono"
+          ],
+          "headline-md": [
+            "Space Grotesk"
+          ],
+          "display": [
+            "Space Grotesk"
+          ],
+          "body-sm": [
+            "Hanken Grotesk"
+          ],
+          "body-lg": [
+            "Hanken Grotesk"
+          ],
+          "body-md": [
+            "Hanken Grotesk"
+          ],
+          "label-md": [
+            "JetBrains Mono"
+          ],
+          "headline-sm": [
+            "Space Grotesk"
+          ]
+        },
+        "fontSize": {
+          "headline-lg-mobile": [
+            "28px",
+            {
+              "lineHeight": "36px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "700"
+            }
+          ],
+          "headline-lg": [
+            "32px",
+            {
+              "lineHeight": "40px",
+              "letterSpacing": "-0.015em",
+              "fontWeight": "600"
+            }
+          ],
+          "label-sm": [
+            "10px",
+            {
+              "lineHeight": "14px",
+              "letterSpacing": "0.06em",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-md": [
+            "24px",
+            {
+              "lineHeight": "32px",
+              "letterSpacing": "-0.01em",
+              "fontWeight": "600"
+            }
+          ],
+          "display": [
+            "56px",
+            {
+              "lineHeight": "64px",
+              "letterSpacing": "-0.03em",
+              "fontWeight": "700"
+            }
+          ],
+          "body-sm": [
+            "14px",
+            {
+              "lineHeight": "20px",
+              "letterSpacing": "0.005em",
+              "fontWeight": "400"
+            }
+          ],
+          "body-lg": [
+            "18px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "-0.005em",
+              "fontWeight": "400"
+            }
+          ],
+          "body-md": [
+            "16px",
+            {
+              "lineHeight": "24px",
+              "letterSpacing": "0em",
+              "fontWeight": "400"
+            }
+          ],
+          "label-md": [
+            "12px",
+            {
+              "lineHeight": "16px",
+              "letterSpacing": "0.04em",
+              "fontWeight": "500"
+            }
+          ],
+          "headline-sm": [
+            "20px",
+            {
+              "lineHeight": "28px",
+              "letterSpacing": "0em",
+              "fontWeight": "600"
+            }
+          ]
+        }
+      },
+    },
+  }
+</script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined[data-weight="fill"] {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-[#0b131e] text-[#f1f5f9] font-body-md min-h-screen flex flex-col antialiased selection:bg-[#00688f] selection:text-white">
+<!-- TopNavBar -->
+<header class="bg-[#0e1927]/90 backdrop-blur-md shadow-md docked w-full top-0 z-50 border-b border-[#23354d]">
+<div class="flex justify-between items-center w-full px-margin-mobile md:px-margin max-w-full mx-auto relative h-16">
+<!-- Brand (Left) -->
+<div class="flex items-center gap-space-xs w-1/3">
+<span class="font-display text-headline-md font-bold text-[#86cffb] tracking-tight">Amaryllis</span>
+</div>
+<!-- Global Search (Center) -->
+<div class="hidden md:flex max-w-md w-full absolute left-1/2 -translate-x-1/2">
+<input class="w-full bg-[#141e2e] border border-[#23354d] text-[#f1f5f9] placeholder-[#94a3b8] rounded-full py-2 pl-10 pr-4 font-label-sm text-label-sm focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] transition-colors" placeholder="Search events..." type="text">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-[#94a3b8] text-sm">search</span>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center justify-end gap-space-md w-1/3">
+<!-- Navigation Links -->
+<nav class="hidden lg:flex items-center gap-space-md font-display text-body-md">
+<a class="text-[#86cffb] border-b-2 border-[#86cffb] font-bold hover:text-[#b7e2ff] transition-colors duration-200 pb-0.5" href="#">Events</a>
+<a class="text-[#cbd5e1] font-medium hover:text-[#86cffb] transition-colors duration-200" href="#">Venues</a>
+<a class="text-[#cbd5e1] font-medium hover:text-[#86cffb] transition-colors duration-200" href="#">Support</a>
+</nav>
+<!-- Trailing Icons -->
+<div class="flex items-center gap-space-sm">
+<button aria-label="Notifications" class="p-2 text-[#cbd5e1] hover:text-[#86cffb] transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-1.5 right-1.5 w-2 h-2 bg-[#86cffb] rounded-full ring-2 ring-[#0e1927]"></span>
+</button>
+<div class="w-8 h-8 rounded-full bg-[#1a293e] overflow-hidden border border-[#23354d]">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional headshot of a young adult user with a clean, modern aesthetic. The lighting is soft and flattering, suitable for a sophisticated corporate or tech platform avatar." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSIsgnXidP723QydwXLCJxpdt-I_hrkfyK4-yGA-UFWgj-AYcAsEFWOCzATMZ9o0l9mq6WER00r02vTvNdRcm1yKXEXnBj_gsxTzqs3nFaVrFhJ_Oz3cTKu3FCP7uIE21CEWwFes8fg5PxTCNBa5Tz6xGLNyOEonne86h20bWeDbr2RSR-aelmWOnMCQ7bIzo_XnS-ObTGuQwssbR7z3tY1FZ8C80nVHnorfBm_jtx4sKHrC-xTyG5XA">
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Hero Carousel Area -->
+<section class="relative w-full overflow-hidden mb-space-lg h-[60vh] bg-[#0c141f] group">
+<!-- Background Image -->
+<div class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-700 ease-in-out group-hover:scale-105" data-alt="A sprawling, high-energy tech conference arena during a keynote speech. The massive stage is bathed in striking, high-contrast Spring Green and deep Charcoal lighting, creating a modern, premium corporate aesthetic. The audience is blurred in the foreground to emphasize the scale and excitement of the event. The atmosphere feels fast, reliable, and cutting-edge." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBRlWtgT8OXyDudLLiasqvnbLimL5tQo-p1ocHtecGJzn_oToymVze6n9bcMhFkTJ_4GQo3mwNhZBZ6Dut8oO6PcnfGH2JV-zfOJJZvdjz6R7JMw9LubnBBrO0I6-AyIDWPJhoNF-y8OoDve3JbGxU46ttFkFkJ_C7PqjspsNHQGPB8pAQLmC5ByDjqf1JcuYS2IWHvPIvTH07y2X_LLLhpzdeZkLpfSIgwo69ECxC7FpPqA6tHD3aqGg')"></div>
+<!-- Gradient Overlay for legibility in rich dark mode -->
+<div class="absolute inset-0 bg-gradient-to-t from-[#0b131e] via-[#0b131e]/70 to-[#0b131e]/30"></div>
+<!-- Content -->
+<div class="absolute inset-0 w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin p-space-sm md:p-space-lg flex flex-col md:flex-row justify-end md:justify-between items-start md:items-end gap-space-md pb-12">
+<div class="flex flex-col gap-2 max-w-2xl text-white">
+<span class="inline-block px-3 py-1 bg-[#162438] text-[#86cffb] border border-[#23354d] font-label-sm text-label-sm uppercase tracking-widest rounded-full w-max font-semibold shadow-sm">Featured Event</span>
+<h1 class="font-display text-display md:text-[64px] md:leading-[72px] font-extrabold text-[#f1f5f9]">Global Tech Summit 2024</h1>
+<p class="font-body-lg text-body-lg text-[#cbd5e1] opacity-90">Experience the future of software architecture with industry leaders.</p>
+</div>
+<button class="bg-[#00688f] hover:bg-[#007da8] text-white font-headline-md text-body-lg px-8 py-4 rounded-xl transition-all duration-300 whitespace-nowrap flex items-center gap-2 mt-4 md:mt-0 border border-[#23354d]">
+                        Ver Entradas
+                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</section>
+<!-- Main Layout Grid -->
+<div class="flex-1 flex w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin py-space-md gap-gutter">
+<!-- Sidebar (Left) - 20% -->
+<aside class="hidden lg:flex flex-col w-1/5 min-w-[240px] flex-shrink-0 gap-space-md h-[calc(100vh-100px)] sticky top-[100px] overflow-y-auto pb-space-lg pr-space-sm scrollbar-hide">
+<!-- Filters Header -->
+<div class="flex items-center justify-between border-b border-[#23354d] pb-2">
+<span class="font-headline-md text-headline-md text-[#f1f5f9]">Filters</span>
+<button class="font-label-sm text-label-sm text-[#94a3b8] hover:text-[#86cffb] transition-colors">Reset</button>
+</div>
+<!-- Genre Filter -->
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-label-md text-label-md text-[#94a3b8] uppercase tracking-wider">Genre</h3>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">All Events</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">Music &amp; Concerts</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">Tech Conferences</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">Sports</span>
+</label>
+</div>
+</div>
+<!-- Date Filter -->
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-label-md text-label-md text-[#94a3b8] uppercase tracking-wider">Date</h3>
+<div class="flex flex-col gap-2">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input checked="" class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">Anytime</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">This Weekend</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="form-checkbox text-[#00688f] bg-[#141e2e] rounded border-[#23354d] focus:ring-[#00688f] focus:ring-offset-[#0b131e] group-hover:border-[#86cffb] transition-colors" type="checkbox">
+<span class="font-body-md text-body-md text-[#cbd5e1] group-hover:text-white transition-colors">Next 30 Days</span>
+</label>
+</div>
+</div>
+<!-- Location Filter -->
+<div class="flex flex-col gap-space-xs">
+<h3 class="font-label-md text-label-md text-[#94a3b8] uppercase tracking-wider">Location</h3>
+<div class="relative">
+<input class="w-full bg-[#141e2e] border border-[#23354d] text-[#f1f5f9] placeholder-[#94a3b8] rounded-lg py-2 px-3 font-label-sm text-label-sm focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] transition-colors" placeholder="Enter city..." type="text">
+<span class="material-symbols-outlined absolute right-3 top-2 text-[#94a3b8] text-sm pointer-events-none">location_on</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area - 80% -->
+<main class="w-full lg:w-4/5 flex-1 flex flex-col min-w-0 pb-space-xl">
+<!-- Event Grid Section -->
+<section class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between mb-2">
+<h2 class="font-display text-headline-lg-mobile md:text-headline-lg text-[#f1f5f9] font-bold tracking-tight">Upcoming Events</h2>
+<div class="flex gap-2">
+<button class="w-10 h-10 rounded-full border border-[#23354d] bg-[#141e2e] flex items-center justify-center text-[#cbd5e1] hover:bg-[#1a293e] hover:border-[#86cffb]/40 hover:text-white transition-colors"><span class="material-symbols-outlined">chevron_left</span></button>
+<button class="w-10 h-10 rounded-full border border-[#23354d] bg-[#141e2e] flex items-center justify-center text-[#cbd5e1] hover:bg-[#1a293e] hover:border-[#86cffb]/40 hover:text-white transition-colors"><span class="material-symbols-outlined">chevron_right</span></button>
+</div>
+</div>
+<!-- Responsive Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
+<!-- Card 1 -->
+<article class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-[0px_4px_20px_rgba(0,0,0,0.35)] overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#86cffb]/50 transition-all duration-300 relative">
+<!-- Urgency Tag -->
+<div class="absolute top-4 right-4 z-10 bg-[#00688f] text-white font-label-sm text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider font-semibold border border-[#23354d]">Últimas Entradas</div>
+<div class="w-full h-48 bg-[#1a293e] overflow-hidden">
+<img alt="Concert Event" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A modern, high-contrast electronic music concert stage. The lighting relies on intense beams of light piercing through a slightly hazy, dark atmosphere, utilizing a palette of crisp whites and deep charcoal blacks with subtle hints of neon green. The aesthetic is clean, fast, and structured, reflecting instant validation." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmbu8KUQYWqKHjLFV302R8Dp7dEMBwHE2vpQqgoTZS-HUk3TxBtplJDNrxSYzirzG71_sarPkl0UcLQhSaRd3RQKYuYg5FAlmN4kHKFXLMUE3e7YLZmaQMm46dfOsVi8kfP0vp-ApTbT0efhKOHviRxORupAapjq12HEN5DzqDz7WeqG4Gjph_wTqLKe8oFgsLkQ6ApMQkekKiUcSvYXSvXj6abjgvicgw5vD95nzuORB5Vz49sR5vrg">
+</div>
+<div class="p-space-sm flex flex-col flex-1 gap-1">
+<span class="font-label-sm text-label-sm text-[#86cffb] font-semibold uppercase tracking-widest mt-1">Oct 24 • 8:00 PM</span>
+<h3 class="font-headline-md text-body-lg text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#86cffb] transition-colors">Neon Nights: Electronic Festival</h3>
+<p class="font-body-md text-body-md text-[#94a3b8] flex items-center gap-1 mt-auto pt-2">
+<span class="material-symbols-outlined text-[16px] text-[#86cffb]">location_on</span> Arena Central
+                            </p>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-[0px_4px_20px_rgba(0,0,0,0.35)] overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#86cffb]/50 transition-all duration-300">
+<div class="w-full h-48 bg-[#1a293e] overflow-hidden">
+<img alt="Workshop Event" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A minimalist, brightly lit corporate workshop space. Rows of sleek, modern desks are arranged efficiently. The room features high-key white lighting, emphasizing a clean, porcelain surface aesthetic with subtle charcoal accents in the furniture. The mood is highly professional, productive, and focused." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZjgKJgQbOm4k0ZVql4tM7Ekwws7U1Eq8hw85Ek47eWAkryV9fODdtHEqCzSN4Zc4_XTBkmXBbAlUsLjz2osxwbOlHHU78a0nQ9oN8mgBWCdILlkjMNAg15B01wpAvxEInffvzoW2yAExmZnELlz_QK0yaJuXORNsH0vJ877mlCZ1bNiRoVpXQrX45tauBkzz-pEuw06TS-U1uSh0Sck9Buq2_nElK-dD9DUK6QrwZJDdFul5NbMV3AQ">
+</div>
+<div class="p-space-sm flex flex-col flex-1 gap-1">
+<span class="font-label-sm text-label-sm text-[#86cffb] font-semibold uppercase tracking-widest mt-1">Nov 12 • 9:00 AM</span>
+<h3 class="font-headline-md text-body-lg text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#86cffb] transition-colors">Design Systems Workshop</h3>
+<p class="font-body-md text-body-md text-[#94a3b8] flex items-center gap-1 mt-auto pt-2">
+<span class="material-symbols-outlined text-[16px] text-[#86cffb]">location_on</span> Tech Hub, Room A
+                            </p>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-[0px_4px_20px_rgba(0,0,0,0.35)] overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#86cffb]/50 transition-all duration-300">
+<div class="w-full h-48 bg-[#1a293e] overflow-hidden">
+<img alt="Sports Event" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-performance sports arena viewed from the VIP section. The seats are pristine white, creating a strong contrast with the dark charcoal tones of the stadium architecture. Bright stadium lights provide clear, decisive illumination over the green field, conveying a sense of speed, precision, and premium access." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAaaGF6Mk1sF6mAXVxAQZgXA8Lx_Hgp9y4UXyDfiu72-7e1HZaYaqRbfGPPvNxClk2PyvzmxBZ21j5htOYzsin4skLQu_s4iKlcKocmeg5KZTddGYXnTd7SNVbKpw7sPdY9TSIHtGgZjIbeDa977x-hgfmSNfnRFv7DKka1rsnuiXBM7jgCzEeMln-P6H1N-Q9eLLnOr-pyLJVvcSrxJwPMGq3Lyh9Fr9TUHgHUvtnp55nBDQEApjCvGQ">
+</div>
+<div class="p-space-sm flex flex-col flex-1 gap-1">
+<span class="font-label-sm text-label-sm text-[#86cffb] font-semibold uppercase tracking-widest mt-1">Dec 05 • 3:30 PM</span>
+<h3 class="font-headline-md text-body-lg text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#86cffb] transition-colors">Championship Finals 2024</h3>
+<p class="font-body-md text-body-md text-[#94a3b8] flex items-center gap-1 mt-auto pt-2">
+<span class="material-symbols-outlined text-[16px] text-[#86cffb]">location_on</span> National Stadium
+                            </p>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-[0px_4px_20px_rgba(0,0,0,0.35)] overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#86cffb]/50 transition-all duration-300 relative">
+<!-- Status Chip -->
+<div class="absolute top-4 right-4 z-10 bg-[#162438]/90 text-[#4fdbc8] border border-[#23354d] font-label-sm text-[10px] px-2.5 py-1 rounded-md uppercase tracking-wider backdrop-blur-sm font-semibold">Confirmed</div>
+<div class="w-full h-48 bg-[#1a293e] overflow-hidden">
+<img alt="Theater Event" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="An elegant, modern theater interior prior to a performance. The design leans heavily on sophisticated porcelain whites and deep charcoal grays, creating a highly structured and predictable environment. Soft, diffused lighting enhances the premium, high-contrast functionalism of the space, suggesting reliability and quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAqJ8yDbKttm-U0sfj4dZ_HnPokJHD_S4tI96qHd66rIPmO8Z6wop8EGYqx2NbSKn1bY0rs0J25OF5CXf4t2PSKsbn3h4i-zjJLKloB1HyA7x3trl7J_m4l-bG2S41_k1aUY_baIciwmolj6ZR7T7eRH4ehVKbcdXIdNe_S9uv0ZE1yfDi5ahkJ-w16ILHuIBNHhVDkKf7NkqsvjRlnqnBeMJaU4j3l2UwWZEXgOCT94TnpLbXkXwkRgw">
+</div>
+<div class="p-space-sm flex flex-col flex-1 gap-1">
+<span class="font-label-sm text-label-sm text-[#86cffb] font-semibold uppercase tracking-widest mt-1">Jan 18 • 7:00 PM</span>
+<h3 class="font-headline-md text-body-lg text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#86cffb] transition-colors">Symphony in Code: An Evening of Classical Music</h3>
+<p class="font-body-md text-body-md text-[#94a3b8] flex items-center gap-1 mt-auto pt-2">
+<span class="material-symbols-outlined text-[16px] text-[#86cffb]">location_on</span> Grand Opera House
+                            </p>
+</div>
+</article>
+</div>
+</section>
+</main>
+</div>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-[#0e1927] shadow-[0px_-4px_20px_rgba(0,0,0,0.5)] border-t border-[#23354d]">
+<a class="flex flex-col items-center justify-center bg-[#00688f] text-white rounded-2xl px-4 py-1 scale-90 duration-150 transition-transform shadow-sm" href="#">
+<span class="material-symbols-outlined" data-icon="home" data-weight="fill">home</span>
+<span class="font-label-sm text-label-sm mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#94a3b8] hover:text-[#86cffb] hover:bg-[#1a293e] transition-all rounded-2xl px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="search">search</span>
+<span class="font-label-sm text-label-sm mt-1">Search</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#94a3b8] hover:text-[#86cffb] hover:bg-[#1a293e] transition-all rounded-2xl px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="confirmation_number">confirmation_number</span>
+<span class="font-label-sm text-label-sm mt-1">Tickets</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#94a3b8] hover:text-[#86cffb] hover:bg-[#1a293e] transition-all rounded-2xl px-4 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm mt-1">Profile</span>
+</a>
+</nav>
+
+
+</body></html>

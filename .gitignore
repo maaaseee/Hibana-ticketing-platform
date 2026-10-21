@@ -1,0 +1,13 @@
+graphify-out
+node_modules
+
+# Gemini
+.agents/skills
+
+# Session Temporary Documentation (outside of repository scope)
+.vscode/
+.github
+infra
+
+.gemini
+.worktrees/

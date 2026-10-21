@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Checkout - Amaryllis</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&amp;family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "border-subtle": "#23354d",
+                        "surface-bright": "#323a46",
+                        "secondary-container": "#04b4a2",
+                        "tertiary-container": "#00688d",
+                        "border-focus": "#86cffb",
+                        "on-surface-variant": "#94a3b8",
+                        "outline": "#899299",
+                        "surface-dim": "#0c141f",
+                        "on-surface": "#f1f5f9",
+                        "surface-variant": "#2d3541",
+                        "surface-tint": "#86cffb",
+                        "surface-container": "#18202b",
+                        "surface": "#0c141f",
+                        "background": "#0c141f",
+                        "primary": "#86cffb",
+                        "on-background": "#f1f5f9",
+                        "ocean-primary": "#00688f",
+                        "primary-container": "#00688f",
+                        "surface-container-high": "#1a293e",
+                        "on-primary-container": "#ffffff",
+                        "outline-variant": "#23354d",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-error": "#690005",
+                        "on-primary": "#00344a",
+                        "surface-container-lowest": "#070f19",
+                        "surface-container-low": "#101825"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "xl": "80px",
+                        "gutter": "24px",
+                        "base": "4px",
+                        "sm": "16px",
+                        "xs": "8px",
+                        "md": "24px",
+                        "margin-desktop": "64px",
+                        "lg": "48px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "display": [
+                            "Space Grotesk"
+                        ],
+                        "headline-lg": [
+                            "Space Grotesk"
+                        ],
+                        "headline-md": [
+                            "Space Grotesk"
+                        ],
+                        "body-lg": [
+                            "Hanken Grotesk"
+                        ],
+                        "body-md": [
+                            "Hanken Grotesk"
+                        ],
+                        "label-md": [
+                            "JetBrains Mono"
+                        ],
+                        "label-sm": [
+                            "JetBrains Mono"
+                        ]
+                    },
+                    "fontSize": {
+                        "display": [
+                            "48px",
+                            {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "800"
+                            }
+                        ],
+                        "label-sm": [
+                            "12px",
+                            {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0.04em",
+                                "fontWeight": "500"
+                            }
+                        ],
+                        "headline-lg-mobile": [
+                            "28px",
+                            {
+                                "lineHeight": "36px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "body-md": [
+                            "16px",
+                            {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0em",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "headline-md": [
+                            "24px",
+                            {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                            }
+                        ],
+                        "body-lg": [
+                            "18px",
+                            {
+                                "lineHeight": "28px",
+                                "letterSpacing": "-0.005em",
+                                "fontWeight": "400"
+                            }
+                        ],
+                        "headline-lg": [
+                            "32px",
+                            {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.015em",
+                                "fontWeight": "700"
+                            }
+                        ],
+                        "label-md": [
+                            "14px",
+                            {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.02em",
+                                "fontWeight": "500"
+                            }
+                        ]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #0c141f;
+            color: #f1f5f9;
+        }
+        
+        .card-level-1 {
+            background-color: #141c27;
+            border: 1px solid #23354d;
+        }
+        
+        .spinner {
+            border: 3px solid #1e2c3d;
+            border-top: 3px solid #00688f;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .processing-overlay {
+            backdrop-filter: blur(6px);
+        }
+    </style>
+</head>
+<body class="font-body-md antialiased min-h-screen flex flex-col bg-[#0c141f] text-[#f1f5f9] selection:bg-[#00688f] selection:text-white">
+<!-- Minimal Header for Checkout -->
+<header class="bg-[#0e1927]/90 sticky top-0 z-40 border-b border-[#23354d]">
+<div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-3 flex justify-between items-center w-full">
+<div class="flex items-center gap-xs cursor-pointer group" onclick="window.history.back()">
+<span class="material-symbols-outlined text-[#94a3b8] group-hover:text-[#86cffb] transition-colors">arrow_back</span>
+<span class="font-label-md text-label-md text-[#94a3b8] group-hover:text-[#86cffb] transition-colors">Volver</span>
+</div>
+<div class="font-display text-headline-md font-bold text-[#86cffb] tracking-tight">
+    Amaryllis
+</div>
+<div class="flex items-center gap-xs bg-[#141e2e] px-sm py-1 rounded-full border border-[#23354d]">
+<span class="material-symbols-outlined text-[#86cffb] text-[18px]">timer</span>
+<span class="font-label-md text-label-md text-[#f1f5f9] font-bold" id="countdown">10:00</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-lg md:py-xl grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Progress Stepper -->
+<div class="col-span-1 lg:col-span-12 mb-6">
+<div class="flex items-center justify-between max-w-2xl mx-auto">
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-[#1b293c] border border-[#23354d] text-[#86cffb] flex items-center justify-center font-label-md text-label-md font-bold">
+<span class="material-symbols-outlined text-[16px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-[#94a3b8]">Selección</span>
+</div>
+<div class="flex-grow h-[1px] bg-[#23354d] mx-sm"></div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-[#00688f] text-white flex items-center justify-center font-label-md text-label-md font-bold">
+    2
+</div>
+<span class="font-label-sm text-label-sm text-[#86cffb] font-bold">Pago</span>
+</div>
+<div class="flex-grow h-[1px] bg-[#23354d] mx-sm"></div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-[#141e2e] border border-[#23354d] text-[#94a3b8] flex items-center justify-center font-label-md text-label-md">
+    3
+</div>
+<span class="font-label-sm text-label-sm text-[#94a3b8]">Confirmación</span>
+</div>
+</div>
+</div>
+<!-- Left Column: Order Summary -->
+<div class="col-span-1 lg:col-span-5 flex flex-col gap-md">
+<h1 class="font-display font-bold text-headline-lg-mobile md:text-headline-lg text-[#f1f5f9]">Resumen del Pedido</h1>
+<div class="card-level-1 rounded-2xl p-md flex flex-col gap-md">
+<!-- Event Details -->
+<div class="flex gap-sm pb-md border-b border-[#23354d]">
+<img class="w-24 h-24 object-cover rounded-xl border border-[#23354d]" data-alt="A small, high-quality thumbnail image showing a vibrant electronic music concert stage with bright green and blue laser lights illuminating a cheering crowd, designed in a modern, light-mode corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAhBw6kkNhbRMM7x0zPeh4J1SvjGbmstnEUYDk8y2baoOtjJLNOJqHUJKMRUdzavb2MxFt0HtaoOVyaTKMGiYKaZ0y3KnicJfuZ5Nyd5B1eB3K6T3pfvGj__7Z_URs4d6-Dl12ejvnEywYUyy2GD1o1T83lKnBQf8poAXb88MXklCaJVNI3v6GXi5g0PKYWqAoMvswD4l1285l4haavwbhSFBTy7Km-uf0__9lxKJ0h1YSqlURJ7Gl7TQ"/>
+<div class="flex flex-col justify-center">
+<h3 class="font-display font-bold text-[#f1f5f9] text-lg leading-tight mb-xs">Neon Nights Festival 2024</h3>
+<div class="flex items-center gap-xs text-[#94a3b8]">
+<span class="material-symbols-outlined text-[16px] text-[#86cffb]">calendar_today</span>
+<span class="font-body-md text-sm">24 Oct, 2024 • 20:00 h</span>
+</div>
+<div class="flex items-center gap-xs text-[#94a3b8] mt-1">
+<span class="material-symbols-outlined text-[16px] text-[#86cffb]">location_on</span>
+<span class="font-body-md text-sm">Arena Central</span>
+</div>
+</div>
+</div>
+<!-- Tickets List -->
+<div class="flex flex-col gap-xs pb-md border-b border-[#23354d]">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-xs">
+<span class="font-body-md text-[#f1f5f9] font-medium">2x VIP Access</span>
+</div>
+<span class="font-body-md text-[#f1f5f9] font-medium">$300.00</span>
+</div>
+<div class="flex justify-between items-center text-[#94a3b8] text-sm">
+<span>Fila 12, Asientos A &amp; B</span>
+</div>
+</div>
+<div class="flex flex-col gap-xs pb-md border-b border-[#23354d]">
+<div class="flex justify-between items-center">
+<div class="flex items-center gap-xs">
+<span class="font-body-md text-[#f1f5f9] font-medium">1x Pase de Estacionamiento</span>
+</div>
+<span class="font-body-md text-[#f1f5f9] font-medium">$45.00</span>
+</div>
+</div>
+<!-- Totals -->
+<div class="flex flex-col gap-xs">
+<div class="flex justify-between items-center text-[#94a3b8]">
+<span class="font-body-md text-sm">Subtotal</span>
+<span class="font-body-md text-sm font-label-md text-[#cbd5e1]">$345.00</span>
+</div>
+<div class="flex justify-between items-center text-[#94a3b8]">
+<span class="font-body-md text-sm">Cargo por Servicio</span>
+<span class="font-body-md text-sm font-label-md text-[#cbd5e1]">$24.15</span>
+</div>
+<div class="flex justify-between items-center text-[#94a3b8]">
+<span class="font-body-md text-sm">Impuestos</span>
+<span class="font-body-md text-sm font-label-md text-[#cbd5e1]">$29.53</span>
+</div>
+<div class="flex justify-between items-center mt-sm pt-sm border-t border-[#23354d]">
+<span class="font-display font-bold text-[#f1f5f9] text-xl">Total</span>
+<span class="font-display font-bold text-[#86cffb] text-xl font-label-md">$398.68</span>
+</div>
+</div>
+</div>
+<div class="flex items-start gap-sm bg-[#101825] p-sm rounded-xl border border-[#23354d]">
+<span class="material-symbols-outlined text-[#86cffb] mt-0.5">lock</span>
+<div>
+<h4 class="font-label-md text-label-md text-[#f1f5f9] font-bold mb-1">Pago 100% Seguro</h4>
+<p class="font-body-md text-sm text-[#94a3b8] leading-snug">Tu información de pago está cifrada con tecnología TLS de 256 bits y se procesa de forma segura. No almacenamos los datos completos de tu tarjeta.</p>
+</div>
+</div>
+</div>
+<!-- Right Column: Payment Methods -->
+<div class="col-span-1 lg:col-span-7 flex flex-col gap-md lg:pl-lg">
+<div class="flex flex-col gap-sm">
+<h2 class="font-display font-bold text-headline-md text-[#f1f5f9]">Método de Pago</h2>
+<!-- Payment Options Tabs -->
+<div class="flex gap-sm mb-sm overflow-x-auto pb-1 -mx-margin-mobile px-margin-mobile md:mx-0 md:px-0">
+<button class="flex items-center gap-xs bg-[#00688f] text-white border border-[#00688f] rounded-xl px-md py-sm font-label-md text-label-md font-bold whitespace-nowrap">
+<span class="material-symbols-outlined text-[20px]">credit_card</span>
+    Tarjeta de Crédito
+</button>
+<button class="flex items-center gap-xs bg-[#141c27] text-[#94a3b8] hover:text-[#f1f5f9] border border-[#23354d] hover:border-[#86cffb]/40 rounded-xl px-md py-sm font-label-md text-label-md transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+    Billetera Digital
+</button>
+<button class="flex items-center gap-xs bg-[#141c27] text-[#94a3b8] hover:text-[#f1f5f9] border border-[#23354d] hover:border-[#86cffb]/40 rounded-xl px-md py-sm font-label-md text-label-md transition-colors whitespace-nowrap">
+<span class="material-symbols-outlined text-[20px]">payments</span>
+    Transferencia Bancaria
+</button>
+</div>
+<!-- Credit Card Form -->
+<div class="card-level-1 rounded-2xl p-md lg:p-lg flex flex-col gap-md relative overflow-hidden">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-[#cbd5e1]">Número de Tarjeta</label>
+<div class="relative">
+<input class="w-full bg-[#1b2533] border border-[#23354d] rounded-lg py-sm px-md font-label-sm text-label-sm text-[#f1f5f9] placeholder:text-[#64748b] focus:border-[#00688f] focus:ring-0 focus:outline-none transition-colors pr-12" placeholder="0000 0000 0000 0000" type="text"/>
+<span class="material-symbols-outlined absolute right-sm top-1/2 -translate-y-1/2 text-[#94a3b8]">credit_card</span>
+</div>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-[#cbd5e1]">Titular de la Tarjeta</label>
+<input class="w-full bg-[#1b2533] border border-[#23354d] rounded-lg py-sm px-md font-label-sm text-label-sm text-[#f1f5f9] placeholder:text-[#64748b] focus:border-[#00688f] focus:ring-0 focus:outline-none transition-colors" placeholder="NOMBRE Y APELLIDO" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-sm">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-[#cbd5e1]">Fecha de Expiración</label>
+<input class="w-full bg-[#1b2533] border border-[#23354d] rounded-lg py-sm px-md font-label-sm text-label-sm text-[#f1f5f9] placeholder:text-[#64748b] focus:border-[#00688f] focus:ring-0 focus:outline-none transition-colors" placeholder="MM/AA" type="text"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-[#cbd5e1] flex justify-between">
+    CVC
+    <span class="material-symbols-outlined text-[16px] text-[#94a3b8] cursor-help" title="3 dígitos al reverso">help</span>
+</label>
+<input class="w-full bg-[#1b2533] border border-[#23354d] rounded-lg py-sm px-md font-label-sm text-label-sm text-[#f1f5f9] placeholder:text-[#64748b] focus:border-[#00688f] focus:ring-0 focus:outline-none transition-colors" placeholder="123" type="text"/>
+</div>
+</div>
+<div class="flex items-start gap-xs mt-xs">
+<input class="mt-1 rounded text-[#00688f] focus:ring-0 focus:ring-offset-0 border-[#23354d] bg-[#1b2533] cursor-pointer" id="save-card" type="checkbox"/>
+<label class="font-body-md text-sm text-[#94a3b8] cursor-pointer select-none" for="save-card">
+    Guardar esta tarjeta de forma segura para compras futuras
+</label>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="mt-md flex flex-col gap-sm">
+<button class="w-full bg-[#00688f] hover:bg-[#005a7d] text-white font-label-md text-label-md font-bold py-md rounded-xl transition-colors active:translate-y-px flex justify-center items-center gap-xs" id="btn-pay">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+    Pagar $398.68
+</button>
+<p class="text-center font-body-md text-xs text-[#94a3b8]">
+    Al presionar "Pagar", aceptas nuestros <a class="text-[#86cffb] hover:underline" href="#">Términos del Servicio</a> y <a class="text-[#86cffb] hover:underline" href="#">Política de Privacidad</a>.
+</p>
+</div>
+</div>
+</main>
+<!-- Processing Overlay (Hidden by default) -->
+<div class="fixed inset-0 z-50 bg-[#0c141f]/85 processing-overlay flex-col items-center justify-center hidden opacity-0 transition-opacity duration-300" id="processing-overlay">
+<div class="bg-[#141c27] p-xl rounded-2xl border border-[#23354d] flex flex-col items-center gap-md max-w-sm w-[90%] mx-auto text-center transform scale-95 transition-transform duration-300" id="processing-card">
+<div class="relative w-16 h-16 flex items-center justify-center">
+<div class="spinner absolute inset-0"></div>
+<span class="material-symbols-outlined text-[#86cffb] text-2xl" style="font-variation-settings: 'FILL' 1;">security</span>
+</div>
+<div class="flex flex-col gap-xs">
+<h3 class="font-display font-bold text-headline-md text-[#f1f5f9]">Validando transacción segura...</h3>
+<p class="font-body-md text-sm text-[#94a3b8]">Por favor no cierres ni actualices esta página.</p>
+</div>
+<div class="w-full bg-[#1b2533] h-1.5 rounded-full overflow-hidden mt-sm border border-[#23354d]/50">
+<div class="bg-[#00688f] h-full rounded-full" style="animation: slideRight 1.8s ease-in-out infinite alternate;"></div>
+</div>
+<style>
+    @keyframes slideRight {
+        0% { transform: translateX(0%); width: 25%; }
+        100% { transform: translateX(300%); width: 35%; }
+    }
+</style>
+</div>
+</div>
+<script>
+        // Simple Countdown Timer
+        let timeInSeconds = 10 * 60;
+        const countdownEl = document.getElementById('countdown');
+        
+        const timerInterval = setInterval(() => {
+            timeInSeconds--;
+            const minutes = Math.floor(timeInSeconds / 60);
+            const seconds = timeInSeconds % 60;
+            
+            countdownEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            if (timeInSeconds <= 60) {
+                countdownEl.classList.add('text-error');
+                countdownEl.parentElement.classList.add('border-error');
+            }
+            
+            if (timeInSeconds <= 0) {
+                clearInterval(timerInterval);
+                countdownEl.textContent = "00:00";
+            }
+        }, 1000);
+
+        // Handle Payment Button Click (Simulate Processing)
+        const btnPay = document.getElementById('btn-pay');
+        const overlay = document.getElementById('processing-overlay');
+        const processingCard = document.getElementById('processing-card');
+
+        btnPay.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Show overlay
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            
+            // Trigger reflow for transition
+            void overlay.offsetWidth;
+            
+            // Fade in and scale up
+            overlay.classList.remove('opacity-0');
+            processingCard.classList.remove('scale-95');
+            processingCard.classList.add('scale-100');
+            
+            // Simulate API call completion after 4 seconds
+            setTimeout(() => {
+                alert("¡Pago procesado con éxito! Redirigiendo a tu entrada...");
+                
+                // Hide overlay
+                overlay.classList.add('opacity-0');
+                processingCard.classList.remove('scale-100');
+                processingCard.classList.add('scale-95');
+                setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    overlay.classList.remove('flex');
+                }, 300);
+            }, 3500);
+        });
+    </script>
+</body></html>

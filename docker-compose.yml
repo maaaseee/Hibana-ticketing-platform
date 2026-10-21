@@ -1,0 +1,79 @@
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Local Azure Emulator (Cosmos DB, Service Bus, Key Vault, Storage)
+  # ---------------------------------------------------------------------------
+  floci-az:
+    image: floci/floci-az:latest
+    container_name: floci-az
+    ports:
+      - "4577:4577"     # Unified Azure REST API & Cosmos DB Gateway
+      - "5673:5673"     # Service Bus AMQP (on-demand emulator)
+    environment:
+      FLOCI_AZ_STORAGE_MODE: hybrid
+      FLOCI_AZ_STORAGE_PERSISTENT_PATH: /app/data
+      FLOCI_AZ_STORAGE_HYBRID_FLUSH_INTERVAL_MS: 5000
+      FLOCI_AZ_STORAGE_WAL_COMPACTION_INTERVAL_MS: 30000
+      FLOCI_AZ_SERVICES_REDIS_MOCKED: false
+      
+      # Essential for local development: returns 'localhost' instead of container IP
+      FLOCI_AZ_HOSTNAME: localhost
+      FLOCI_AZ_BASE_URL: http://localhost:4577
+    volumes:
+      - ${USERPROFILE:-~}/.floci-studio/data:/app/data
+      # Required for Floci to manage on-demand runtime containers
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 2. Azure Database for PostgreSQL (Flexible Server) + pgvector
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: ticketing-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ticketing_db
+      POSTGRES_USER: ticketing_admin
+      POSTGRES_PASSWORD: dev_password_123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/local-dev/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ticketing_admin -d ticketing_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 3. Azure Cache for Redis (Redlock, Waiting Room, & PubSub)
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: ticketing-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+volumes:
+  postgres-data:
+  redis-data:
+
+networks:
+  ticketing-net:
+    driver: bridge

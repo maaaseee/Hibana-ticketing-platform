@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: catalog-service
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.vectorstore.pgvector.autoconfigure.PgVectorStoreAutoConfiguration
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ticketing_db}
+    username: ${DB_USER:ticketing_admin}
+    password: ${DB_PASSWORD:dev_password_123}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 10000
+      pool-name: CatalogHikariPool
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 25
+          order_inserts: true
+          order_updates: true
+
+server:
+  port: 8080
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+catalog:
+  outbox:
+    relay:
+      enabled: true
+      fixed-delay-ms: 500
+      batch-size: 50
+      max-retries: 3
+  messaging:
+    topics:
+      event-lifecycle: event.lifecycle.v1
+  azure:
+    storage:
+      blob:
+        endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:http://localhost:4577/devstoreaccount1}
+        container: ${AZURE_STORAGE_VENUES_CONTAINER:venues}
+        connection-string: ${AZURE_STORAGE_CONNECTION_STRING:DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:4577/devstoreaccount1;}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+

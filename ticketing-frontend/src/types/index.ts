@@ -1,0 +1,78 @@
+export interface EventItem {
+  id: string
+  title: string
+  subtitle: string
+  date: string
+  time?: string
+  venue: string
+  location: string
+  category: string
+  genre?: 'Music & Concerts' | 'Tech Conferences' | 'Sports' | 'Theater' | string
+  dateFilter?: 'this_weekend' | 'next_30_days' | 'future'
+  price: number
+  imageUrl: string
+  badgeText?: string
+  badgeType?: 'primary' | 'secondary' | 'warning' | 'error'
+  status: 'AVAILABLE' | 'FEW_SEATS' | 'SOLD_OUT' | 'QUEUE_ACTIVE'
+  description?: string
+  aiSimilarityScore?: number
+  lineup?: string
+  doorsOpen?: string
+  venueMapUrl?: string
+  availableDates?: string[]
+  ticketTypes?: { name: string; price: number }[]
+}
+
+export interface Seat {
+  id: string
+  row: string
+  number: number
+  sector: string
+  price: number
+  status: 'AVAILABLE' | 'SELECTED' | 'RESERVED' | 'LOCKED'
+  x: number
+  y: number
+}
+
+export interface Sector {
+  id: string
+  name: string
+  price: number
+  color: string
+  availableCount: number
+  totalCount: number
+}
+
+export interface Ticket {
+  id: string
+  orderId: string
+  eventId: string
+  eventTitle: string
+  eventDate: string
+  venue: string
+  sector: string
+  row: string
+  seatNumber: number | string
+  customerName: string
+  customerEmail: string
+  status: 'ISSUED' | 'REDEEMED' | 'REFUNDED' | 'TRANSFERRED'
+  qrPayload: {
+    tid: string
+    eid: string
+    vid: string
+    sec: string
+    sig: string
+  }
+  totpRemainingSeconds: number
+  barcode: string
+}
+
+export interface ChatMessage {
+  id: string
+  sender: 'ai' | 'user' | 'operator' | 'system'
+  senderName: string
+  text: string
+  timestamp: string
+  isInternalNote?: boolean
+  quickActions?: { label: string; action: string; icon?: string }[]
+}

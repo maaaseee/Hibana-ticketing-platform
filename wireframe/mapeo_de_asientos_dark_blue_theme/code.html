@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Selección de Asientos - Amaryllis</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "background": "#0c141f",
+          "surface": "#0c141f",
+          "surface-container-lowest": "#070f19",
+          "surface-container-low": "#101825",
+          "surface-container": "#141c27",
+          "surface-container-high": "#1b2533",
+          "surface-container-highest": "#23354d",
+          "border-subtle": "#23354d",
+          "outline-variant": "#23354d",
+          "primary": "#86cffb",
+          "primary-container": "#00688f",
+          "on-primary-container": "#ffffff",
+          "secondary": "#4fdbc8",
+          "secondary-container": "#00688f",
+          "on-secondary-container": "#ffffff",
+          "on-surface": "#f1f5f9",
+          "on-surface-variant": "#94a3b8",
+          "on-background": "#f1f5f9",
+          "error": "#ffb4ab",
+          "error-container": "#93000a"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "space-xs": "0.25rem",
+          "space-sm": "0.5rem",
+          "space-md": "1rem",
+          "space-lg": "1.5rem",
+          "space-xl": "2.5rem",
+          "margin": "2.5rem",
+          "margin-mobile": "1rem",
+          "gutter": "1.5rem"
+        },
+        "fontFamily": {
+          "display": ["Space Grotesk"],
+          "headline-xl": ["Space Grotesk"],
+          "headline-lg": ["Space Grotesk"],
+          "headline-md": ["Space Grotesk"],
+          "headline-sm": ["Space Grotesk"],
+          "body-lg": ["Hanken Grotesk"],
+          "body-md": ["Hanken Grotesk"],
+          "body-sm": ["Hanken Grotesk"],
+          "label-lg": ["JetBrains Mono"],
+          "label-md": ["JetBrains Mono"],
+          "label-sm": ["JetBrains Mono"]
+        }
+      }
+    }
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-family: 'Material Symbols Outlined';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 20px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+  }
+</style>
+</head>
+<body class="bg-[#0c141f] text-[#f1f5f9] font-body-md min-h-screen flex flex-col antialiased selection:bg-[#00688f] selection:text-white">
+<!-- Urgency Banner (Navy Header Bar) -->
+<div class="bg-[#101825] border-b border-[#23354d] text-[#86cffb] py-2 px-margin-mobile md:px-margin flex justify-center items-center gap-2 z-50 sticky top-0 font-label-md text-sm">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+<span>Asientos reservados por <strong class="font-bold text-[#f1f5f9]">09:59</strong></span>
+</div>
+<!-- Main Layout Container -->
+<main class="flex-grow flex flex-col lg:flex-row h-[calc(100vh-41px)] overflow-hidden">
+<!-- Canvas Area (Seat Map) -->
+<section class="flex-grow relative bg-[#0c141f] p-4 flex items-center justify-center overflow-auto border-r border-[#23354d]">
+<!-- Map Tools (Flat, refined border) -->
+<div class="absolute bottom-4 right-4 flex flex-col bg-[#141c27] rounded-lg p-1 border border-[#23354d] z-10">
+<button class="w-9 h-9 flex items-center justify-center text-[#94a3b8] hover:text-[#f1f5f9] hover:bg-[#1b2533] rounded transition-colors" title="Zoom in">
+<span class="material-symbols-outlined">zoom_in</span>
+</button>
+<div class="w-full h-px bg-[#23354d]"></div>
+<button class="w-9 h-9 flex items-center justify-center text-[#94a3b8] hover:text-[#f1f5f9] hover:bg-[#1b2533] rounded transition-colors" title="Zoom out">
+<span class="material-symbols-outlined">zoom_out</span>
+</button>
+</div>
+<!-- Seat Legend (Flat, subtle border) -->
+<div class="absolute top-4 left-4 bg-[#141c27] rounded-lg p-3 border border-[#23354d] z-10 flex flex-wrap gap-4 items-center">
+<div class="flex items-center gap-2 font-label-sm text-xs text-[#94a3b8]">
+<div class="w-3.5 h-3.5 rounded-sm bg-[#162a3f] border border-[#23354d]"></div>
+<span>Disponible</span>
+</div>
+<div class="flex items-center gap-2 font-label-sm text-xs text-[#94a3b8]">
+<div class="w-3.5 h-3.5 rounded-sm bg-[#00688f] border border-[#00688f]"></div>
+<span class="text-[#f1f5f9] font-medium">Seleccionado</span>
+</div>
+<div class="flex items-center gap-2 font-label-sm text-xs text-[#94a3b8]">
+<div class="w-3.5 h-3.5 rounded-sm bg-[#101825] border border-[#1b2533]"></div>
+<span>Ocupado</span>
+</div>
+</div>
+<!-- Seat Map / Stadium Venue Layout -->
+<div class="flex flex-col items-center justify-center w-full max-w-4xl py-6 px-2 select-none">
+<!-- Escenario / Stage Area -->
+<div class="w-72 md:w-96 mb-10 text-center">
+<div class="w-full py-2 bg-[#141c27] border border-[#23354d] rounded text-[#86cffb] font-label-md text-xs tracking-widest uppercase font-semibold">
+          ESCENARIO PRINCIPAL
+        </div>
+<div class="w-32 h-1 bg-[#00688f] mx-auto mt-1 rounded-full"></div>
+</div>
+<!-- Seating Grid Matrix -->
+<div class="grid gap-1.5 p-4 bg-[#101825] border border-[#23354d] rounded-xl" style="grid-template-columns: repeat(20, minmax(0, 1fr));">
+<!-- Fila A -->
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<!-- Selected Seat A3 -->
+<div class="w-6 h-6 rounded-t bg-[#00688f] border border-[#23354d] cursor-pointer flex items-center justify-center text-[10px] font-bold text-white font-label-sm">A3</div>
+<!-- Selected Seat A4 -->
+<div class="w-6 h-6 rounded-t bg-[#00688f] border border-[#23354d] cursor-pointer flex items-center justify-center text-[10px] font-bold text-white font-label-sm">A4</div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="col-span-4 flex items-center justify-center font-label-sm text-[11px] text-[#94a3b8] tracking-wider">PASILLO</div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<!-- Fila B -->
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="col-span-4 flex items-center justify-center font-label-sm text-[10px] text-[#94a3b8]">FILA B</div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] hover:border-[#86cffb]/50 transition-colors cursor-pointer"></div>
+<!-- Fila C -->
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="col-span-4 flex items-center justify-center font-label-sm text-[10px] text-[#94a3b8]">FILA C</div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#101825] border border-[#1b2533] cursor-not-allowed"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<!-- Fila D -->
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="col-span-4 flex items-center justify-center font-label-sm text-[10px] text-[#94a3b8]">FILA D</div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+<div class="w-6 h-6 rounded-t bg-[#162a3f] border border-[#23354d] hover:bg-[#1e3a57] transition-colors cursor-pointer"></div>
+</div>
+<div class="mt-4 flex items-center gap-6 font-label-sm text-xs text-[#94a3b8]">
+<span>Zona: Platea Central A</span>
+<span>•</span>
+<span>Capacidad: 80 asientos</span>
+</div>
+</div>
+</section>
+<!-- Selection Sidebar (Dark Navy Surfaces) -->
+<aside class="w-full lg:w-96 bg-[#141c27] flex flex-col h-full border-l border-[#23354d] z-20">
+<!-- Sidebar Header -->
+<div class="p-4 border-b border-[#23354d]">
+<h2 class="font-headline-md text-xl font-bold text-[#f1f5f9] mb-1">Tu Selección</h2>
+<p class="font-body-sm text-xs text-[#94a3b8]">Elige hasta 5 asientos por compra.</p>
+</div>
+<!-- Tier Breakdown / Info Tag -->
+<div class="px-4 py-2.5 bg-[#101825] border-b border-[#23354d] flex items-center justify-between font-label-sm text-xs">
+<span class="text-[#94a3b8]">Categoría seleccionada</span>
+<span class="text-[#86cffb] font-medium">Entrada Estándar ($145.00 c/u)</span>
+</div>
+<!-- Selected Seats List -->
+<div class="flex-grow p-4 overflow-y-auto space-y-2.5">
+<!-- Selected Seat Card 1 -->
+<div class="bg-[#1b2533] border border-[#23354d] rounded-lg p-3 flex justify-between items-center transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-[#00688f] flex items-center justify-center text-white font-bold font-label-md text-sm border border-[#23354d]">
+            A3
+          </div>
+<div>
+<p class="font-body-md text-sm font-semibold text-[#f1f5f9]">Entrada Estándar</p>
+<p class="font-label-sm text-xs text-[#94a3b8]">Fila A, Asiento 3</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="font-headline-sm text-sm font-bold text-[#f1f5f9]">$145.00</p>
+<button class="text-[#94a3b8] hover:text-[#ffb4ab] p-1 transition-colors mt-0.5" title="Eliminar asiento">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Selected Seat Card 2 -->
+<div class="bg-[#1b2533] border border-[#23354d] rounded-lg p-3 flex justify-between items-center transition-colors">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-[#00688f] flex items-center justify-center text-white font-bold font-label-md text-sm border border-[#23354d]">
+            A4
+          </div>
+<div>
+<p class="font-body-md text-sm font-semibold text-[#f1f5f9]">Entrada Estándar</p>
+<p class="font-label-sm text-xs text-[#94a3b8]">Fila A, Asiento 4</p>
+</div>
+</div>
+<div class="flex flex-col items-end">
+<p class="font-headline-sm text-sm font-bold text-[#f1f5f9]">$145.00</p>
+<button class="text-[#94a3b8] hover:text-[#ffb4ab] p-1 transition-colors mt-0.5" title="Eliminar asiento">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Summary Price Tier Breakdown -->
+<div class="mt-4 p-3 bg-[#101825] border border-[#23354d] rounded-lg space-y-1.5 font-label-sm text-xs">
+<div class="flex justify-between text-[#94a3b8]">
+<span>Platea Central A (x2)</span>
+<span class="text-[#f1f5f9]">$290.00</span>
+</div>
+<div class="flex justify-between text-[#94a3b8]">
+<span>Cargos de gestión</span>
+<span class="text-[#f1f5f9]">$0.00</span>
+</div>
+</div>
+</div>
+<!-- Checkout Summary Sticky Bottom -->
+<div class="p-4 bg-[#141c27] border-t border-[#23354d]">
+<div class="flex justify-between items-center mb-3">
+<span class="text-[#94a3b8] font-body-sm text-sm">Subtotal (2 asientos)</span>
+<span class="text-[#f1f5f9] font-headline-md text-xl font-bold">$290.00</span>
+</div>
+<button class="w-full bg-[#00688f] text-white hover:bg-[#005a7d] font-label-md text-sm font-bold py-3 rounded-lg border border-[#23354d] transition-colors flex items-center justify-center gap-2">
+<span>Continuar al Pago</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</aside>
+</main>
+</body></html>
