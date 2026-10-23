@@ -3,7 +3,6 @@ package com.aieta.ticketing_app_inventory.infrastructure.schedulers;
 import com.aieta.ticketing_app_inventory.domain.enums.ReservationStatus;
 import com.aieta.ticketing_app_inventory.domain.enums.SeatStatus;
 import com.aieta.ticketing_app_inventory.domain.ports.DistributedLockPort;
-import com.aieta.ticketing_app_inventory.infrastructure.persistence.entity.SeatJpaEntity;
 import com.aieta.ticketing_app_inventory.infrastructure.persistence.entity.TicketReservationJpaEntity;
 import com.aieta.ticketing_app_inventory.infrastructure.persistence.repository.SpringDataReservationRepository;
 import com.aieta.ticketing_app_inventory.infrastructure.persistence.repository.SpringDataSeatRepository;
@@ -33,8 +32,7 @@ public class ReservationExpirationSweeper {
             SpringDataReservationRepository reservationRepository,
             SpringDataSeatRepository seatRepository,
             DistributedLockPort distributedLockPort,
-            @Value("${ticketing.sweeper.expiration.batch-size:100}") int batchSize
-    ) {
+            @Value("${ticketing.sweeper.expiration.batch-size:100}") int batchSize) {
         this.reservationRepository = reservationRepository;
         this.seatRepository = seatRepository;
         this.distributedLockPort = distributedLockPort;
@@ -48,8 +46,7 @@ public class ReservationExpirationSweeper {
         List<TicketReservationJpaEntity> expiredList = reservationRepository.findExpiredReservations(
                 ReservationStatus.PENDING_PAYMENT.name(),
                 now,
-                PageRequest.of(0, batchSize)
-        );
+                PageRequest.of(0, batchSize));
 
         if (expiredList == null || expiredList.isEmpty()) {
             return;
@@ -76,9 +73,11 @@ public class ReservationExpirationSweeper {
                 // 3. Ensure any lingering Redis lock key is purged
                 distributedLockPort.forceReleaseSeatLock(reservation.getEventId(), reservation.getSeatId());
 
-                log.info("Sweeper successfully expired reservation {} for seat {}", reservation.getId(), reservation.getSeatId());
+                log.info("Sweeper successfully expired reservation {} for seat {}", reservation.getId(),
+                        reservation.getSeatId());
             } catch (Exception ex) {
-                log.error("Sweeper failed processing expired reservation {}: {}", reservation.getId(), ex.getMessage(), ex);
+                log.error("Sweeper failed processing expired reservation {}: {}", reservation.getId(), ex.getMessage(),
+                        ex);
             }
         }
     }

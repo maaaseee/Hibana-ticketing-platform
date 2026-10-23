@@ -23,7 +23,7 @@ class SeatAggregateUnitTest {
                 "sec_vip",
                 "A",
                 "104",
-                Money.of(new BigDecimal("150.00"), "USD")
+                Money.of(new BigDecimal("15000.00"), "ARS")
         );
     }
 
@@ -39,8 +39,8 @@ class SeatAggregateUnitTest {
         assertTrue(seat.isAvailable());
         assertFalse(seat.isHeld());
         assertFalse(seat.isBooked());
-        assertEquals(new BigDecimal("150.00"), seat.getPrice().amount());
-        assertEquals("USD", seat.getPrice().currency());
+        assertEquals(new BigDecimal("15000.00"), seat.getPrice().amount());
+        assertEquals("ARS", seat.getPrice().currency());
     }
 
     @Test

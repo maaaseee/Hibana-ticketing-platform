@@ -33,7 +33,7 @@ public class SeatJpaEntity {
     private BigDecimal price;
 
     @Column(name = "currency", length = 10, nullable = false)
-    private String currency = "USD";
+    private String currency = "ARS";
 
     @Column(name = "status", length = 30, nullable = false)
     private String status = "AVAILABLE";

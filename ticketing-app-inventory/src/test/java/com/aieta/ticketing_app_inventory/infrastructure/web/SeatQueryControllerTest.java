@@ -39,11 +39,11 @@ class SeatQueryControllerTest {
     void shouldReturn200WithEventSeats() throws Exception {
         SeatResponseDto seat1 = new SeatResponseDto(
                 "seat_1", "evt_coldplay", "sec_vip", "Row-A", "1",
-                new BigDecimal("150.00"), "USD", SeatStatus.AVAILABLE
+                new BigDecimal("15000.00"), "ARS", SeatStatus.AVAILABLE
         );
         SeatResponseDto seat2 = new SeatResponseDto(
                 "seat_2", "evt_coldplay", "sec_vip", "Row-A", "2",
-                new BigDecimal("150.00"), "USD", SeatStatus.HELD
+                new BigDecimal("15000.00"), "ARS", SeatStatus.HELD
         );
 
         EventSeatsResponse response = new EventSeatsResponse(

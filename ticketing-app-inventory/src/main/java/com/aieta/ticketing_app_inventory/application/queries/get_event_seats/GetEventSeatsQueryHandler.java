@@ -1,7 +1,6 @@
 package com.aieta.ticketing_app_inventory.application.queries.get_event_seats;
 
 import com.aieta.ticketing_app_inventory.application.common.mediator.RequestHandler;
-import com.aieta.ticketing_app_inventory.domain.enums.SeatStatus;
 import com.aieta.ticketing_app_inventory.domain.model.Seat;
 import com.aieta.ticketing_app_inventory.domain.ports.SeatRepositoryPort;
 import org.springframework.stereotype.Component;
@@ -41,8 +40,7 @@ public class GetEventSeatsQueryHandler implements RequestHandler<GetEventSeatsQu
                         seat.getSeatNumber(),
                         seat.getPrice().amount(),
                         seat.getPrice().currency(),
-                        seat.getStatus()
-                ))
+                        seat.getStatus()))
                 .toList();
 
         for (Seat seat : seats) {
@@ -61,8 +59,7 @@ public class GetEventSeatsQueryHandler implements RequestHandler<GetEventSeatsQu
                 heldSeats,
                 bookedSeats,
                 blockedSeats,
-                dtoList
-        );
+                dtoList);
     }
 
     @Override

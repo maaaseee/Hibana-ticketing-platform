@@ -51,7 +51,7 @@ class ConfirmReservationCommandHandlerTest {
         String orderId = "ord_999";
 
         TicketReservation reservation = TicketReservation.createNew(eventId, SeatId.of(seatId), "user_1", Duration.ofSeconds(600));
-        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("100"), "USD"));
+        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("15000.00"), "ARS"));
         seat.hold("user_1");
 
         when(reservationRepositoryPort.findById(ReservationId.of(resId))).thenReturn(Optional.of(reservation));

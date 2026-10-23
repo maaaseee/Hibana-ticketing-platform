@@ -55,7 +55,7 @@ class HoldSeatCommandHandlerTest {
         when(distributedLockPort.acquireSeatLock(eq(eventId), eq(seatId), eq(userId), any(Duration.class)))
                 .thenReturn(true);
 
-        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("100"), "USD"));
+        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("15000"), "ARS"));
         when(seatRepositoryPort.findByEventIdAndSeatId(eventId, seatId)).thenReturn(Optional.of(seat));
 
         when(reservationRepositoryPort.saveWithOutbox(any(TicketReservation.class), any(Seat.class), any()))
@@ -117,7 +117,7 @@ class HoldSeatCommandHandlerTest {
         when(distributedLockPort.acquireSeatLock(eq(eventId), eq(seatId), eq(newUserId), any(Duration.class)))
                 .thenReturn(true);
 
-        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("100"), "USD"));
+        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("15000"), "ARS"));
         seat.hold("prior_user"); // Seat is currently HELD
 
         // Expired reservation in past
@@ -158,7 +158,7 @@ class HoldSeatCommandHandlerTest {
         when(distributedLockPort.acquireSeatLock(eq(eventId), eq(seatId), eq(newUserId), any(Duration.class)))
                 .thenReturn(true);
 
-        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("100"), "USD"));
+        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("15000"), "ARS"));
         seat.hold("prior_user");
 
         // Active reservation expiring in future
@@ -187,7 +187,7 @@ class HoldSeatCommandHandlerTest {
         when(distributedLockPort.acquireSeatLock(eq(eventId), eq(seatId), eq(userId), any(Duration.class)))
                 .thenReturn(true);
 
-        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("100"), "USD"));
+        Seat seat = Seat.createNew(SeatId.of(seatId), eventId, "sec_1", "A", "1", Money.of(new BigDecimal("15000"), "ARS"));
         when(seatRepositoryPort.findByEventIdAndSeatId(eventId, seatId)).thenReturn(Optional.of(seat));
         when(reservationRepositoryPort.saveWithOutbox(any(), any(), any()))
                 .thenThrow(new RuntimeException("Simulated Outbox Failure"));

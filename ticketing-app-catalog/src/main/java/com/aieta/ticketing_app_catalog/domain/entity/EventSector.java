@@ -39,7 +39,7 @@ public class EventSector {
         this.totalCapacity = totalCapacity;
         this.basePrice = basePrice;
         this.serviceFee = serviceFee;
-        this.currency = currency != null && !currency.isBlank() ? currency.trim().toUpperCase() : "USD";
+        this.currency = currency != null && !currency.isBlank() ? currency.trim().toUpperCase() : "ARS";
     }
 
     public String getId() { return id; }

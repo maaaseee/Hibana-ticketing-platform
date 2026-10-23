@@ -35,7 +35,7 @@ class EventCreatedAmqpListenerTest {
                       "totalCapacity": 500,
                       "basePrice": 180.00,
                       "serviceFee": 27.00,
-                      "currency": "USD"
+                      "currency": "ARS"
                     }
                   ]
                 }

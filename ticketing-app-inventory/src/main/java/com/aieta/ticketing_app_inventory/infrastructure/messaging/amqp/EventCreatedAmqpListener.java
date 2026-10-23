@@ -44,7 +44,8 @@ public class EventCreatedAmqpListener {
                         s.totalCapacity(),
                         s.basePrice(),
                         s.serviceFee(),
-                        s.currency()
+                        s.currency(),
+                        s.seatsPerRow()
                 ))
                 .toList();
 

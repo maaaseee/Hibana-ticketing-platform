@@ -56,7 +56,7 @@ class EventJpaRepositoryIT {
         assertNotNull(vipSector);
         assertEquals(new BigDecimal("180.00"), vipSector.basePrice());
         assertEquals(new BigDecimal("27.00"), vipSector.serviceFee());
-        assertEquals("USD", vipSector.currency());
+        assertEquals("ARS", vipSector.currency());
         assertEquals(5000, vipSector.totalCapacity());
     }
 

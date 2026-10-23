@@ -64,7 +64,7 @@ class TransactionalRollbackIT {
                 "sec_1",
                 "A",
                 "1",
-                Money.of(new BigDecimal("100.00"), "USD")
+                Money.of(new BigDecimal("15000.00"), "ARS")
         );
         seatRepository.save(seatMapper.toEntity(seat));
 

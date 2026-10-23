@@ -51,7 +51,7 @@ public class EventController {
                 .min((left, right) -> left.compareTo(right))
                 .orElse(BigDecimal.ZERO);
 
-        String currency = sectorResponses.isEmpty() ? "USD" : sectorResponses.getFirst().currency();
+        String currency = sectorResponses.isEmpty() ? "ARS" : sectorResponses.getFirst().currency();
 
         String bannerUrl = extractJsonField(event.mediaJson(), "bannerUrl");
         String posterUrl = extractJsonField(event.mediaJson(), "posterUrl");

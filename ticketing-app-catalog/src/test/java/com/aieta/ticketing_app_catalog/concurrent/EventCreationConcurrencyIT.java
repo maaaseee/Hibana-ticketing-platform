@@ -71,7 +71,7 @@ class EventCreationConcurrencyIT {
                                 "{}",
                                 "{}",
                                 List.of(new CreateEventCommand.SectorInput(
-                                        "Platea", "GENERAL_ADMISSION", 100, BigDecimal.valueOf(50), BigDecimal.valueOf(5), "USD"
+                                        "Platea", "GENERAL_ADMISSION", 100, BigDecimal.valueOf(5000), BigDecimal.valueOf(500), "ARS"
                                 ))
                         );
                         EventCreateResult result = mediator.dispatch(command);

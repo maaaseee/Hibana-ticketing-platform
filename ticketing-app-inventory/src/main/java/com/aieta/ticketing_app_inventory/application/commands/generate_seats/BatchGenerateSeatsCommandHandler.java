@@ -46,10 +46,13 @@ public class BatchGenerateSeatsCommandHandler implements RequestHandler<BatchGen
                     ));
                 }
             } else {
-                // NUMBERED_SEATS: 20 seats per row
-                int seatsPerRow = 20;
+                // NUMBERED_SEATS: use explicit seatsPerRow if provided by venue layout JSON; otherwise calculate dynamically
+                int seatsPerRow = resolveSeatsPerRow(sector);
                 int totalRows = (int) Math.ceil((double) sector.totalCapacity() / seatsPerRow);
                 int seatCounter = 1;
+
+                log.debug("Generating numbered seats for sector {}: capacity={}, seatsPerRow={}, totalRows={}",
+                        sector.sectorId(), sector.totalCapacity(), seatsPerRow, totalRows);
 
                 for (int r = 1; r <= totalRows && seatCounter <= sector.totalCapacity(); r++) {
                     String rowIdentifier = String.format("R%d", r);
@@ -75,6 +78,19 @@ public class BatchGenerateSeatsCommandHandler implements RequestHandler<BatchGen
         log.info("Successfully persisted {} seats for event {}", allSeats.size(), command.eventId());
 
         return allSeats.size();
+    }
+
+    private int resolveSeatsPerRow(SectorDefinition sector) {
+        if (sector.seatsPerRow() != null && sector.seatsPerRow() > 0) {
+            return sector.seatsPerRow();
+        }
+        // Adaptive distribution based on sector capacity when no explicit venue geometry is supplied
+        int capacity = sector.totalCapacity();
+        if (capacity <= 50) return 10;
+        if (capacity <= 200) return 20;
+        if (capacity <= 1000) return 30;
+        if (capacity <= 5000) return 40;
+        return 60; // Mass stadium sectors
     }
 
     @Override

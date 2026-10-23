@@ -116,7 +116,7 @@ public class EventCreationStepDefinitions {
                 "{}",
                 "{}",
                 List.of(new CreateEventCommand.SectorInput(
-                        "Sector A", "GENERAL_ADMISSION", 100, BigDecimal.TEN, BigDecimal.ONE, "USD"
+                        "Sector A", "GENERAL_ADMISSION", 100, BigDecimal.TEN, BigDecimal.ONE, "ARS"
                 ))
         );
 
@@ -153,7 +153,7 @@ public class EventCreationStepDefinitions {
                 "{}",
                 "{}",
                 List.of(new CreateEventCommand.SectorInput(
-                        "General", "GENERAL_ADMISSION", 500, BigDecimal.valueOf(30), BigDecimal.valueOf(3), "USD"
+                        "General", "GENERAL_ADMISSION", 500, BigDecimal.valueOf(3000), BigDecimal.valueOf(300), "ARS"
                 ))
         );
         EventCreateResult res = mediator.dispatch(command);

@@ -31,7 +31,7 @@ class EventDomainUnitTest {
         Instant ends = now.plus(5, ChronoUnit.HOURS);
 
         VenueSummary venue = new VenueSummary("ven_1", "Test Venue", "City", "Country", "Addr", BigDecimal.ZERO, BigDecimal.ZERO);
-        EventSectorSummary sector = new EventSectorSummary("sec_1", "VIP", "GA", 100, new BigDecimal("50.00"), new BigDecimal("5.00"), "USD");
+        EventSectorSummary sector = new EventSectorSummary("sec_1", "VIP", "GA", 100, new BigDecimal("50.00"), new BigDecimal("5.00"), "ARS");
 
         EventSummary event = new EventSummary(
                 "evt_1", "test-slug", "Test Event", EventStatus.PUBLISHED,
@@ -76,7 +76,7 @@ class EventDomainUnitTest {
     @DisplayName("Should throw InvalidSectorCapacityException when sector capacity is zero or negative")
     void shouldRejectInvalidSectorCapacity() {
         assertThrows(InvalidSectorCapacityException.class, () -> new EventSectorSummary(
-                "sec_1", "VIP", "GA", 0, new BigDecimal("50.00"), BigDecimal.ZERO, "USD"
+                "sec_1", "VIP", "GA", 0, new BigDecimal("50.00"), BigDecimal.ZERO, "ARS"
         ));
     }
 
@@ -84,7 +84,7 @@ class EventDomainUnitTest {
     @DisplayName("Should throw InvalidSectorPricingException when base price is non-positive")
     void shouldRejectInvalidSectorPricing() {
         assertThrows(InvalidSectorPricingException.class, () -> new EventSectorSummary(
-                "sec_1", "VIP", "GA", 100, BigDecimal.ZERO, BigDecimal.ZERO, "USD"
+                "sec_1", "VIP", "GA", 100, BigDecimal.ZERO, BigDecimal.ZERO, "ARS"
         ));
     }
 }

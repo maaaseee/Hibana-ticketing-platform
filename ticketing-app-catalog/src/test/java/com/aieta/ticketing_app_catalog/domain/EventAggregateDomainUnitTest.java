@@ -31,7 +31,7 @@ class EventAggregateDomainUnitTest {
                 capacity,
                 new BigDecimal("50.00"),
                 new BigDecimal("5.00"),
-                "USD"
+                "ARS"
         );
     }
 
@@ -160,10 +160,10 @@ class EventAggregateDomainUnitTest {
     @DisplayName("Should reject sector with zero or negative capacity")
     void shouldRejectInvalidSectorCapacity() {
         assertThrows(InvalidSectorCapacityException.class, () ->
-                new EventSector("sec_01", "Sector", "GENERAL", 0, new BigDecimal("10.00"), BigDecimal.ZERO, "USD")
+                new EventSector("sec_01", "Sector", "GENERAL", 0, new BigDecimal("10.00"), BigDecimal.ZERO, "ARS")
         );
         assertThrows(InvalidSectorCapacityException.class, () ->
-                new EventSector("sec_01", "Sector", "GENERAL", -5, new BigDecimal("10.00"), BigDecimal.ZERO, "USD")
+                new EventSector("sec_01", "Sector", "GENERAL", -5, new BigDecimal("10.00"), BigDecimal.ZERO, "ARS")
         );
     }
 
@@ -171,10 +171,10 @@ class EventAggregateDomainUnitTest {
     @DisplayName("Should reject sector with negative price or fee")
     void shouldRejectInvalidSectorPricing() {
         assertThrows(InvalidSectorPricingException.class, () ->
-                new EventSector("sec_01", "Sector", "GENERAL", 100, new BigDecimal("-1.00"), BigDecimal.ZERO, "USD")
+                new EventSector("sec_01", "Sector", "GENERAL", 100, new BigDecimal("-1.00"), BigDecimal.ZERO, "ARS")
         );
         assertThrows(InvalidSectorPricingException.class, () ->
-                new EventSector("sec_01", "Sector", "GENERAL", 100, new BigDecimal("10.00"), new BigDecimal("-0.01"), "USD")
+                new EventSector("sec_01", "Sector", "GENERAL", 100, new BigDecimal("10.00"), new BigDecimal("-0.01"), "ARS")
         );
     }
 }

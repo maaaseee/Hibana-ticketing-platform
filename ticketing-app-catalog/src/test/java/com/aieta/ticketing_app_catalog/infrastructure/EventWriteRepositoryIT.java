@@ -51,7 +51,7 @@ class EventWriteRepositoryIT {
                 250,
                 new BigDecimal("65.00"),
                 new BigDecimal("7.50"),
-                "USD"
+                "ARS"
         );
 
         Event event = Event.createNew(

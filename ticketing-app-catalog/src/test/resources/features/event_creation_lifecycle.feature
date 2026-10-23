@@ -17,8 +17,8 @@ Feature: Event Creation and Lifecycle Management
   Scenario: Organizer creates a new stadium event with multiple sectors
     Given an organizer with ID "org_amaryllis_live" and an existing venue "ven_estadio_nacional"
     When the organizer submits a request to create event "rock-stadium-fest" titled "Rock Stadium Festival"
-    And the event has a sector "VIP Section" with capacity 500 and price 150.00 "USD"
-    And the event has a sector "General Admission" with capacity 2500 and price 50.00 "USD"
+    And the event has a sector "VIP Section" with capacity 500 and price 15000.00 "ARS"
+    And the event has a sector "General Admission" with capacity 2500 and price 5000.00 "ARS"
     Then the event is accepted with status "DRAFT"
     And the total estimated capacity is calculated as 3000
 

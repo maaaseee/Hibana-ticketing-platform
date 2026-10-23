@@ -17,7 +17,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@DisplayName("Unit Test: BatchGenerateSeatsCommandHandler")
+@DisplayName("Unit Test: BatchGenerateSeatsCommandHandler & SectorDefinition validations")
 class BatchGenerateSeatsCommandHandlerTest {
 
     private SeatRepositoryPort seatRepositoryPort;
@@ -30,15 +30,15 @@ class BatchGenerateSeatsCommandHandlerTest {
     }
 
     @Test
-    @DisplayName("Should generate correct number of physical seats with AVAILABLE status")
+    @DisplayName("Should generate correct number of physical seats with AVAILABLE status in ARS currency")
     void shouldGenerateSeatsAcrossSectors() {
         SectorDefinition gaSector = new SectorDefinition(
                 "sec_ga", "General Admission", "GENERAL_ADMISSION", 50,
-                new BigDecimal("50.00"), new BigDecimal("5.00"), "USD"
+                new BigDecimal("5000.00"), new BigDecimal("500.00"), "ARS"
         );
         SectorDefinition numberedSector = new SectorDefinition(
                 "sec_num", "Numbered Section", "NUMBERED_SEATS", 40,
-                new BigDecimal("100.00"), new BigDecimal("10.00"), "USD"
+                new BigDecimal("10000.00"), new BigDecimal("1000.00"), "ARS", 10
         );
 
         BatchGenerateSeatsCommand command = new BatchGenerateSeatsCommand(
@@ -56,5 +56,62 @@ class BatchGenerateSeatsCommandHandlerTest {
         assertEquals(90, savedSeats.size());
         assertTrue(savedSeats.stream().allMatch(s -> s.getStatus() == SeatStatus.AVAILABLE));
         assertTrue(savedSeats.stream().allMatch(s -> s.getEventId().equals("evt_test")));
+        assertTrue(savedSeats.stream().allMatch(s -> "ARS".equals(s.getPrice().currency())));
+
+        // Verify numbered sector respected custom seatsPerRow (10 seats/row -> R1..R4)
+        List<Seat> numberedSeats = savedSeats.stream()
+                .filter(s -> "sec_num".equals(s.getSectorId()))
+                .toList();
+        assertEquals(40, numberedSeats.size());
+        assertTrue(numberedSeats.stream().anyMatch(s -> "R4".equals(s.getRowIdentifier())));
+    }
+
+    @Test
+    @DisplayName("SectorDefinition validation: should reject basePrice <= 0")
+    void shouldRejectNonPositiveBasePrice() {
+        assertThrows(IllegalArgumentException.class, () -> new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                BigDecimal.ZERO, new BigDecimal("500.00"), "ARS"
+        ));
+
+        assertThrows(IllegalArgumentException.class, () -> new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                new BigDecimal("-100.00"), new BigDecimal("500.00"), "ARS"
+        ));
+    }
+
+    @Test
+    @DisplayName("SectorDefinition validation: should reject serviceFee <= 0")
+    void shouldRejectNonPositiveServiceFee() {
+        assertThrows(IllegalArgumentException.class, () -> new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                new BigDecimal("5000.00"), BigDecimal.ZERO, "ARS"
+        ));
+
+        assertThrows(IllegalArgumentException.class, () -> new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                new BigDecimal("5000.00"), new BigDecimal("-50.00"), "ARS"
+        ));
+    }
+
+    @Test
+    @DisplayName("SectorDefinition validation: should reject foreign non-ARS currencies")
+    void shouldRejectNonArsCurrency() {
+        assertThrows(IllegalArgumentException.class, () -> new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                new BigDecimal("5000.00"), new BigDecimal("500.00"), "USD"
+        ));
+
+        assertThrows(IllegalArgumentException.class, () -> new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                new BigDecimal("5000.00"), new BigDecimal("500.00"), "EUR"
+        ));
+
+        // Default to ARS if null or blank
+        SectorDefinition defaultCurrency = new SectorDefinition(
+                "sec_1", "Platea", "NUMBERED_SEATS", 100,
+                new BigDecimal("5000.00"), new BigDecimal("500.00"), null
+        );
+        assertEquals("ARS", defaultCurrency.currency());
     }
 }

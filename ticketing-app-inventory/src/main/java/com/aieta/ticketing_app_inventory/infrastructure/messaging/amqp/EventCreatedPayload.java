@@ -17,6 +17,11 @@ public record EventCreatedPayload(
             int totalCapacity,
             BigDecimal basePrice,
             BigDecimal serviceFee,
-            String currency
-    ) {}
+            String currency,
+            Integer seatsPerRow
+    ) {
+        public SectorItemPayload(String sectorId, String name, String type, int totalCapacity, BigDecimal basePrice, BigDecimal serviceFee, String currency) {
+            this(sectorId, name, type, totalCapacity, basePrice, serviceFee, currency, null);
+        }
+    }
 }

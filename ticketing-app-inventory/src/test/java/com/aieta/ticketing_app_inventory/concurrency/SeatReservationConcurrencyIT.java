@@ -10,8 +10,6 @@ import com.aieta.ticketing_app_inventory.domain.model.Money;
 import com.aieta.ticketing_app_inventory.domain.model.Seat;
 import com.aieta.ticketing_app_inventory.domain.model.SeatId;
 import com.aieta.ticketing_app_inventory.domain.ports.DistributedLockPort;
-import com.aieta.ticketing_app_inventory.domain.ports.ReservationRepositoryPort;
-import com.aieta.ticketing_app_inventory.domain.ports.SeatRepositoryPort;
 import com.aieta.ticketing_app_inventory.infrastructure.persistence.adapter.JpaReservationRepositoryAdapter;
 import com.aieta.ticketing_app_inventory.infrastructure.persistence.adapter.JpaSeatRepositoryAdapter;
 import com.aieta.ticketing_app_inventory.infrastructure.persistence.repository.SpringDataOutboxRepository;
@@ -31,7 +29,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -110,8 +107,7 @@ class SeatReservationConcurrencyIT {
                 "sec_vip",
                 "Row-1",
                 "104",
-                Money.of(new BigDecimal("180.00"), "USD")
-        );
+                Money.of(new BigDecimal("25000.00"), "ARS"));
         seatRepositoryAdapter.save(seat);
 
         CountDownLatch readyLatch = new CountDownLatch(concurrencyLevel);
@@ -167,11 +163,14 @@ class SeatReservationConcurrencyIT {
             // Invariant 2: Exactly 499 threads were rejected
             assertEquals(concurrencyLevel - 1, rejections.size(), "Remaining 499 threads must be rejected");
 
-            // Invariant 3: All 499 rejections are SeatAlreadyHeldException (HTTP 409 Conflict)
-            assertEquals(concurrencyLevel - 1, conflictCount.get(), "All 499 rejected threads must encounter SeatAlreadyHeldException");
+            // Invariant 3: All 499 rejections are SeatAlreadyHeldException (HTTP 409
+            // Conflict)
+            assertEquals(concurrencyLevel - 1, conflictCount.get(),
+                    "All 499 rejected threads must encounter SeatAlreadyHeldException");
 
             // Invariant 4: Zero double-booking in database
-            assertEquals(1, reservationRepository.countBySeatId(seatId), "Database must contain exactly 1 reservation record for this seat");
+            assertEquals(1, reservationRepository.countBySeatId(seatId),
+                    "Database must contain exactly 1 reservation record for this seat");
 
             // Invariant 5: Lock is active
             assertTrue(lockAdapter.hasLock(eventId, seatId), "Seat lock must be held");
@@ -181,7 +180,8 @@ class SeatReservationConcurrencyIT {
             assertEquals(SeatStatus.HELD, persistedSeat.getStatus(), "Seat status in DB must be HELD");
 
             // Invariant 7: Outbox event was created for the winning reservation
-            assertEquals(1, outboxRepository.count(), "Exactly 1 Outbox event must be persisted for the winning reservation");
+            assertEquals(1, outboxRepository.count(),
+                    "Exactly 1 Outbox event must be persisted for the winning reservation");
         }
     }
 }

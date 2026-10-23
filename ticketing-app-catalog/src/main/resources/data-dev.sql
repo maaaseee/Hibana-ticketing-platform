@@ -29,6 +29,6 @@ INSERT INTO events (
 
 INSERT INTO event_sectors (id, event_id, name, type, total_capacity, currency, base_price, service_fee)
 VALUES 
-    ('sec_coldplay_vip', 'evt_coldplay_2026', 'Cancha VIP Front', 'GENERAL_ADMISSION', 5000, 'USD', 180.00, 27.00),
-    ('sec_coldplay_andes', 'evt_coldplay_2026', 'Tribuna Andes', 'NUMBERED_SEATS', 12000, 'USD', 85.00, 12.75)
+    ('sec_coldplay_vip', 'evt_coldplay_2026', 'Cancha VIP Front', 'GENERAL_ADMISSION', 5000, 'ARS', 180.00, 27.00),
+    ('sec_coldplay_andes', 'evt_coldplay_2026', 'Tribuna Andes', 'NUMBERED_SEATS', 12000, 'ARS', 85.00, 12.75)
 ON CONFLICT (id) DO NOTHING;
