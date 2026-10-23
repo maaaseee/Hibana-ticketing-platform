@@ -259,8 +259,8 @@ describe('EventsCatalogView.spec.ts - Catalog Shows & Filters Experience', () =>
     })
   })
 
-  describe('Prominent Min Price Badge on Cards', () => {
-    it('displays prominent "Entradas desde $X" badge on all catalog cards matching getMinEventPrice', async () => {
+  describe('Card Actions and Presentation', () => {
+    it('displays action buttons and titles on all catalog cards', async () => {
       const { pinia, router } = setupTestEnvironment()
       router.push('/events')
       await router.isReady()
@@ -277,10 +277,10 @@ describe('EventsCatalogView.spec.ts - Catalog Shows & Filters Experience', () =>
 
       cards.forEach((card, idx) => {
         const correspondingEvent = catalog.upcomingEvents[idx]!
-        const minPrice = getMinEventPrice(correspondingEvent)
 
-        expect(card.text()).toContain('Entradas desde')
-        expect(card.text()).toContain(`$${minPrice}`)
+        expect(card.text()).toContain(correspondingEvent.title)
+        expect(card.find('[data-testid="event-card-buy"]').exists()).toBe(true)
+        expect(card.find('[data-testid="event-card-more-info"]').exists()).toBe(true)
       })
     })
   })

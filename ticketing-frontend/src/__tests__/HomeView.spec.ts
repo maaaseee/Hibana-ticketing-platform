@@ -79,7 +79,7 @@ describe('HomeView.spec.ts - Landing Page & Catalog Sections', () => {
     })
   })
 
-  it('renders the prominent "Entradas desde $X" badge on every event card in both sections', async () => {
+  it('renders every event card in both sections with its action buttons', async () => {
     const { pinia, router } = setupTestEnvironment()
     router.push('/')
     await router.isReady()
@@ -96,30 +96,31 @@ describe('HomeView.spec.ts - Landing Page & Catalog Sections', () => {
     expect(articles).toHaveLength(6)
 
     articles.forEach(card => {
-      const badge = card.find('span.inline-flex')
-      expect(badge.exists()).toBe(true)
-      expect(badge.text()).toContain('Entradas desde')
-      expect(badge.text()).toMatch(/Entradas desde\s*\$\d+/)
+      const buyBtn = card.find('[data-testid="event-card-buy"]')
+      expect(buyBtn.exists()).toBe(true)
+      expect(buyBtn.text()).toContain('Comprar')
+
+      const moreInfoBtn = card.find('[data-testid="event-card-more-info"]')
+      expect(moreInfoBtn.exists()).toBe(true)
+      expect(moreInfoBtn.text()).toContain('Más info')
     })
 
-    // Verify badge values match getMinEventPrice for recent cards (first 3)
+    // Verify titles match for recent cards (first 3)
     const expectedRecent = catalog.recentlyAddedEvents.slice(0, 3)
     expectedRecent.forEach((ev, idx) => {
       const card = articles[idx]!
-      const minPrice = getMinEventPrice(ev)
-      expect(card.text()).toContain(`$${minPrice}`)
+      expect(card.text()).toContain(ev.title)
     })
 
-    // Verify badge values match getMinEventPrice for upcoming cards (last 3)
+    // Verify titles match for upcoming cards (last 3)
     const expectedUpcoming = catalog.upcomingEvents.slice(0, 3)
     expectedUpcoming.forEach((ev, idx) => {
       const card = articles[3 + idx]!
-      const minPrice = getMinEventPrice(ev)
-      expect(card.text()).toContain(`$${minPrice}`)
+      expect(card.text()).toContain(ev.title)
     })
   })
 
-  it('navigates to /event/:id when clicking any event card', async () => {
+  it('navigates to /event/:id when clicking buy button or image on any event card', async () => {
     const { pinia, router } = setupTestEnvironment()
     router.push('/')
     await router.isReady()
@@ -137,7 +138,8 @@ describe('HomeView.spec.ts - Landing Page & Catalog Sections', () => {
     const cards = wrapper.findAll('article')
     const firstCard = cards[0]!
 
-    await firstCard.trigger('click')
+    const buyButton = firstCard.find('[data-testid="event-card-buy"]')
+    await buyButton.trigger('click')
 
     expect(pushSpy).toHaveBeenCalledWith({
       name: 'event-detail',
@@ -189,5 +191,22 @@ describe('HomeView.spec.ts - Landing Page & Catalog Sections', () => {
       name: 'event-detail',
       params: { id: activeSlide.id }
     })
+  })
+
+  it('renders "Conoce los Lugares y Recintos" section with venue cards and modal trigger info', async () => {
+    const { pinia, router } = setupTestEnvironment()
+    router.push('/')
+    await router.isReady()
+
+    const wrapper = mount(HomeView, {
+      global: {
+        plugins: [pinia, router]
+      }
+    })
+
+    expect(wrapper.text()).toContain('Conoce los Lugares y Recintos')
+    expect(wrapper.text()).toContain('Estadio Monumental')
+    expect(wrapper.text()).toContain('Arena Buenos Aires')
+    expect(wrapper.text()).toContain('Teatro Rex')
   })
 })

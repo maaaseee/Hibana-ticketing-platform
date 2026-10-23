@@ -14,13 +14,25 @@ export const mockVenues: VenueInfo[] = [
       available: true,
       title: 'Estacionamiento Oficial Tiro Federal & Ciudad Universitaria',
       description: 'Capacidad para 3.500 vehículos con control de acceso automatizado y vigilancia privada permanente durante todo el evento.',
-      price: 20,
+      price: 20000,
       accessRoutes: [
         'Ingreso vehicular por Av. Cantilo o Av. del Libertador',
         'Acceso peatonal directo al estadio por Puente Labruna',
         'Carriles exclusivos para ingreso ágil con código QR de estacionamiento'
       ],
       bookingPassUrl: '/parking/estadio-monumental'
+    },
+    transit: {
+      busLines: ['15', '28', '29', '42', '107', '130'],
+      trains: [
+        'FFCC Belgrano Norte (Estación Ciudad Universitaria - a 300m)',
+        'FFCC Mitre (Estación Núñez o Belgrano C)'
+      ],
+      subway: [
+        'Subte Línea D (Estación Congreso de Tucumán - combinación con colectivos 29 y 130)'
+      ],
+      googleMapsUrl: 'https://maps.google.com/?q=Estadio+Monumental+River+Plate+Buenos+Aires',
+      embedQuery: 'Estadio Monumental, Av. Figueroa Alcorta 7597, Buenos Aires'
     },
     paymentMethods: [
       {
@@ -52,51 +64,121 @@ export const mockVenues: VenueInfo[] = [
       {
         id: 'sec-monumental-campo-vip',
         name: 'Campo Delantero VIP',
-        price: 140,
-        currency: 'USD',
+        price: 140000,
+        currency: 'ARS',
         capacity: 12000,
         type: 'VIP',
         description: 'Sector frontal frente al escenario, vista directa preferencial y accesos rápidos exclusivos.',
         status: 'AVAILABLE'
       },
       {
-        id: 'sec-monumental-platea-baja',
-        name: 'Platea San Martín / Belgrano Baja',
-        price: 110,
-        currency: 'USD',
-        capacity: 18000,
-        type: 'NUMBERED_SEATS',
-        description: 'Butacas numeradas laterales con excelente ángulo de visión y elevación acústica.',
-        status: 'AVAILABLE'
-      },
-      {
-        id: 'sec-monumental-platea-alta',
-        name: 'Platea San Martín / Belgrano Alta',
-        price: 75,
-        currency: 'USD',
-        capacity: 22000,
-        type: 'NUMBERED_SEATS',
-        description: 'Ubicaciones numeradas en nivel superior con panorámica completa del estadio.',
-        status: 'AVAILABLE'
-      },
-      {
         id: 'sec-monumental-campo-general',
         name: 'Campo General',
-        price: 50,
-        currency: 'USD',
+        price: 50000,
+        currency: 'ARS',
         capacity: 16000,
         type: 'GENERAL_ADMISSION',
         description: 'Acceso de pie a campo central detrás del sector VIP con amplio espacio.',
         status: 'AVAILABLE'
       },
       {
-        id: 'sec-monumental-sivori-alta',
-        name: 'Tribuna Sívori / Centenario Alta',
-        price: 40,
-        currency: 'USD',
-        capacity: 16567,
+        id: 'sec-monumental-platea-baja-sanmartin-norte',
+        name: 'Platea San Martín Baja (Visión Reducida)',
+        price: 75000,
+        currency: 'ARS',
+        capacity: 2500,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación numerada en lateral oeste bajo sector norte con ángulo sesgado hacia el escenario Sívori.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-baja-sanmartin',
+        name: 'Platea San Martín Baja',
+        price: 110000,
+        currency: 'ARS',
+        capacity: 6500,
+        type: 'NUMBERED_SEATS',
+        description: 'Butacas numeradas en lateral oeste bajo con excelente ángulo de visión y elevación acústica.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-alta-sanmartin-norte',
+        name: 'Platea San Martín Alta (Visión Reducida)',
+        price: 50000,
+        currency: 'ARS',
+        capacity: 3000,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación alta en lateral oeste tramo norte a precio preferencial por ángulo ciego.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-alta-sanmartin',
+        name: 'Platea San Martín Alta',
+        price: 75000,
+        currency: 'ARS',
+        capacity: 8000,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicaciones numeradas en lateral oeste alto con panorámica completa del estadio.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-baja-belgrano-norte',
+        name: 'Platea Belgrano Baja (Visión Reducida)',
+        price: 75000,
+        currency: 'ARS',
+        capacity: 2500,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación numerada en lateral este bajo sector norte con ángulo ciego relativo al escenario.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-baja-belgrano',
+        name: 'Platea Belgrano Baja',
+        price: 110000,
+        currency: 'ARS',
+        capacity: 6500,
+        type: 'NUMBERED_SEATS',
+        description: 'Butacas numeradas en lateral este bajo con cercanía y visibilidad óptima.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-alta-belgrano-norte',
+        name: 'Platea Belgrano Alta (Visión Reducida)',
+        price: 50000,
+        currency: 'ARS',
+        capacity: 3000,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación alta en lateral este tramo norte a precio promocional por visión reducida.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-platea-alta-belgrano',
+        name: 'Platea Belgrano Alta',
+        price: 75000,
+        currency: 'ARS',
+        capacity: 8000,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicaciones numeradas en lateral este alto con vista amplia del espectáculo.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-centenario-baja',
+        name: 'Tribuna Centenario Baja',
+        price: 45000,
+        currency: 'ARS',
+        capacity: 8000,
         type: 'GENERAL_ADMISSION',
-        description: 'Gradas generales en cabeceras superiores con visual completa del escenario.',
+        description: 'Ubicación en cabecera sur baja frente directo al escenario monumental.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-monumental-centenario-alta',
+        name: 'Tribuna Centenario Alta',
+        price: 38000,
+        currency: 'ARS',
+        capacity: 8567,
+        type: 'GENERAL_ADMISSION',
+        description: 'Gradas generales en cabecera sur alta con perspectiva panorámica de todo el estadio.',
         status: 'AVAILABLE'
       }
     ]
@@ -114,13 +196,24 @@ export const mockVenues: VenueInfo[] = [
       available: true,
       title: 'Estacionamiento Subterráneo Techado Arena Buenos Aires',
       description: '800 cocheras techadas con seguridad 24 horas y celdas de recarga para vehículos híbridos y eléctricos.',
-      price: 15,
+      price: 15000,
       accessRoutes: [
         'Ingreso vehicular exclusivo por Humboldt 450 y Juan B. Justo',
         'Conexión directa por ascensores a los niveles de Platea y Palcos',
         'Salida directa hacia Av. Corrientes y Av. Juan B. Justo'
       ],
       bookingPassUrl: '/parking/arena-buenos-aires'
+    },
+    transit: {
+      busLines: ['34', '42', '55', '65', '71', '76', '109', '112', '166'],
+      trains: [
+        'FFCC San Martín (Estación Villa Crespo - a 100m)'
+      ],
+      subway: [
+        'Subte Línea B (Estación Dorrego - a 250m)'
+      ],
+      googleMapsUrl: 'https://maps.google.com/?q=Movistar+Arena+Humboldt+450+Buenos+Aires',
+      embedQuery: 'Humboldt 450, Villa Crespo, Buenos Aires'
     },
     paymentMethods: [
       {
@@ -152,51 +245,81 @@ export const mockVenues: VenueInfo[] = [
       {
         id: 'sec-arena-campo-vip',
         name: 'Campo VIP Frontal',
-        price: 95,
-        currency: 'USD',
+        price: 95000,
+        currency: 'ARS',
         capacity: 3000,
         type: 'VIP',
         description: 'Proximidad inmediata al escenario con visuales y sonido de sala inmersivos.',
         status: 'AVAILABLE'
       },
       {
-        id: 'sec-arena-platea-baja',
-        name: 'Platea Baja Preferencial',
-        price: 85,
-        currency: 'USD',
-        capacity: 4500,
-        type: 'NUMBERED_SEATS',
-        description: 'Butacas numeradas en anillo bajo con acústica de precisión envolvente.',
-        status: 'AVAILABLE'
-      },
-      {
         id: 'sec-arena-campo-general',
         name: 'Campo General',
-        price: 65,
-        currency: 'USD',
+        price: 65000,
+        currency: 'ARS',
         capacity: 3500,
         type: 'GENERAL_ADMISSION',
         description: 'Ubicación de pie central con acceso fluido a barras gastronómicas.',
         status: 'AVAILABLE'
       },
       {
-        id: 'sec-arena-platea-alta-central',
-        name: 'Platea Alta Central',
-        price: 55,
-        currency: 'USD',
-        capacity: 2500,
+        id: 'sec-arena-platea-baja-lateral-oeste',
+        name: 'Platea Baja Lateral Oeste',
+        price: 85000,
+        currency: 'ARS',
+        capacity: 1500,
         type: 'NUMBERED_SEATS',
-        description: 'Butacas numeradas en anillo superior con perspectiva central del show.',
+        description: 'Butacas numeradas en anillo bajo lateral oeste con acústica envolvente.',
         status: 'AVAILABLE'
       },
       {
-        id: 'sec-arena-platea-alta-lateral',
-        name: 'Platea Alta Lateral',
-        price: 35,
-        currency: 'USD',
+        id: 'sec-arena-platea-baja-lateral-este',
+        name: 'Platea Baja Lateral Este',
+        price: 85000,
+        currency: 'ARS',
         capacity: 1500,
         type: 'NUMBERED_SEATS',
-        description: 'Ubicación numerada lateral accesible con visual completa del recinto.',
+        description: 'Butacas numeradas en anillo bajo lateral este con vista privilegiada del show.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-arena-platea-baja-cabecera',
+        name: 'Platea Baja Cabecera Sur',
+        price: 80000,
+        currency: 'ARS',
+        capacity: 1500,
+        type: 'NUMBERED_SEATS',
+        description: 'Butacas numeradas en anillo bajo frontal con visual directa hacia el escenario.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-arena-platea-alta-lateral-oeste',
+        name: 'Platea Alta Lateral Oeste',
+        price: 50000,
+        currency: 'ARS',
+        capacity: 1300,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación numerada en nivel alto lateral oeste con panorámica completa del recinto.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-arena-platea-alta-lateral-este',
+        name: 'Platea Alta Lateral Este',
+        price: 50000,
+        currency: 'ARS',
+        capacity: 1300,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación numerada en nivel alto lateral este con visual de 360 grados.',
+        status: 'AVAILABLE'
+      },
+      {
+        id: 'sec-arena-platea-alta-cabecera',
+        name: 'Platea Alta Cabecera Sur',
+        price: 45000,
+        currency: 'ARS',
+        capacity: 1400,
+        type: 'NUMBERED_SEATS',
+        description: 'Ubicación numerada en nivel alto frente directo al escenario.',
         status: 'AVAILABLE'
       }
     ]
@@ -214,13 +337,26 @@ export const mockVenues: VenueInfo[] = [
       available: true,
       title: 'Convenio Garajes Comerciales Corrientes y Sarmiento',
       description: 'Convenio preferencial con garajes comerciales a menos de 100 metros del teatro (Av. Corrientes 880 y Sarmiento 940). 20% de descuento validando tu entrada digital Amaryllis.',
-      price: 10,
+      price: 10000,
       accessRoutes: [
         'Ingreso por Av. Corrientes 880 (Garage Central Corrientes)',
         'Ingreso alternativo por Sarmiento 940 (Estacionamiento Rex)',
         'Acceso peatonal a 2 minutos caminando de la puerta del teatro sobre calle peatonal nocturna'
       ],
       bookingPassUrl: '/parking/teatro-rex'
+    },
+    transit: {
+      busLines: ['5', '6', '7', '9', '24', '26', '50', '111', '115', '140', '180'],
+      trains: [
+        'Conexión directa vía Subte con terminales Retiro, Constitución y Once'
+      ],
+      subway: [
+        'Subte Línea B (Estación Carlos Pellegrini - a 50m)',
+        'Subte Línea D (Estación 9 de Julio - a 80m)',
+        'Subte Línea C (Estación Diagonal Norte - a 100m)'
+      ],
+      googleMapsUrl: 'https://maps.google.com/?q=Teatro+Gran+Rex+Av+Corrientes+857+Buenos+Aires',
+      embedQuery: 'Av. Corrientes 857, San Nicolás, Buenos Aires'
     },
     paymentMethods: [
       {
@@ -250,10 +386,20 @@ export const mockVenues: VenueInfo[] = [
     ],
     sectors: [
       {
+        id: 'sec-rex-palcos-izq',
+        name: 'Palcos Bajos Izquierda',
+        price: 90000,
+        currency: 'ARS',
+        capacity: 100,
+        type: 'VIP',
+        description: 'Exclusivos palcos privados en el lateral izquierdo con atención preferencial y vista directa.',
+        status: 'AVAILABLE'
+      },
+      {
         id: 'sec-rex-platea-platino',
         name: 'Platea Platino (Filas 1–12)',
-        price: 80,
-        currency: 'USD',
+        price: 80000,
+        currency: 'ARS',
         capacity: 700,
         type: 'VIP',
         description: 'Ubicación premium en primeras filas de platea baja frente al proscenio.',
@@ -262,18 +408,28 @@ export const mockVenues: VenueInfo[] = [
       {
         id: 'sec-rex-platea-oro',
         name: 'Platea Oro (Filas 13–25)',
-        price: 65,
-        currency: 'USD',
+        price: 65000,
+        currency: 'ARS',
         capacity: 850,
         type: 'NUMBERED_SEATS',
         description: 'Platea baja central con excelente acústica de sala teatral.',
         status: 'AVAILABLE'
       },
       {
+        id: 'sec-rex-palcos-der',
+        name: 'Palcos Bajos Derecha',
+        price: 90000,
+        currency: 'ARS',
+        capacity: 100,
+        type: 'VIP',
+        description: 'Exclusivos palcos privados en el lateral derecho con vista panorámica del proscenio.',
+        status: 'AVAILABLE'
+      },
+      {
         id: 'sec-rex-super-pullman',
-        name: 'Super Pullman',
-        price: 50,
-        currency: 'USD',
+        name: 'Super Pullman (Primer Piso)',
+        price: 50000,
+        currency: 'ARS',
         capacity: 650,
         type: 'NUMBERED_SEATS',
         description: 'Primer piso voladizo con barandas despejadas y acústica óptima.',
@@ -281,9 +437,9 @@ export const mockVenues: VenueInfo[] = [
       },
       {
         id: 'sec-rex-pullman',
-        name: 'Pullman',
-        price: 38,
-        currency: 'USD',
+        name: 'Pullman (Segundo Nivel)',
+        price: 38000,
+        currency: 'ARS',
         capacity: 600,
         type: 'NUMBERED_SEATS',
         description: 'Segundo nivel del teatro con excelente campo visual panorámico.',
@@ -292,9 +448,9 @@ export const mockVenues: VenueInfo[] = [
       {
         id: 'sec-rex-tertulia',
         name: 'Tertulia Superior',
-        price: 25,
-        currency: 'USD',
-        capacity: 462,
+        price: 25000,
+        currency: 'ARS',
+        capacity: 262,
         type: 'NUMBERED_SEATS',
         description: 'Nivel superior del auditorio histórico con precio más accesible.',
         status: 'AVAILABLE'
@@ -312,3 +468,4 @@ export function getVenueById(id: string): VenueInfo | undefined {
 export function getVenueByName(name: string): VenueInfo | undefined {
   return mockVenues.find(v => v.name === name || v.shortName === name)
 }
+

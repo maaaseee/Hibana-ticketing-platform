@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useCatalogStore, getMinEventPrice } from '../stores/catalog'
 import type { EventItem } from '../types'
+import EventCard from '../components/ui/EventCard.vue'
 
 const catalog = useCatalogStore()
 const router = useRouter()
@@ -201,21 +202,27 @@ function resetFilters() {
 </script>
 
 <template>
-  <div class="flex flex-col w-full min-h-[calc(100vh-64px)] bg-[#0c141f] text-[#f1f5f9] pb-24">
-    <!-- Header Hero con Fondo de Recital, Efecto de Carrusel para Bajar Intensidad e Ink Font (Neuegrid) -->
-    <header class="relative w-full overflow-hidden bg-[#0c141f] border-b border-[#23354d] pt-14 pb-14 md:pt-16 md:pb-16 group">
-      <!-- Imagen de Fondo de un Recital en Vivo -->
-      <div
-        class="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-1000 ease-out group-hover:scale-105"
-        style="background-image: url('https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=2000&q=80');"
-      ></div>
+  <div class="flex flex-col w-full min-h-[calc(100vh-64px)] bg-surface text-high-emphasis pb-24 relative overflow-hidden">
+    <!-- Ambient Topography Background: Top side of the shows list, slowly vanishing downwards (+300px extended, softened opacity) -->
+    <div
+      class="shows-topography-wrapper pointer-events-none absolute inset-x-0 top-0 h-[940px] overflow-hidden z-0"
+      aria-hidden="true"
+    >
+      <!-- Base Topographic Elevation Map with Progressive Downward Mask & Subdued Opacity -->
+      <div class="w-full h-full bg-topography topography-hero-mask opacity-65"></div>
 
-      <!-- Mismo efecto del carrusel para bajar la intensidad de la imagen (Gradiente y Overlay Oscuro) -->
-      <div class="absolute inset-0 bg-gradient-to-t from-[#0c141f] via-[#0c141f]/80 to-[#0c141f]/40 backdrop-blur-[0.5px]"></div>
+      <!-- Radial Atmospheric Glow (Subtle Electric Cyan accent on title area) -->
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_75%_50%_at_50%_15%,rgba(0,207,243,0.08),transparent_70%)] pointer-events-none"></div>
 
+      <!-- Seamless Downward Vanish Gradient Overlay into Deep Surface Canvas -->
+      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-surface/50 to-surface pointer-events-none"></div>
+    </div>
+
+    <!-- Header Hero con Skyvia Font y Controles de Filtrado (Sin barra/border separador) -->
+    <header class="relative z-10 w-full overflow-hidden pt-14 pb-8 md:pt-16 md:pb-10">
       <div class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center gap-7">
-        <!-- Título con Ink Font (Neuegrid / Bricolage Grotesque) -->
-        <h1 class="font-ink text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#f1f5f9] tracking-tight drop-shadow-lg">
+        <!-- Título con Skyvia Demo Bold -->
+        <h1 class="font-skyvia text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-high-emphasis tracking-tight drop-shadow-lg">
           Cartelera de Shows
         </h1>
 
@@ -228,15 +235,15 @@ function resetFilters() {
               @input="handleSearchInput"
               type="text"
               placeholder="Buscar por show o artista..."
-              class="w-full bg-[#141e2e]/90 backdrop-blur-md border border-[#23354d] text-[#f1f5f9] placeholder-[#64748b] rounded-xl py-2.5 pl-10 pr-9 font-mono text-xs focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] outline-none transition-all shadow-inner"
+              class="w-full bg-surface-card/90 backdrop-blur-md border border-border-subtle text-high-emphasis placeholder-muted rounded-xl py-2.5 pl-10 pr-9 font-mono text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-inner"
             />
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
+            <span class="material-symbols-outlined absolute left-3 top-2.5 text-muted-light text-[18px] pointer-events-none">
               search
             </span>
             <button
               v-if="searchName"
               @click="clearSearch"
-              class="absolute right-3 top-2.5 text-[#94a3b8] hover:text-white transition-colors cursor-pointer"
+              class="absolute right-3 top-2.5 text-muted-light hover:text-white transition-colors cursor-pointer"
               title="Limpiar búsqueda"
             >
               <span class="material-symbols-outlined text-[18px]">close</span>
@@ -247,17 +254,17 @@ function resetFilters() {
           <div class="relative w-full md:w-64">
             <select
               v-model="selectedMonth"
-              class="w-full bg-[#141e2e]/90 backdrop-blur-md border border-[#23354d] text-[#f1f5f9] rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] outline-none transition-all cursor-pointer appearance-none shadow-inner"
+              class="w-full bg-surface-card/90 backdrop-blur-md border border-border-subtle text-high-emphasis rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer appearance-none shadow-inner"
             >
               <option value="all">Todos los meses</option>
               <option v-for="month in availableMonths" :key="month.value" :value="month.value">
                 {{ month.label }}
               </option>
             </select>
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
+            <span class="material-symbols-outlined absolute left-3 top-2.5 text-muted-light text-[18px] pointer-events-none">
               calendar_month
             </span>
-            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
+            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-muted-light text-[18px] pointer-events-none">
               arrow_drop_down
             </span>
           </div>
@@ -266,16 +273,16 @@ function resetFilters() {
           <div class="relative w-full md:w-64">
             <select
               v-model="selectedVenue"
-              class="w-full bg-[#141e2e]/90 backdrop-blur-md border border-[#23354d] text-[#f1f5f9] rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-[#86cffb] focus:ring-1 focus:ring-[#86cffb] outline-none transition-all cursor-pointer appearance-none shadow-inner"
+              class="w-full bg-surface-card/90 backdrop-blur-md border border-border-subtle text-high-emphasis rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer appearance-none shadow-inner"
             >
               <option v-for="venue in venueOptions" :key="venue.value" :value="venue.value">
                 {{ venue.label }}
               </option>
             </select>
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
+            <span class="material-symbols-outlined absolute left-3 top-2.5 text-muted-light text-[18px] pointer-events-none">
               stadium
             </span>
-            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-[#94a3b8] text-[18px] pointer-events-none">
+            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-muted-light text-[18px] pointer-events-none">
               arrow_drop_down
             </span>
           </div>
@@ -284,83 +291,34 @@ function resetFilters() {
     </header>
 
     <!-- Listado Simple de Eventos (Ordenados por proximidad a su realización) -->
-    <main class="w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+    <main class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
       <div
         v-if="filteredEvents.length > 0"
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
       >
-        <article
+        <EventCard
           v-for="event in filteredEvents"
           :key="event.id"
-          @click="goToEvent(event.id)"
-          class="bg-[#141e2e] rounded-2xl border border-[#23354d] shadow-md overflow-hidden flex flex-col group hover:-translate-y-1 hover:border-[#86cffb]/60 transition-all duration-300 relative cursor-pointer"
-        >
-          <!-- Badge -->
-          <div
-            v-if="event.badgeText"
-            class="absolute top-3 right-3 z-10 font-mono text-[10px] px-2.5 py-0.5 rounded-md uppercase tracking-wider font-semibold border border-[#23354d]"
-            :class="event.badgeText === 'Confirmado' ? 'bg-[#162438]/90 text-[#4fdbc8] backdrop-blur-sm' : 'bg-[#00688f] text-white'"
-          >
-            {{ event.badgeText }}
-          </div>
-
-          <!-- Portada -->
-          <div class="w-full h-44 bg-[#1a293e] overflow-hidden">
-            <img
-              :src="event.imageUrl"
-              :alt="event.title"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              loading="lazy"
-            />
-          </div>
-
-          <!-- Información del Show -->
-          <div class="p-4 flex flex-col flex-1 gap-2">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono text-xs text-[#86cffb] font-semibold">
-                {{ event.date }}
-              </span>
-              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#00688f]/90 text-[#86cffb] border border-[#86cffb]/30 font-mono text-xs font-bold shadow-sm backdrop-blur-md">
-                <span>Entradas desde</span>
-                <span class="text-white">${{ getMinEventPrice(event) }}</span>
-              </span>
-            </div>
-
-            <h3 class="font-ink text-base text-[#f1f5f9] line-clamp-2 leading-tight group-hover:text-[#86cffb] transition-colors font-bold">
-              {{ event.title }}
-            </h3>
-
-            <p class="font-body text-xs text-[#94a3b8] line-clamp-2 leading-relaxed">
-              {{ event.subtitle }}
-            </p>
-
-            <div class="flex items-center justify-between pt-3 mt-auto border-t border-[#23354d]/50 font-body text-xs text-[#94a3b8]">
-              <span class="flex items-center gap-1 truncate">
-                <span class="material-symbols-outlined text-[15px] text-[#86cffb]">stadium</span>
-                <span class="truncate">{{ event.venue }}</span>
-              </span>
-              <span class="font-mono text-[#86cffb] group-hover:translate-x-0.5 transition-transform font-medium flex items-center gap-0.5 shrink-0">
-                Ver
-                <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
-              </span>
-            </div>
-          </div>
-        </article>
+          :event="event"
+          accent-color="primary"
+          show-venue-icon="stadium"
+          @click="goToEvent"
+        />
       </div>
 
       <!-- Estado Vacío -->
       <div
         v-else
-        class="bg-[#141e2e]/50 border border-[#23354d] rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-3 my-8"
+        class="bg-surface-card/50 border border-border-subtle rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-3 my-8"
       >
-        <span class="material-symbols-outlined text-4xl text-[#94a3b8]">search_off</span>
-        <h4 class="font-ink text-lg font-bold text-[#f1f5f9]">No se encontraron espectáculos</h4>
-        <p class="font-body text-sm text-[#94a3b8] max-w-md">
+        <span class="material-symbols-outlined text-4xl text-muted-light">search_off</span>
+        <h4 class="font-display text-lg font-bold text-high-emphasis">No se encontraron espectáculos</h4>
+        <p class="font-body text-sm text-muted-light max-w-md">
           No hay eventos que coincidan con los filtros seleccionados. Prueba con otros criterios o limpia la búsqueda.
         </p>
         <button
           @click="resetFilters"
-          class="mt-2 bg-[#1a293e] hover:bg-[#23354d] text-[#86cffb] font-mono text-xs px-4 py-2 rounded-lg border border-[#23354d] transition-colors cursor-pointer"
+          class="mt-2 bg-surface-interactive hover:bg-border-subtle text-primary font-mono text-xs px-4 py-2 rounded-lg border border-border-subtle transition-colors cursor-pointer"
         >
           Limpiar filtros
         </button>

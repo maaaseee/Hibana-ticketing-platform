@@ -69,7 +69,7 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
       expect(bannerBadge.exists()).toBe(true)
       expect(bannerBadge.text()).toContain('Entradas desde')
       expect(bannerBadge.text()).toContain(`$${minPrice}`)
-      expect(bannerBadge.text()).toContain('USD')
+      expect(bannerBadge.text()).toContain('ARS')
 
       // Also verify complementary inline badge in title area
       const inlineBadge = wrapper.find('[data-testid="inline-min-price-badge"]')

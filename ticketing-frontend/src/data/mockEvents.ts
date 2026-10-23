@@ -11,7 +11,7 @@ function buildAvailableDates(functions: EventFunction[]): string[] {
 
 function buildTicketTypes(sectors: SectorPricing[]): { name: string; price: number }[] {
   return sectors.map(sec => ({
-    name: `${sec.name} ($${sec.price.toFixed(2)})`,
+    name: `${sec.name} ($${sec.price.toLocaleString('es-AR')})`,
     price: sec.price
   }))
 }
@@ -31,8 +31,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Conciertos',
     genre: 'Music & Concerts',
     dateFilter: 'this_weekend',
-    price: 35,
-    minPrice: 35,
+    price: 35000,
+    minPrice: 35000,
     imageUrl: 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Confirmado',
     badgeType: 'secondary',
@@ -42,6 +42,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'The Lumineers, Of Monsters and Men, Orquesta Filarmónica',
     venueMapUrl: '/images/venues/arena-buenos-aires-map.svg',
     parking: arenaVenue.parking,
+    transit: arenaVenue.transit,
     paymentPromotions: arenaVenue.paymentMethods,
     sectors: arenaVenue.sectors,
     functions: [
@@ -82,8 +83,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Conciertos',
     genre: 'Music & Concerts',
     dateFilter: 'this_weekend',
-    price: 35,
-    minPrice: 35,
+    price: 35000,
+    minPrice: 35000,
     imageUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Últimas Entradas',
     badgeType: 'primary',
@@ -93,6 +94,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Tale of Us, Boris Brejcha, Stephan Bodzin, Mathame',
     venueMapUrl: '/images/venues/arena-buenos-aires-map.svg',
     parking: arenaVenue.parking,
+    transit: arenaVenue.transit,
     paymentPromotions: arenaVenue.paymentMethods,
     sectors: arenaVenue.sectors,
     functions: [
@@ -133,8 +135,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Conciertos',
     genre: 'Music & Concerts',
     dateFilter: 'next_30_days',
-    price: 40,
-    minPrice: 40,
+    price: 40000,
+    minPrice: 40000,
     imageUrl: 'https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Gira Mundial',
     badgeType: 'primary',
@@ -144,6 +146,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Coldplay, H.E.R., Zoe Gotusso',
     venueMapUrl: '/images/venues/monumental-map.svg',
     parking: monumentalVenue.parking,
+    transit: monumentalVenue.transit,
     paymentPromotions: monumentalVenue.paymentMethods,
     sectors: monumentalVenue.sectors,
     functions: [
@@ -193,8 +196,8 @@ export const mockEvents: EventItem[] = [
     category: 'Conferencias & Tech',
     genre: 'Tech Conferences',
     dateFilter: 'next_30_days',
-    price: 25,
-    minPrice: 25,
+    price: 25000,
+    minPrice: 25000,
     imageUrl: 'https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Conferencia',
     badgeType: 'secondary',
@@ -204,6 +207,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Keynotes por líderes globales de ingeniería y computación en la nube',
     venueMapUrl: '/images/venues/teatro-rex-map.svg',
     parking: rexVenue.parking,
+    transit: rexVenue.transit,
     paymentPromotions: rexVenue.paymentMethods,
     sectors: rexVenue.sectors,
     functions: [
@@ -244,8 +248,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Conciertos',
     genre: 'Music & Concerts',
     dateFilter: 'next_30_days',
-    price: 25,
-    minPrice: 25,
+    price: 25000,
+    minPrice: 25000,
     imageUrl: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Formato Acústico',
     badgeType: 'secondary',
@@ -255,6 +259,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Él Mató a un Policía Motorizado, Conociendo Rusia, Bandalos Chinos',
     venueMapUrl: '/images/venues/teatro-rex-map.svg',
     parking: rexVenue.parking,
+    transit: rexVenue.transit,
     paymentPromotions: rexVenue.paymentMethods,
     sectors: rexVenue.sectors,
     functions: [
@@ -286,8 +291,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Conciertos',
     genre: 'Music & Concerts',
     dateFilter: 'future',
-    price: 40,
-    minPrice: 40,
+    price: 40000,
+    minPrice: 40000,
     imageUrl: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Sala de Espera',
     badgeType: 'warning',
@@ -297,6 +302,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Divididos, La Renga, Ciro y los Persas, Airbag',
     venueMapUrl: '/images/venues/monumental-map.svg',
     parking: monumentalVenue.parking,
+    transit: monumentalVenue.transit,
     paymentPromotions: monumentalVenue.paymentMethods,
     sectors: monumentalVenue.sectors,
     functions: [
@@ -328,8 +334,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Festivales',
     genre: 'Music & Concerts',
     dateFilter: 'future',
-    price: 40,
-    minPrice: 40,
+    price: 40000,
+    minPrice: 40000,
     imageUrl: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Imperdible',
     badgeType: 'primary',
@@ -339,6 +345,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Duki, Bizarrap, Nicki Nicole, Trueno, Milo J',
     venueMapUrl: '/images/venues/monumental-map.svg',
     parking: monumentalVenue.parking,
+    transit: monumentalVenue.transit,
     paymentPromotions: monumentalVenue.paymentMethods,
     sectors: monumentalVenue.sectors,
     functions: [
@@ -370,8 +377,8 @@ export const mockEvents: EventItem[] = [
     category: 'Teatro & Cultura',
     genre: 'Theater',
     dateFilter: 'future',
-    price: 25,
-    minPrice: 25,
+    price: 25000,
+    minPrice: 25000,
     imageUrl: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Gala Exclusiva',
     badgeType: 'secondary',
@@ -381,6 +388,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Solistas líricos del Teatro Colón & Orquesta Estable',
     venueMapUrl: '/images/venues/teatro-rex-map.svg',
     parking: rexVenue.parking,
+    transit: rexVenue.transit,
     paymentPromotions: rexVenue.paymentMethods,
     sectors: rexVenue.sectors,
     functions: [
@@ -412,8 +420,8 @@ export const mockEvents: EventItem[] = [
     category: 'Conferencias & Tech',
     genre: 'Tech Conferences',
     dateFilter: 'future',
-    price: 35,
-    minPrice: 35,
+    price: 35000,
+    minPrice: 35000,
     imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Cupos Limitados',
     badgeType: 'secondary',
@@ -423,6 +431,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Ingenieros Cloud Native Foundation, Kubernetes Contributors',
     venueMapUrl: '/images/venues/arena-buenos-aires-map.svg',
     parking: arenaVenue.parking,
+    transit: arenaVenue.transit,
     paymentPromotions: arenaVenue.paymentMethods,
     sectors: arenaVenue.sectors,
     functions: [
@@ -463,8 +472,8 @@ export const mockEvents: EventItem[] = [
     category: 'Música & Conciertos',
     genre: 'Music & Concerts',
     dateFilter: 'future',
-    price: 35,
-    minPrice: 35,
+    price: 35000,
+    minPrice: 35000,
     imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Edición Especial',
     badgeType: 'primary',
@@ -474,6 +483,7 @@ export const mockEvents: EventItem[] = [
     lineup: 'Ben Böhmer, Lane 8, Nora En Pure',
     venueMapUrl: '/images/venues/arena-buenos-aires-map.svg',
     parking: arenaVenue.parking,
+    transit: arenaVenue.transit,
     paymentPromotions: arenaVenue.paymentMethods,
     sectors: arenaVenue.sectors,
     functions: [
@@ -494,3 +504,4 @@ export const mockEvents: EventItem[] = [
 ]
 
 export const MOCK_EVENTS = mockEvents
+

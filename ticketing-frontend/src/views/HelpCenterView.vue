@@ -1,181 +1,340 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
 
 interface FaqItem {
   id: string
   question: string
   answer: string
-  category: 'booking' | 'queue' | 'security' | 'refunds'
+  tags: string[]
 }
 
+const route = useRoute()
+
+// Reactive state
 const searchQuery = ref('')
-const selectedCategory = ref<'all' | 'booking' | 'queue' | 'security' | 'refunds'>('all')
-const openItem = ref<string | null>('faq-1')
+const openItem = ref<string | null>('faq-tickets-delivery')
 
 const faqs: FaqItem[] = [
   {
-    id: 'faq-1',
-    question: 'How does the Virtual Waiting Room operate during massive onsale spikes?',
-    answer: 'When high traffic is detected on top-tier concert releases, requests are placed in an orderly Redis-backed FIFO queue (Sorted Sets). A deterministic position number is assigned. Once you reach position #1, an ephemeral cryptographic token (X-Checkout-Token) is issued, allowing 10 uninterrupted minutes to finalize your seat reservation.',
-    category: 'queue'
+    id: 'faq-tickets-delivery',
+    question: '¿Cómo y cuándo recibo mis entradas después de comprar?',
+    answer:
+      'Una vez confirmado tu pago, tus entradas quedan disponibles de inmediato en la sección <strong class="text-on-surface font-semibold">Mis Entradas</strong> de tu cuenta. No enviamos archivos PDF por correo para evitar fraudes y duplicados; en su lugar, verás tu código QR digital seguro directamente en la pantalla de tu móvil, listo para ser escaneado al entrar al evento.',
+    tags: ['recibir', 'donde estan', 'pdf', 'correo', 'comprar', 'mis entradas', 'qr', 'entrega']
   },
   {
-    id: 'faq-2',
-    question: 'Why does my dynamic ticket QR code rotate every 15 seconds?',
-    answer: 'To protect attendees against counterfeit duplicates and secondary market scalper screenshots, each ticket payload is continuously re-signed using TOTP (Time-Based One-Time Password) seeds with Ed25519 signatures. Static screenshots will fail validation at venue optical scanners.',
-    category: 'security'
+    id: 'faq-dynamic-qr',
+    question: '¿Por qué mi código QR cambia continuamente en la pantalla?',
+    answer:
+      'Es una medida de seguridad para protegerte contra estafas, fotos robadas y reventa no autorizada. Tu código QR se actualiza automáticamente cada pocos segundos para asegurar que solo la persona con la sesión activa pueda ingresar. Por este motivo, las capturas de pantalla o fotos impresas no son válidas en las puertas de acceso.',
+    tags: ['qr', 'pantalla', 'seguridad', 'captura', 'foto', 'cambia', 'reventa']
   },
   {
-    id: 'faq-3',
-    question: 'What is the Redlock timer on the seat selection screen?',
-    answer: 'When you tap a seat, a distributed lock is acquired across our Redis clusters (Redlock algorithm) under the key lock:event:{id}:seat:{id}. This prevents two buyers from checking out the exact same seat simultaneously. The lock is held for 10 minutes.',
-    category: 'booking'
+    id: 'faq-transfers',
+    question: '¿Cómo puedo transferir una entrada a un amigo o familiar?',
+    answer:
+      'Ingresa a <strong class="text-on-surface font-semibold">Mis Entradas</strong>, abre los detalles del boleto que quieres traspasar y presiona <strong class="text-on-surface font-semibold">Transferir Entrada</strong>. Solo debes escribir el correo electrónico de la persona que lo recibirá (debe tener una cuenta creada en Amaryllis). Por seguridad, las transferencias pueden realizarse hasta 2 horas antes de la apertura de puertas del evento.',
+    tags: ['transferir', 'regalar', 'amigo', 'familiar', 'cambiar nombre', 'titular', 'ceder']
   },
   {
-    id: 'faq-4',
-    question: 'How do refunds work if a show is rescheduled or canceled?',
-    answer: 'Cancellations trigger an automated compensating Saga workflow. Funds are credited directly back to your payment method or your Pocket digital balance with an exact double-entry audit trail.',
-    category: 'refunds'
+    id: 'faq-seat-timer',
+    question: '¿Qué significa el tiempo límite de 10 minutos al elegir asientos o pagar?',
+    answer:
+      'Cuando eliges tus asientos, el sistema los aparta de forma exclusiva para ti durante 10 minutos. Esto evita que otra persona te gane los mismos lugares mientras ingresas tus datos con calma. Si no completas la compra dentro de ese tiempo, los asientos se liberan automáticamente para que otros asistentes puedan seleccionarlos.',
+    tags: ['tiempo', 'minutos', 'reloj', 'temporizador', 'asientos', 'butacas', 'reserva', 'limite']
   },
   {
-    id: 'faq-5',
-    question: 'Can I safely transfer my digital pass to a family member or friend?',
-    answer: 'Yes! From the My Passes tab, click "Transfer Pass" and provide the recipient\'s email address. Once accepted, cryptographic ownership is revoked from your wallet and securely minted into the recipient\'s profile.',
-    category: 'booking'
+    id: 'faq-virtual-queue',
+    question: '¿Cómo funciona la fila virtual cuando hay mucha demanda en un evento?',
+    answer:
+      'En eventos de alta concurrencia, activamos una fila de espera virtual para asegurar que todos tengan la misma oportunidad de compra de manera justa y ordenada, sin que el sitio web se caiga. Al ingresar, se te asigna un turno automáticamente. Te recomendamos no refrescar ni cerrar la página mientras esperas para no perder tu posición.',
+    tags: ['fila virtual', 'espera', 'turno', 'demanda', 'masiva', 'concierto', 'agotado']
   },
   {
-    id: 'faq-6',
-    question: 'What payment options are supported?',
-    answer: 'We support all major Visa/MasterCard credit/debit cards via a PCI-DSS certified gateway, as well as the Amaryllis Pocket digital wallet featuring zero transaction surcharges and instant atomic settlements.',
-    category: 'refunds'
+    id: 'faq-offline-access',
+    question: '¿Puedo ingresar al evento si me quedo sin internet o sin señal en el móvil?',
+    answer:
+      '¡Sí! Nuestra plataforma almacena de forma segura tu entrada en tu dispositivo. Te sugerimos abrir la sección <strong class="text-on-surface font-semibold">Mis Entradas</strong> unas horas antes de salir de casa mientras tengas conexión a internet o datos; así tu boleto quedará listo para validarse en el acceso aunque no haya señal en el recinto.',
+    tags: ['offline', 'sin internet', 'sin señal', 'datos', 'celular', 'estadio', 'acceso']
+  },
+  {
+    id: 'faq-cancellations-refunds',
+    question: '¿Qué ocurre si un evento se cancela o cambia de fecha?',
+    answer:
+      'Te notificaremos inmediatamente por correo electrónico. Si el espectáculo se reprograma para una nueva fecha, tu entrada seguirá siendo válida automáticamente. Si no puedes asistir a la nueva fecha o el evento se cancela de forma definitiva, dispondrás de 15 días continuos para solicitar la devolución total de tu dinero a tu medio de pago original o a tu saldo Amaryllis Pocket.',
+    tags: ['cancelacion', 'reprogramado', 'devolucion', 'reembolso', 'dinero', 'fecha']
+  },
+  {
+    id: 'faq-payment-methods',
+    question: '¿Cuáles son los métodos de pago aceptados?',
+    answer:
+      'Aceptamos tarjetas de débito y crédito nacionales e internacionales (Visa, Mastercard, American Express), transferencias bancarias y saldo disponible en tu billetera digital Amaryllis Pocket. Todos los pagos se procesan con certificación de máxima seguridad financiera.',
+    tags: ['pago', 'tarjetas', 'credito', 'debito', 'transferencia', 'pocket', 'cuotas']
+  },
+  {
+    id: 'faq-tax-receipts',
+    question: '¿Dónde puedo descargar mi comprobante o factura de compra con RUT?',
+    answer:
+      'En la sección <strong class="text-on-surface font-semibold">Mis Entradas</strong>, haz clic en la compra correspondiente. Allí podrás descargar tu boleta electrónica o ingresar tus datos tributarios (RUT o razón social) para emitir tu factura antes del cierre del mes.',
+    tags: ['factura', 'boleta', 'rut', 'comprobante', 'recibo', 'impuestos', 'tributario']
+  },
+  {
+    id: 'faq-ticket-limits',
+    question: '¿Cuántas entradas puedo comprar por persona?',
+    answer:
+      'Para evitar la reventa y permitir que más personas disfruten del espectáculo, la mayoría de los eventos permiten adquirir entre 4 y 6 entradas por persona o tarjeta bancaria. El límite exacto siempre se especifica claramente antes de iniciar el proceso de compra.',
+    tags: ['limite', 'cuantas', 'maximo', 'entradas', 'persona', 'comprar']
+  },
+  {
+    id: 'faq-children-admission',
+    question: '¿Los niños o menores de edad pagan entrada?',
+    answer:
+      'Depende de las políticas de cada recinto y espectáculo. Generalmente los menores a partir de 2 o 3 años deben tener su propia butaca y entrada. En eventos con restricción de edad (por ejemplo, para mayores de 18 años), se solicitará documento de identidad en los accesos. Puedes consultar las edades permitidas en la ficha informativa de cada show.',
+    tags: ['niños', 'menores', 'edad', 'hijos', 'familia', 'documento', 'cedula']
+  },
+  {
+    id: 'faq-missing-charges',
+    question: '¿Qué hago si veo el cobro en mi banco pero no aparecen mis entradas?',
+    answer:
+      'En ocasiones muy puntuales, los bancos pueden tardar unos minutos en confirmar la transacción. Si tras 10 minutos tus entradas no aparecen en tu cuenta, no vuelvas a comprar para evitar cargos duplicados. Presiona el botón <strong class="text-on-surface font-semibold">Iniciar chat de soporte</strong> y nuestro equipo verificará tu transacción al instante con tu número de comprobante.',
+    tags: ['cobro', 'banco', 'descuento', 'no aparecen', 'error', 'problema', 'soporte']
   }
 ]
 
-const categories = [
-  { id: 'all', label: 'All Topics' },
-  { id: 'queue', label: 'Waiting Room & Queue' },
-  { id: 'security', label: 'Anti-Scalper Security' },
-  { id: 'booking', label: 'Seat Selection & Redlock' },
-  { id: 'refunds', label: 'Refunds & Wallet' }
-]
-
 const filteredFaqs = computed(() => {
+  const query = searchQuery.value.trim().toLowerCase()
+  if (!query) return faqs
+
   return faqs.filter((faq) => {
-    const matchesCat = selectedCategory.value === 'all' || faq.category === selectedCategory.value
-    const matchesQuery = !searchQuery.value ||
-      faq.question.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchQuery.value.toLowerCase())
-    return matchesCat && matchesQuery
+    const inQuestion = faq.question.toLowerCase().includes(query)
+    const inAnswer = faq.answer.toLowerCase().includes(query)
+    const inTags = faq.tags.some((t) => t.toLowerCase().includes(query))
+    return inQuestion || inAnswer || inTags
   })
 })
 
 function toggleFaq(id: string) {
   openItem.value = openItem.value === id ? null : id
 }
+
+function clearSearch() {
+  searchQuery.value = ''
+}
+
+function scrollToFaq(id: string) {
+  setTimeout(() => {
+    const el = document.getElementById(id)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, 100)
+}
+
+onMounted(() => {
+  const hash = route.hash.replace('#', '')
+  if (hash) {
+    const target = faqs.find((f) => f.id === hash)
+    if (target) {
+      openItem.value = target.id
+      scrollToFaq(target.id)
+    }
+  }
+})
 </script>
 
 <template>
-  <div class="py-10 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-12">
-    
-    <!-- Hero Header -->
-    <div class="text-center space-y-4 max-w-2xl mx-auto">
-      <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-500/10 text-primary-300 border border-primary-500/20">
-        Knowledge Base & FAQ
-      </span>
-      <h1 class="text-3xl sm:text-4xl font-extrabold font-display text-text-primary tracking-tight">
-        How can we assist you today?
-      </h1>
-      <p class="text-sm text-text-secondary leading-relaxed">
-        Everything you need to know about the Amaryllis ticketing platform, queue mechanics, dynamic passes, and distributed seat locking.
-      </p>
+  <div class="w-full bg-surface min-h-[calc(100vh-4rem)] px-gutter py-space-lg">
+    <div class="flex flex-col w-full">
+      <div class="flex flex-col gap-space-xl w-full max-w-[1040px] mx-auto pb-space-xl pt-space-md">
+        
+        <!-- ========================================== -->
+        <!-- 1. Hero Title & Search Bar                 -->
+        <!-- ========================================== -->
+        <section class="text-center flex flex-col items-center gap-space-md pt-space-md">
+          <!-- Main Title (without pill badge and without subtitle) -->
+          <h1 class="font-headline-xl text-3xl sm:text-4xl lg:text-headline-xl font-bold text-on-surface tracking-tight">
+            ¿En qué podemos ayudarte hoy?
+          </h1>
 
-      <!-- Search Input -->
-      <div class="relative pt-2">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search by keywords (e.g., waiting room, refund, qr code, redlock)..."
-          class="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-surface-card border border-border-default text-text-primary placeholder:text-text-muted text-sm shadow-xl focus:outline-none focus:border-primary-400 transition-colors"
-        />
-        <svg class="w-5 h-5 text-text-muted absolute left-4 top-5.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+          <!-- Search Bar -->
+          <div class="w-full max-w-2xl mt-space-xs relative">
+            <div class="relative w-full shadow-lg">
+              <div class="absolute inset-y-0 left-0 pl-space-md flex items-center pointer-events-none text-outline">
+                <span class="material-symbols-outlined text-[24px]">search</span>
+              </div>
+              <input
+                v-model="searchQuery"
+                class="w-full pl-12 pr-32 py-4 bg-surface-container-high border border-surface-variant/60 rounded-xl text-on-surface placeholder:text-outline font-body-md focus:outline-none focus:bg-surface-bright focus:border-primary transition-all shadow-inner"
+                placeholder="Buscar por término, ej: 'entradas', 'reembolso', 'QR', 'transferir'..."
+                type="text"
+                aria-label="Buscar en Centro de Ayuda"
+              />
+              <div class="absolute inset-y-0 right-2 flex items-center gap-1.5">
+                <button
+                  v-if="searchQuery"
+                  @click="clearSearch"
+                  class="text-outline hover:text-on-surface p-1 rounded-md transition-colors cursor-pointer"
+                  title="Borrar búsqueda"
+                  aria-label="Borrar búsqueda"
+                >
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+                <button
+                  type="button"
+                  class="bg-primary-container hover:bg-inverse-primary text-on-primary-container font-label-md px-space-md py-2.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm select-none font-medium"
+                >
+                  <span>Buscar</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 2. Accordion FAQ Section with Animations   -->
+        <!-- ========================================== -->
+        <section class="bg-surface-container-low rounded-xl p-space-md sm:p-space-lg border border-surface-variant/40 flex flex-col gap-space-lg shadow-sm">
+          <!-- Accordion Header -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-surface-variant/40 pb-space-sm gap-2">
+            <div class="flex items-center gap-space-xs">
+              <span class="material-symbols-outlined text-secondary text-[22px]">help_center</span>
+              <h2 class="font-headline-md text-xl sm:text-headline-md text-on-surface font-semibold tracking-tight">
+                Preguntas Frecuentes
+              </h2>
+              <span
+                class="ml-2 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-mono text-xs border border-surface-variant/40"
+              >
+                {{ filteredFaqs.length }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <button
+                v-if="searchQuery"
+                @click="clearSearch"
+                class="font-label-sm text-primary hover:text-primary-fixed-dim underline transition-colors cursor-pointer"
+              >
+                Ver todas las preguntas
+              </button>
+              <span class="font-label-sm text-outline">Actualizado hoy</span>
+            </div>
+          </div>
+
+          <!-- FAQ Accordion Items -->
+          <div class="flex flex-col gap-space-sm">
+            <div
+              v-for="faq in filteredFaqs"
+              :key="faq.id"
+              :id="faq.id"
+              :class="[
+                'bg-surface-container rounded-lg p-space-md flex flex-col gap-space-xs border transition-all duration-300 ease-in-out',
+                openItem === faq.id
+                  ? 'border-surface-variant/80 shadow-md ring-1 ring-primary/20'
+                  : 'border-surface-variant/30 hover:border-surface-variant'
+              ]"
+            >
+              <!-- Accordion Toggle Button -->
+              <button
+                @click="toggleFaq(faq.id)"
+                class="w-full flex items-center justify-between cursor-pointer text-left select-none focus:outline-none group gap-3 py-0.5"
+                :aria-expanded="openItem === faq.id"
+              >
+                <span
+                  :class="[
+                    'font-body-md font-semibold transition-colors duration-200 text-sm sm:text-base',
+                    openItem === faq.id ? 'text-primary' : 'text-on-surface group-hover:text-primary'
+                  ]"
+                >
+                  {{ faq.question }}
+                </span>
+                <span
+                  :class="[
+                    'material-symbols-outlined text-[20px] transition-transform duration-300 ease-in-out shrink-0',
+                    openItem === faq.id ? 'text-primary rotate-180' : 'text-outline group-hover:text-on-surface'
+                  ]"
+                >
+                  expand_more
+                </span>
+              </button>
+
+              <!-- Collapsible Content Animated with CSS Grid (Modern Fluid Accordion Animation) -->
+              <div
+                class="grid transition-all duration-300 ease-in-out"
+                :class="openItem === faq.id ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
+              >
+                <div class="overflow-hidden">
+                  <div class="font-body-sm text-on-surface-variant pt-space-xs pb-1 leading-relaxed text-sm border-t border-surface-variant/30 mt-2">
+                    <p v-html="faq.answer"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty Search State -->
+            <div
+              v-if="filteredFaqs.length === 0"
+              class="py-12 px-4 text-center flex flex-col items-center gap-3 bg-surface-container/40 rounded-lg border border-dashed border-surface-variant"
+            >
+              <div class="w-12 h-12 rounded-full bg-surface-container-high flex items-center justify-center text-outline">
+                <span class="material-symbols-outlined text-[26px]">search_off</span>
+              </div>
+              <div class="flex flex-col gap-1 max-w-md">
+                <h3 class="font-headline-sm text-base font-semibold text-on-surface">
+                  No encontramos respuestas para "{{ searchQuery }}"
+                </h3>
+                <p class="font-body-sm text-on-surface-variant text-xs">
+                  Intenta buscar con palabras más simples como "entradas", "devolución", "pago" o consulta a nuestro equipo mediante el chat de soporte.
+                </p>
+              </div>
+              <button
+                @click="clearSearch"
+                class="mt-2 bg-surface-container-high hover:bg-surface-variant text-primary px-space-md py-2 rounded-lg font-label-sm border border-surface-variant/40 transition-colors cursor-pointer"
+              >
+                Borrar búsqueda
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 3. Escalation / Support CTA Banner         -->
+        <!-- ========================================== -->
+        <section class="bg-gradient-to-r from-surface-container-low to-surface-container border border-surface-variant/50 rounded-xl p-space-md sm:p-space-lg flex flex-col md:flex-row items-center justify-between gap-space-lg shadow-sm">
+          <div class="flex items-start gap-space-md">
+            <div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0 shadow-inner">
+              <span class="material-symbols-outlined text-[26px]">support_agent</span>
+            </div>
+            <div class="flex flex-col gap-1 text-left">
+              <h3 class="font-headline-sm text-lg sm:text-headline-sm text-on-surface font-semibold tracking-tight">
+                ¿No encontraste lo que buscabas o necesitas más ayuda?
+              </h3>
+              <p class="font-body-md text-sm sm:text-body-md text-on-surface-variant max-w-xl leading-relaxed">
+                Conéctate con nuestro asistente virtual inteligente para resolver incidentes con tus compras o transferir tu caso a un especialista en minutos.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-space-sm w-full md:w-auto shrink-0">
+            <RouterLink
+              :to="{ name: 'support-chat' }"
+              class="w-full sm:w-auto bg-primary text-on-primary hover:bg-primary-fixed-dim px-space-lg py-3 rounded-lg font-label-md font-semibold flex items-center justify-center gap-space-xs transition-colors shadow-md cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[20px]">chat</span>
+              <span>Iniciar chat de soporte</span>
+            </RouterLink>
+            <RouterLink
+              :to="{ name: 'tickets' }"
+              class="w-full sm:w-auto bg-surface-container-high hover:bg-surface-variant text-on-surface px-space-md py-3 rounded-lg font-label-md border border-surface-variant/40 transition-colors flex items-center justify-center gap-space-xs cursor-pointer"
+            >
+              <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+              <span>Ver mis tickets (3)</span>
+            </RouterLink>
+          </div>
+        </section>
+
       </div>
     </div>
-
-    <!-- Category Filter Pills -->
-    <div class="flex flex-wrap items-center justify-center gap-2">
-      <button
-        v-for="cat in categories"
-        :key="cat.id"
-        @click="selectedCategory = cat.id as any"
-        :class="[
-          'px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer',
-          selectedCategory === cat.id
-            ? 'bg-primary-400 text-surface-base shadow-md'
-            : 'bg-surface-card text-text-secondary hover:text-text-primary border border-border-default'
-        ]"
-      >
-        {{ cat.label }}
-      </button>
-    </div>
-
-    <!-- Accordion List -->
-    <div class="space-y-4 max-w-3xl mx-auto">
-      <div
-        v-for="faq in filteredFaqs"
-        :key="faq.id"
-        class="bg-surface-card border border-border-default rounded-2xl overflow-hidden shadow-sm transition-all hover:border-border-default/80"
-      >
-        <button
-          @click="toggleFaq(faq.id)"
-          class="w-full p-5 text-left flex items-center justify-between gap-4 cursor-pointer focus:outline-none"
-        >
-          <span class="font-bold text-sm sm:text-base text-text-primary">
-            {{ faq.question }}
-          </span>
-          <span
-            :class="[
-              'w-6 h-6 rounded-full bg-surface-base border border-border-default flex items-center justify-center text-primary-400 text-sm transition-transform duration-200 shrink-0',
-              openItem === faq.id ? 'rotate-180 bg-primary-500/20 text-primary-300' : ''
-            ]"
-          >
-            &darr;
-          </span>
-        </button>
-
-        <div
-          v-if="openItem === faq.id"
-          class="px-5 pb-5 text-sm text-text-secondary leading-relaxed border-t border-border-default/50 pt-3"
-        >
-          {{ faq.answer }}
-        </div>
-      </div>
-
-      <div v-if="filteredFaqs.length === 0" class="text-center py-12 text-text-muted text-sm">
-        No articles matched your search query. Try another term or contact support directly.
-      </div>
-    </div>
-
-    <!-- Escalation / Still need help CTA Banner -->
-    <div class="max-w-3xl mx-auto bg-gradient-to-r from-surface-card via-surface-card to-primary-950/30 border border-primary-500/30 rounded-3xl p-8 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
-      <div class="space-y-1 text-center sm:text-left">
-        <h3 class="text-lg font-bold font-display text-text-primary">Still have questions?</h3>
-        <p class="text-xs text-text-secondary max-w-md">
-          Chat with our intelligent AI concierge or connect with an operations representative in real time.
-        </p>
-      </div>
-
-      <RouterLink
-        :to="{ name: 'support-chat' }"
-        class="px-6 py-3 rounded-xl font-bold text-xs bg-primary-400 text-surface-base hover:bg-primary-300 shadow-lg shadow-primary-500/20 transition-all shrink-0 flex items-center gap-2"
-      >
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-        <span>Open Support Chat</span>
-      </RouterLink>
-    </div>
-
   </div>
 </template>

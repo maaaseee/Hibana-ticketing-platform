@@ -139,7 +139,7 @@ function navigateToTickets() {
               <div class="pt-2 border-t border-border-default/60 flex items-center justify-between text-xs font-mono">
                 <span class="text-text-muted">Saldo Disponible:</span>
                 <span :class="checkoutStore.pocketBalance >= grandTotal ? 'text-secondary-400 font-bold' : 'text-red-400 font-bold'">
-                  ${{ checkoutStore.pocketBalance.toFixed(2) }} USD
+                  ${{ checkoutStore.pocketBalance.toLocaleString('es-AR') }} ARS
                 </span>
               </div>
             </label>
@@ -262,7 +262,7 @@ function navigateToTickets() {
                 <span class="font-semibold text-text-primary">{{ seat.sector }}</span>
                 <span class="text-text-muted font-mono block text-[11px]">Fila {{ seat.row }}, Butaca {{ seat.number }}</span>
               </div>
-              <span class="font-mono font-medium text-text-secondary">${{ seat.price }} USD</span>
+              <span class="font-mono font-medium text-text-secondary">${{ seat.price.toLocaleString('es-AR') }} ARS</span>
             </div>
           </div>
 
@@ -270,15 +270,15 @@ function navigateToTickets() {
           <div class="pt-2 space-y-2 text-xs">
             <div class="flex justify-between text-text-secondary">
               <span>Total Entradas ({{ selectedSeats.length }})</span>
-              <span class="font-mono">${{ subtotal.toFixed(2) }}</span>
+              <span class="font-mono">${{ subtotal.toLocaleString('es-AR') }}</span>
             </div>
             <div class="flex justify-between text-text-secondary">
               <span>Costo por Servicio (12%)</span>
-              <span class="font-mono">${{ fees.toFixed(2) }}</span>
+              <span class="font-mono">${{ fees.toLocaleString('es-AR') }}</span>
             </div>
             <div class="flex justify-between font-bold text-base text-text-primary pt-3 border-t border-border-default">
               <span>Total a Liquidar</span>
-              <span class="font-mono text-secondary-400">${{ grandTotal.toFixed(2) }} USD</span>
+              <span class="font-mono text-secondary-400">${{ grandTotal.toLocaleString('es-AR') }} ARS</span>
             </div>
           </div>
 
@@ -289,7 +289,7 @@ function navigateToTickets() {
             class="w-full py-4 px-4 rounded-xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-surface-base hover:opacity-95 shadow-xl shadow-primary-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             <span v-if="isProcessing" class="inline-block w-4 h-4 border-2 border-surface-base border-t-transparent rounded-full animate-spin"></span>
-            <span>{{ isProcessing ? 'Autorizando Transacción...' : `Pagar $${grandTotal.toFixed(2)} USD` }}</span>
+            <span>{{ isProcessing ? 'Autorizando Transacción...' : `Pagar $${grandTotal.toLocaleString('es-AR')} ARS` }}</span>
           </button>
 
           <p class="text-[11px] text-center text-text-muted font-mono">

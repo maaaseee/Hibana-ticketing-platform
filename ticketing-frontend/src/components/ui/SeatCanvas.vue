@@ -219,7 +219,7 @@ watch(() => [props.seats, props.selectedSeats], () => {
       </div>
       <div class="border-l border-border-subtle pl-space-md">
         <span class="text-outline uppercase font-mono tracking-wider text-[10px]">Precio</span>
-        <p class="font-mono font-bold text-primary text-sm">${{ hoveredSeat.price }} USD</p>
+        <p class="font-mono font-bold text-primary text-sm">${{ hoveredSeat.price.toLocaleString('es-AR') }} ARS</p>
       </div>
       <div class="border-l border-border-subtle pl-space-md">
         <span class="text-outline uppercase font-mono tracking-wider text-[10px]">Estado</span>

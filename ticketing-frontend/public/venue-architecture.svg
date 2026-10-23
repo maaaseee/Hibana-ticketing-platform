@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 600" width="100%" height="100%" preserveAspectRatio="none">
+  <defs>
+    <!-- Gradiente Arquitectónico: Cian Eléctrico a Bioluminiscencia Turquesa y Azul Profundo -->
+    <linearGradient id="venue-grad-primary" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0ec2d7" stop-opacity="0.85" />
+      <stop offset="40%" stop-color="#4fdbc8" stop-opacity="0.65" />
+      <stop offset="80%" stop-color="#00688f" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#0b131e" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="venue-grad-reverse" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#86cffb" stop-opacity="0.75" />
+      <stop offset="50%" stop-color="#0ec2d7" stop-opacity="0.45" />
+      <stop offset="100%" stop-color="#141e2e" stop-opacity="0" />
+    </linearGradient>
+
+    <radialGradient id="stage-focal-glow" cx="50%" cy="100%" r="60%">
+      <stop offset="0%" stop-color="#0ec2d7" stop-opacity="0.35" />
+      <stop offset="40%" stop-color="#00688f" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#0b131e" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Máscara de Desvanecimiento Suave Multidireccional (Arriba, Abajo, Izquierda, Derecha) -->
+    <!-- Elimina completamente cualquier corte abrupto o costura en los 4 bordes -->
+    <linearGradient id="mask-fade-v" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="12%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="78%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <linearGradient id="mask-fade-h" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0" />
+      <stop offset="8%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="92%" stop-color="#ffffff" stop-opacity="1" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <mask id="venue-soft-edges-mask">
+      <rect x="0" y="0" width="2400" height="600" fill="url(#mask-fade-v)" />
+      <rect x="0" y="0" width="2400" height="600" fill="url(#mask-fade-h)" style="mix-blend-mode: multiply;" />
+    </mask>
+
+    <style>
+      @keyframes pulseStageGlow {
+        0%, 100% { opacity: 0.25; }
+        50% { opacity: 0.55; }
+      }
+      @keyframes acousticPropagation {
+        from { stroke-dashoffset: 0; }
+        to { stroke-dashoffset: -360; }
+      }
+      @keyframes sightlineEnergy {
+        from { stroke-dashoffset: 0; }
+        to { stroke-dashoffset: 240; }
+      }
+      @keyframes roofSway {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-7px); }
+      }
+      @keyframes nodeFlicker {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.95; }
+      }
+
+      .anim-stage-glow {
+        animation: pulseStageGlow 8s ease-in-out infinite;
+      }
+      .anim-acoustic-rings {
+        animation: acousticPropagation 24s linear infinite;
+      }
+      .anim-sightlines {
+        animation: sightlineEnergy 18s linear infinite;
+      }
+      .anim-roof-truss {
+        animation: roofSway 12s ease-in-out infinite;
+      }
+      .anim-nodes {
+        animation: nodeFlicker 4s ease-in-out infinite;
+      }
+    </style>
+  </defs>
+
+  <!-- Grupo contenedor protegido con Máscara de Desvanecimiento de Bordes -->
+  <g mask="url(#venue-soft-edges-mask)">
+    <!-- Resplandor sutil del foco central (Escenario / Escena) con Respiración Viva -->
+    <rect x="0" y="0" width="2400" height="600" fill="url(#stage-focal-glow)" class="anim-stage-glow" />
+
+    <!-- 1. Arcos Concéntricos del Anfiteatro (Gradas & Propagación Acústica Viva) -->
+    <!-- Los trazados terminan en y=680 (más allá del límite de 600) para no cortarse antes de desvanecer -->
+    <g fill="none" stroke="url(#venue-grad-primary)" stroke-width="2" stroke-linecap="round">
+      <!-- Nivel Escenario & Campo VIP -->
+      <path d="M 400 680 Q 1200 420 2000 680" opacity="0.95" />
+      <path d="M 320 680 Q 1200 370 2080 680" opacity="0.88" stroke-dasharray="14 8" class="anim-acoustic-rings" />
+      <path d="M 240 680 Q 1200 320 2160 680" opacity="0.82" />
+      <path d="M 160 680 Q 1200 270 2240 680" opacity="0.75" />
+      
+      <!-- Anillo Medio (Plateas Bajas & Palcos) -->
+      <path d="M 80 680 Q 1200 220 2320 680" opacity="0.68" stroke-dasharray="18 10" class="anim-acoustic-rings" />
+      <path d="M 0 680 Q 1200 170 2400 680" opacity="0.60" />
+      <path d="M -80 680 Q 1200 120 2480 680" opacity="0.52" />
+      
+      <!-- Anillo Superior (Plateas Altas & Corona del Estadio) -->
+      <path d="M -160 680 Q 1200 70 2560 680" opacity="0.45" stroke-dasharray="24 12" class="anim-acoustic-rings" />
+      <path d="M -240 680 Q 1200 20 2640 680" opacity="0.38" />
+      <path d="M -320 680 Q 1200 -30 2720 680" opacity="0.28" />
+      <path d="M -400 680 Q 1200 -80 2800 680" opacity="0.18" />
+    </g>
+
+    <!-- 2. Líneas Radiales de Visibilidad & Ejes Arquitectónicos (Sightlines con Flujo de Corriente) -->
+    <g fill="none" stroke="url(#venue-grad-reverse)" stroke-width="1.5" stroke-linecap="round">
+      <!-- Ejes Izquierdos -->
+      <line x1="1200" y1="680" x2="100" y2="40" opacity="0.4" stroke-dasharray="10 8" class="anim-sightlines" />
+      <line x1="1200" y1="680" x2="350" y2="10" opacity="0.45" stroke-dasharray="12 10" class="anim-sightlines" />
+      <line x1="1200" y1="680" x2="650" y2="0" opacity="0.5" />
+      <line x1="1200" y1="680" x2="950" y2="0" opacity="0.55" stroke-dasharray="8 8" class="anim-sightlines" />
+
+      <!-- Eje Central Fiduciario -->
+      <line x1="1200" y1="680" x2="1200" y2="0" opacity="0.6" stroke-dasharray="16 8" class="anim-sightlines" />
+
+      <!-- Ejes Derechos -->
+      <line x1="1200" y1="680" x2="1450" y2="0" opacity="0.55" stroke-dasharray="8 8" class="anim-sightlines" />
+      <line x1="1200" y1="680" x2="1750" y2="0" opacity="0.5" />
+      <line x1="1200" y1="680" x2="2050" y2="10" opacity="0.45" stroke-dasharray="12 10" class="anim-sightlines" />
+      <line x1="1200" y1="680" x2="2300" y2="40" opacity="0.4" stroke-dasharray="10 8" class="anim-sightlines" />
+    </g>
+
+    <!-- 3. Parábolas de Cubierta Estructural & Acústica de Techo con Leve Ondulación -->
+    <g fill="none" stroke="#0ec2d7" stroke-width="1.5" opacity="0.42" class="anim-roof-truss">
+      <path d="M 0 50 Q 800 350 2400 50" stroke-dasharray="16 12" />
+      <path d="M 0 100 Q 1000 420 2400 100" />
+      <path d="M 0 160 Q 1200 480 2400 160" stroke-dasharray="24 14" />
+      <path d="M 0 230 Q 1400 520 2400 230" opacity="0.3" />
+    </g>
+
+    <!-- 4. Puntos / Nodos de Iluminación y Referencia (Micro-Beacon Pulsing) -->
+    <g fill="#86cffb" class="anim-nodes">
+      <circle cx="1200" cy="420" r="3" />
+      <circle cx="1200" cy="320" r="3" />
+      <circle cx="1200" cy="220" r="3" />
+      <circle cx="1200" cy="120" r="3" />
+      <circle cx="1200" cy="20" r="3" />
+
+      <circle cx="950" cy="265" r="2.5" />
+      <circle cx="1450" cy="265" r="2.5" />
+      <circle cx="650" cy="310" r="2.5" />
+      <circle cx="1750" cy="310" r="2.5" />
+      <circle cx="350" cy="380" r="2" />
+      <circle cx="2050" cy="380" r="2" />
+    </g>
+  </g>
+</svg>
