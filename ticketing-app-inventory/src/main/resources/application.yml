@@ -20,15 +20,17 @@ spring:
     properties:
       hibernate:
         format_sql: false
-        jdbc:
-          batch_size: 50
-          order_inserts: true
-          order_updates: true
+      jdbc:
+        batch_size: 50
+        order_inserts: true
+        order_updates: true
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       timeout: 2000ms
+      repositories:
+        enabled: false
 
 server:
   port: 8082
