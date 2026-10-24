@@ -1,4 +1,15 @@
 {
+  "name": "amaryllis-ticketing-platform",
+  "private": true,
+  "scripts": {
+    "dev": "bun run scripts/dev.ts",
+    "test:all": "bun run scripts/test-all.ts",
+    "infra:up": "docker compose up -d",
+    "infra:down": "docker compose down",
+    "infra:status": "docker compose ps",
+    "build:frontend": "bun run --cwd ticketing-frontend build",
+    "test:frontend": "bun run --cwd ticketing-frontend test:unit -- --run"
+  },
   "devDependencies": {
     "@types/node": "^26.6.5"
   }
