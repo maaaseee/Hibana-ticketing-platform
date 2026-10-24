@@ -461,11 +461,43 @@ export const mockVenues: VenueInfo[] = [
 
 export const MOCK_VENUES = mockVenues
 
-export function getVenueById(id: string): VenueInfo | undefined {
-  return mockVenues.find(v => v.id === id)
+export function getVenueById(id?: string): VenueInfo | undefined {
+  if (!id) return undefined
+  const direct = mockVenues.find(v => v.id === id || id.includes(v.id) || v.id.includes(id))
+  if (direct) return direct
+  if (id.includes('nacional')) {
+    return {
+      id: 'ven_estadio_nacional',
+      name: 'Estadio Nacional',
+      shortName: 'Estadio Nacional',
+      city: 'Buenos Aires',
+      country: 'Argentina',
+      address: 'Av. Libertador y Parque Nacional',
+      capacity: 60000,
+      type: 'ESTADIO_MASIVO',
+      parking: mockVenues[0]!.parking,
+      transit: mockVenues[0]!.transit,
+      paymentMethods: mockVenues[0]!.paymentMethods,
+      sectors: mockVenues[0]!.sectors
+    }
+  }
+  return undefined
 }
 
-export function getVenueByName(name: string): VenueInfo | undefined {
-  return mockVenues.find(v => v.name === name || v.shortName === name)
+export function getVenueByName(name?: string): VenueInfo | undefined {
+  if (!name) return undefined
+  const lower = name.toLowerCase()
+  const direct = mockVenues.find(v =>
+    v.name.toLowerCase() === lower ||
+    v.shortName.toLowerCase() === lower ||
+    v.name.toLowerCase().includes(lower) ||
+    lower.includes(v.shortName.toLowerCase()) ||
+    lower.includes(v.id.toLowerCase())
+  )
+  if (direct) return direct
+  if (lower.includes('nacional')) {
+    return getVenueById('ven_estadio_nacional')
+  }
+  return undefined
 }
 

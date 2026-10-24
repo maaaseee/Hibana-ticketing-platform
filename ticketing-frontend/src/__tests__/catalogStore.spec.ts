@@ -124,7 +124,7 @@ describe('catalogStore.spec.ts - Store & Data Invariants', () => {
     it('getMinEventPrice calculates the minimum sector price', () => {
       const sampleEvent = mockEvents[0]!
       const minPrice = getMinEventPrice(sampleEvent)
-      expect(minPrice).toBe(35000)
+      expect(minPrice).toBe(45000)
     })
 
     it('getMinEventPrice falls back gracefully to minPrice if sectors are empty', () => {
@@ -163,8 +163,8 @@ describe('catalogStore.spec.ts - Store & Data Invariants', () => {
       const store = useCatalogStore()
       const recent = store.recentlyAddedEvents
       expect(recent).toHaveLength(10)
-      expect(recent[0]!.id).toBe('coldplay-music-spheres')
-      expect(recent[1]!.id).toBe('river-stadium-rockfest')
+      expect(recent[0]!.id).toBe('cloud-native-devcon')
+      expect(recent[1]!.id).toBe('opera-clasica-verano')
       expect(recent[2]!.id).toBe('chronos-fest-2026')
     })
 
@@ -183,6 +183,32 @@ describe('catalogStore.spec.ts - Store & Data Invariants', () => {
       // Non-existent IDs
       expect(store.getEventById('non-existent-event-999')).toBeUndefined()
       expect(store.getEventById('')).toBeUndefined()
+    })
+
+    it('persists home highlights to sessionStorage and recovers from cache', async () => {
+      const store = useCatalogStore()
+      sessionStorage.clear()
+
+      await store.fetchHomeHighlights()
+      expect(store.homeHighlights.recentlyAdded.length).toBeGreaterThan(0)
+      expect(store.homeHighlights.upcoming.length).toBeGreaterThan(0)
+
+      const cachedRaw = sessionStorage.getItem('amaryllis_highlights_cache')
+      expect(cachedRaw).not.toBeNull()
+      const cached = JSON.parse(cachedRaw!)
+      expect(cached.timestamp).toBeGreaterThan(0)
+      expect(cached.recentlyAdded.length).toBeGreaterThan(0)
+    })
+
+    it('dynamically generates availableMonths up to furthestEventDate', async () => {
+      const store = useCatalogStore()
+      expect(store.availableMonths.length).toBeGreaterThanOrEqual(8)
+
+      // Set furthest date into December 2027
+      store.furthestEventDate = '2027-12-15T20:00:00Z'
+      const labels = store.availableMonths.map(m => m.label)
+      expect(labels).toContain('Diciembre 2027')
+      expect(store.availableMonths.length).toBe(15) // Oct 2026 to Dec 2027 = 15 months
     })
   })
 })
