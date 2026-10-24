@@ -320,4 +320,74 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
       expect(wrapper.text()).toContain('Garantía de Asiento Sin Sobreventa')
     })
   })
+
+  describe('Section F: Real-time Countdown, FAQs and Payment Logos', () => {
+    it('renders the real-time countdown banner formatted as "Faltan dd, hh, mm, ss" for upcoming concerts', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/coldplay-music-spheres')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      const countdownBar = wrapper.find('[data-testid="concert-countdown-bar"]')
+      expect(countdownBar.exists()).toBe(true)
+      expect(countdownBar.text()).toMatch(/Faltan \d+d, \d+h, \d+m, \d+s/)
+    })
+
+    it('renders "Concierto finalizado" when event date is in the past', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      const countdownBar = wrapper.find('[data-testid="concert-countdown-bar"]')
+      expect(countdownBar.exists()).toBe(true)
+      expect(countdownBar.text()).toContain('Concierto finalizado')
+    })
+
+    it('renders the description FAQ accordion covering policies, setlist and max tickets', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      expect(wrapper.text()).toContain('Preguntas Frecuentes y Políticas del Evento')
+      expect(wrapper.text()).toContain('Políticas de Acceso y Elementos Prohibidos')
+      expect(wrapper.text()).toContain('Cancionero y Repertorio del Show')
+      expect(wrapper.text()).toContain('Cantidad Máxima de Entradas por Persona')
+    })
+
+    it('renders payment logos for accepted payment methods', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      const paymentAccordion = wrapper.find('[data-testid="payment-methods-accordion"]')
+      const trigger = paymentAccordion.find('button')
+      await trigger.trigger('click')
+      await wrapper.vm.$nextTick()
+
+      const paymentImages = paymentAccordion.findAll('img')
+      expect(paymentImages.length).toBeGreaterThan(0)
+      const srcs = paymentImages.map(img => img.attributes('src'))
+      expect(srcs.some(src => src?.includes('visa'))).toBe(true)
+      expect(srcs.some(src => src?.includes('mastercard'))).toBe(true)
+    })
+  })
 })

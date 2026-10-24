@@ -146,7 +146,7 @@ onMounted(() => {
 <template>
   <div class="w-full bg-surface min-h-[calc(100vh-4rem)] px-gutter py-space-lg">
     <div class="flex flex-col w-full">
-      <div class="flex flex-col gap-space-xl w-full max-w-[1040px] mx-auto pb-space-xl pt-space-md">
+      <div class="flex flex-col gap-space-xl w-full max-w-260 mx-auto pb-space-xl pt-space-md">
         
         <!-- ========================================== -->
         <!-- 1. Hero Title & Search Bar                 -->
@@ -301,9 +301,9 @@ onMounted(() => {
         <!-- ========================================== -->
         <!-- 3. Escalation / Support CTA Banner         -->
         <!-- ========================================== -->
-        <section class="bg-gradient-to-r from-surface-container-low to-surface-container border border-surface-variant/50 rounded-xl p-space-md sm:p-space-lg flex flex-col md:flex-row items-center justify-between gap-space-lg shadow-sm">
+        <section class="bg-linear-to-r from-surface-container-low to-surface-container border border-surface-variant/50 rounded-xl p-space-md sm:p-space-lg flex flex-col md:flex-row items-center justify-between gap-space-lg shadow-sm">
           <div class="flex items-start gap-space-md">
-            <div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0 shadow-inner">
+            <div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary-container flex items-center justify-center shrink-0 shadow-inner">
               <span class="material-symbols-outlined text-[26px]">support_agent</span>
             </div>
             <div class="flex flex-col gap-1 text-left">

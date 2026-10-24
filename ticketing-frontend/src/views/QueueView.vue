@@ -88,7 +88,7 @@ function proceedToSeatSelection() {
           </div>
           <div class="w-full bg-surface-base h-2.5 rounded-full overflow-hidden border border-border-default">
             <div
-              class="h-full bg-gradient-to-r from-primary-500 via-secondary-400 to-primary-300 rounded-full transition-all duration-700 ease-out"
+              class="h-full bg-linear-to-r from-primary-500 via-secondary-400 to-primary-300 rounded-full transition-all duration-700 ease-out"
               :style="{ width: `${queueStore.progressPercentage}%` }"
             ></div>
           </div>
@@ -138,7 +138,7 @@ function proceedToSeatSelection() {
         <div class="pt-4">
           <button
             @click="proceedToSeatSelection"
-            class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-surface-base hover:opacity-95 shadow-lg shadow-primary-500/20 cursor-pointer transition-all transform hover:-translate-y-0.5"
+            class="w-full sm:w-auto px-8 py-3.5 rounded-xl font-bold bg-linear-to-r from-primary-400 to-secondary-400 text-surface-base hover:opacity-95 shadow-lg shadow-primary-500/20 cursor-pointer transition-all transform hover:-translate-y-0.5"
           >
             Enter Seat Map & Selection &rarr;
           </button>

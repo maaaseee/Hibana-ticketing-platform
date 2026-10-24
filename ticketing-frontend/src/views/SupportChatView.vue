@@ -59,7 +59,7 @@ onMounted(() => {
     <!-- Header -->
     <div class="flex items-center justify-between pb-4 border-b border-border-default shrink-0">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-500 to-secondary-400 flex items-center justify-center text-surface-base font-bold shadow-md shadow-primary-500/20">
+        <div class="w-10 h-10 rounded-xl bg-linear-to-tr from-primary-500 to-secondary-400 flex items-center justify-center text-surface-base font-bold shadow-md shadow-primary-500/20">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>

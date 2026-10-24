@@ -34,23 +34,8 @@ const venueOptions = [
   { label: 'Teatro Rex (Buenos Aires)', value: 'Teatro Rex (Buenos Aires)' }
 ]
 
-// Dynamic list of upcoming months up to 8 months into future (Octubre 2026 to Mayo 2027)
-const availableMonths = computed(() => {
-  const baseYear = 2026
-  const baseMonth = 9 // October (0-indexed)
-  const list: { label: string; value: string }[] = []
-
-  for (let i = 0; i < 8; i++) {
-    const totalMonths = baseMonth + i
-    const year = baseYear + Math.floor(totalMonths / 12)
-    const monthIndex = totalMonths % 12
-    const monthName = SPANISH_MONTHS[monthIndex]
-    const label = `${monthName} ${year}`
-    list.push({ label, value: label })
-  }
-
-  return list
-})
+// Dynamic list of upcoming months up to the furthest event date
+const availableMonths = computed(() => catalog.availableMonths)
 
 // Debounced search handler (300ms)
 function handleSearchInput(e: Event) {
@@ -123,6 +108,8 @@ watch(
 
 onMounted(() => {
   syncFromRoute()
+  catalog.fetchCatalogMetadata()
+  catalog.fetchEvents()
 })
 
 onUnmounted(() => {
@@ -131,15 +118,42 @@ onUnmounted(() => {
   }
 })
 
+function fuzzyTextMatch(text: string, query: string): boolean {
+  if (!text || !query) return false
+  const t = text.toLowerCase()
+  const q = query.toLowerCase().trim()
+  if (t.includes(q)) return true
+
+  // Word-level edit distance for typo tolerance (e.g. "Colplay" -> "Coldplay")
+  const words = t.split(/[\s,.-]+/)
+  const qWords = q.split(/\s+/)
+
+  return qWords.every(qWord => {
+    if (qWord.length <= 3) return t.includes(qWord)
+    return words.some(word => {
+      if (word.includes(qWord)) return true
+      if (Math.abs(word.length - qWord.length) > 2) return false
+      const maxDistance = qWord.length <= 5 ? 1 : 2
+      let dist = 0
+      const minLen = Math.min(word.length, qWord.length)
+      for (let i = 0; i < minLen; i++) {
+        if (word[i] !== qWord[i]) dist++
+      }
+      dist += Math.abs(word.length - qWord.length)
+      return dist <= maxDistance
+    })
+  })
+}
+
 // Filtered events: starts from upcomingEvents (chronologically sorted)
 const filteredEvents = computed(() => {
   return catalog.upcomingEvents.filter((event: EventItem) => {
-    // 1. Text Search matching title, subtitle, lineup (or artist)
-    const query = debouncedQuery.value.toLowerCase().trim()
+    // 1. Text Search matching title, subtitle, lineup (or artist) with typo tolerance
+    const query = debouncedQuery.value.trim()
     if (query) {
-      const titleMatch = event.title.toLowerCase().includes(query)
-      const subtitleMatch = event.subtitle ? event.subtitle.toLowerCase().includes(query) : false
-      const lineupMatch = event.lineup ? event.lineup.toLowerCase().includes(query) : false
+      const titleMatch = fuzzyTextMatch(event.title, query)
+      const subtitleMatch = event.subtitle ? fuzzyTextMatch(event.subtitle, query) : false
+      const lineupMatch = event.lineup ? fuzzyTextMatch(event.lineup, query) : false
       if (!titleMatch && !subtitleMatch && !lineupMatch) {
         return false
       }
@@ -205,7 +219,7 @@ function resetFilters() {
   <div class="flex flex-col w-full min-h-[calc(100vh-64px)] bg-surface text-high-emphasis pb-24 relative overflow-hidden">
     <!-- Ambient Topography Background: Top side of the shows list, slowly vanishing downwards (+300px extended, softened opacity) -->
     <div
-      class="shows-topography-wrapper pointer-events-none absolute inset-x-0 top-0 h-[940px] overflow-hidden z-0"
+      class="shows-topography-wrapper pointer-events-none absolute inset-x-0 top-0 h-235 overflow-hidden z-0"
       aria-hidden="true"
     >
       <!-- Base Topographic Elevation Map with Progressive Downward Mask & Subdued Opacity -->
@@ -215,15 +229,15 @@ function resetFilters() {
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_75%_50%_at_50%_15%,rgba(0,207,243,0.08),transparent_70%)] pointer-events-none"></div>
 
       <!-- Seamless Downward Vanish Gradient Overlay into Deep Surface Canvas -->
-      <div class="absolute inset-0 bg-gradient-to-b from-transparent via-surface/50 to-surface pointer-events-none"></div>
+      <div class="absolute inset-0 bg-linear-to-b from-transparent via-surface/50 to-surface pointer-events-none"></div>
     </div>
 
     <!-- Header Hero con Skyvia Font y Controles de Filtrado (Sin barra/border separador) -->
-    <header class="relative z-10 w-full overflow-hidden pt-14 pb-8 md:pt-16 md:pb-10">
+    <header class="relative z-10 w-full overflow-hidden pt-14 pb-8 md:pt-16 md:pb-10 select-none">
       <div class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center gap-7">
         <!-- Título con Skyvia Demo Bold -->
-        <h1 class="font-skyvia text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-high-emphasis tracking-tight drop-shadow-lg">
-          Cartelera de Shows
+        <h1 class="font-skyvia text-3xl sm:text-5xl md:text-6xl lg:text-7xl  font-bold text-high-emphasis tracking-wide drop-shadow-lg">
+          Shows
         </h1>
 
         <!-- Controles de Filtrado Centrados (Nombre, Fecha por Meses, y Estadios) -->
@@ -294,7 +308,7 @@ function resetFilters() {
     <main class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
       <div
         v-if="filteredEvents.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-6"
       >
         <EventCard
           v-for="event in filteredEvents"

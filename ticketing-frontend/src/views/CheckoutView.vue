@@ -32,7 +32,7 @@ const isProcessing = ref(false)
 const orderCompleted = ref(false)
 const orderId = ref('')
 
-function handleCompleteOrder() {
+async function handleCompleteOrder() {
   if (selectedSeats.value.length === 0) return
   isProcessing.value = true
 
@@ -49,6 +49,9 @@ function handleCompleteOrder() {
       return
     }
 
+    // Confirm remote reservation in inventory service
+    await ticketingStore.confirmAllActiveReservations(newOrderId)
+
     ticketsStore.addIssuedTickets(
       currentEvent.title,
       currentEvent.date,
@@ -63,7 +66,7 @@ function handleCompleteOrder() {
       ticketingStore.releaseExpiredLocks()
       isProcessing.value = false
       orderCompleted.value = true
-    }, 1300)
+    }, 1000)
   } else {
     isProcessing.value = false
   }
@@ -286,7 +289,7 @@ function navigateToTickets() {
           <button
             @click="handleCompleteOrder"
             :disabled="isProcessing || selectedSeats.length === 0"
-            class="w-full py-4 px-4 rounded-xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-surface-base hover:opacity-95 shadow-xl shadow-primary-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+            class="w-full py-4 px-4 rounded-xl font-bold bg-linear-to-r from-primary-400 to-secondary-400 text-surface-base hover:opacity-95 shadow-xl shadow-primary-500/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
           >
             <span v-if="isProcessing" class="inline-block w-4 h-4 border-2 border-surface-base border-t-transparent rounded-full animate-spin"></span>
             <span>{{ isProcessing ? 'Autorizando Transacción...' : `Pagar $${grandTotal.toLocaleString('es-AR')} ARS` }}</span>

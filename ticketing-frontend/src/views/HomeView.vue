@@ -48,6 +48,8 @@ function setSlide(idx: number) {
 }
 
 onMounted(() => {
+  catalog.fetchHomeHighlights()
+
   autoPlayTimer = setInterval(() => {
     if (!isAutoPlayPaused.value) {
       nextSlide()
@@ -66,9 +68,20 @@ onUnmounted(() => {
   if (promoTimer) clearInterval(promoTimer)
 })
 
-// Secciones fijas: muestran a lo sumo 3 eventos
-const recentEvents = computed(() => catalog.recentlyAddedEvents.slice(0, 3))
-const upcomingEvents = computed(() => catalog.upcomingEvents.slice(0, 3))
+// Secciones fijas: muestran a lo sumo 3 eventos cada una
+const recentEvents = computed(() => {
+  if (catalog.homeHighlights.recentlyAdded && catalog.homeHighlights.recentlyAdded.length > 0) {
+    return catalog.homeHighlights.recentlyAdded.slice(0, 3)
+  }
+  return catalog.recentlyAddedEvents.slice(0, 3)
+})
+
+const upcomingEvents = computed(() => {
+  if (catalog.homeHighlights.upcoming && catalog.homeHighlights.upcoming.length > 0) {
+    return catalog.homeHighlights.upcoming.slice(0, 3)
+  }
+  return catalog.upcomingEvents.slice(0, 3)
+})
 
 function goToEvent(id: string) {
   router.push({ name: 'event-detail', params: { id } })
@@ -268,7 +281,7 @@ function openVenueModal(venue: VenueWithImage) {
       v-if="activeSlide"
       @mouseenter="isAutoPlayPaused = true"
       @mouseleave="isAutoPlayPaused = false"
-      class="relative w-full overflow-hidden h-[55vh] min-h-[440px] max-h-[600px] bg-surface group border-b border-border-subtle"
+      class="relative w-full overflow-hidden h-[55vh] min-h-110 max-h-150 bg-surface group border-b border-border-subtle"
     >
       <!-- Background Image with Fade Transition -->
       <transition name="carousel-fade" mode="out-in">
@@ -315,7 +328,7 @@ function openVenueModal(venue: VenueWithImage) {
           </div>
 
           <!-- Título -->
-          <h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[54px] md:leading-[56px] lg:leading-[62px] font-extrabold text-high-emphasis tracking-tight drop-shadow-md">
+          <h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[54px] md:leading-14 lg:leading-15.5 font-extrabold text-high-emphasis tracking-tight drop-shadow-md">
             {{ activeSlide.title }}
           </h1>
 
@@ -370,7 +383,7 @@ function openVenueModal(venue: VenueWithImage) {
           :src="'/Wave Line.svg'"
           alt=""
           aria-hidden="true"
-          class="w-[125vw] min-w-[125%] max-w-none h-auto min-h-[380px] object-cover object-top opacity-35 select-none pointer-events-none shrink-0"
+          class="w-[125vw] min-w-[125%] max-w-none h-auto min-h-95 object-cover object-top opacity-35 select-none pointer-events-none shrink-0"
         />
       </div>
 
@@ -492,7 +505,7 @@ function openVenueModal(venue: VenueWithImage) {
                 :alt="service.title"
                 class="w-full h-full object-cover"
               />
-              <div class="absolute inset-0 bg-gradient-to-t from-surface-card via-transparent to-transparent"></div>
+              <div class="absolute inset-0 bg-linear-to-t from-surface-card via-transparent to-transparent"></div>
               <div class="absolute bottom-3 left-4 flex items-center gap-2">
                 <div class="w-8 h-8 rounded-lg bg-surface-dim/90 border border-border-subtle flex items-center justify-center text-primary">
                   <span class="material-symbols-outlined text-[18px]">{{ service.icon }}</span>
@@ -550,7 +563,7 @@ function openVenueModal(venue: VenueWithImage) {
             v-for="venue in venuesList"
             :key="venue.id"
             @click="openVenueModal(venue)"
-            class="relative h-[340px] sm:h-[380px] rounded-3xl overflow-hidden group cursor-pointer border border-border-subtle hover:border-primary/60 transition-all duration-500 shadow-xl hover:shadow-[0_16px_40px_rgba(0,104,143,0.3)] flex flex-col justify-end p-6"
+            class="relative h-85 sm:h-95 rounded-3xl overflow-hidden group cursor-pointer border border-border-subtle hover:border-primary/60 transition-all duration-500 shadow-xl hover:shadow-[0_16px_40px_rgba(0,104,143,0.3)] flex flex-col justify-end p-6"
           >
             <!-- Fotografía de Fondo Completa con Zoom Dinámico en Hover -->
             <img
@@ -665,7 +678,7 @@ function openVenueModal(venue: VenueWithImage) {
                   </p>
 
                   <div class="pt-2 border-t border-white/10 flex items-center justify-between text-[11px] font-mono text-medium-emphasis">
-                    <span class="truncate max-w-[200px]">{{ promo.card }}</span>
+                    <span class="truncate max-w-50">{{ promo.card }}</span>
                     <span class="text-primary font-semibold flex items-center gap-1 shrink-0">
                       <span class="material-symbols-outlined text-sm">credit_card</span>
                       <span>En Checkout</span>
@@ -681,7 +694,7 @@ function openVenueModal(venue: VenueWithImage) {
 
     <!-- 7. REDIRECCIÓN A FAQ (Cartel Ampliado, Destacado y de Alto Impacto Visual) -->
     <section class="w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="relative overflow-hidden bg-gradient-to-br from-surface-card via-surface-elevated to-surface-container-deep border border-border-subtle rounded-3xl p-8 sm:p-12 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-10 shadow-2xl">
+      <div class="relative overflow-hidden bg-linear-to-br from-surface-card via-surface-elevated to-surface-container-deep border border-border-subtle rounded-3xl p-8 sm:p-12 md:p-16 flex flex-col lg:flex-row items-center justify-between gap-8 sm:gap-10 shadow-2xl">
         <!-- Resplandores ambientales de fondo -->
         <div class="absolute -right-24 -bottom-24 w-96 h-96 bg-primary/10 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -left-20 -top-20 w-72 h-72 bg-secondary/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -752,7 +765,7 @@ function openVenueModal(venue: VenueWithImage) {
               :alt="selectedVenue.name"
               class="w-full h-full object-cover"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-surface-card via-surface-card/60 to-transparent"></div>
+            <div class="absolute inset-0 bg-linear-to-t from-surface-card via-surface-card/60 to-transparent"></div>
 
             <!-- Botón Cerrar (Radix DialogClose) -->
             <DialogClose

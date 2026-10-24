@@ -15,11 +15,12 @@ const queueStore = useQueueStore()
 const eventId = computed(() => (route.params.id as string) || 'evt-stellar-2026')
 const event = computed(() => catalogStore.getEventById(eventId.value))
 
-onMounted(() => {
+onMounted(async () => {
   // Ensure queue token is active for local demo testing
   if (!queueStore.checkoutToken) {
     queueStore.checkoutToken = `tkn_auto_${Date.now()}`
   }
+  await ticketingStore.loadSeatsForEvent(eventId.value)
 })
 
 function handleSeatSelect(seatId: string) {
@@ -65,6 +66,25 @@ function proceedToCheckout() {
       </div>
     </div>
 
+    <!-- Error / Collision Notification Banner (Accessible with aria-live) -->
+    <div
+      v-if="ticketingStore.errorNotification"
+      role="alert"
+      aria-live="polite"
+      class="flex items-center justify-between gap-3 p-4 rounded-xl bg-rose-950/70 border border-rose-500/40 text-rose-200 text-sm font-sans shadow-lg animate-fadeIn"
+    >
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-rose-400 animate-ping"></span>
+        <span>{{ ticketingStore.errorNotification }}</span>
+      </div>
+      <button
+        @click="ticketingStore.errorNotification = null"
+        class="text-xs font-mono text-rose-300 hover:text-white px-2 py-1 rounded bg-rose-900/60 transition-colors"
+      >
+        Entendido
+      </button>
+    </div>
+
     <!-- Main Seatmap & Summary Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
       
@@ -89,10 +109,10 @@ function proceedToCheckout() {
           
           <!-- Virtual Stage Banner -->
           <div class="text-center py-2 mb-2">
-            <div class="inline-block px-12 py-1 rounded-t-xl bg-gradient-to-b from-primary-500/20 to-transparent border-t-2 border-primary-400/80 text-[11px] font-mono tracking-widest text-primary-300 uppercase">
+            <div class="inline-block px-12 py-1 rounded-t-xl bg-linear-to-b from-primary-500/20 to-transparent border-t-2 border-primary-400/80 text-[11px] font-mono tracking-widest text-primary-300 uppercase">
               Main Stage / Escenario Frontal
             </div>
-            <div class="h-0.5 max-w-md mx-auto bg-gradient-to-r from-transparent via-primary-400/60 to-transparent"></div>
+            <div class="h-0.5 max-w-md mx-auto bg-linear-to-r from-transparent via-primary-400/60 to-transparent"></div>
           </div>
 
           <!-- HTML5 Canvas Component with full Pan & Zoom -->
