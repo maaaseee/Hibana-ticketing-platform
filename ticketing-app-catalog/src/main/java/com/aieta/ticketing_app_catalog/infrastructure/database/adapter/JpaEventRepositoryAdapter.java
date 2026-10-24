@@ -6,6 +6,7 @@ import com.aieta.ticketing_app_catalog.infrastructure.database.mapper.EventMappe
 import com.aieta.ticketing_app_catalog.infrastructure.database.repository.SpringDataEventRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +32,36 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
     @Override
     public List<EventSummary> findByCategoryAndPublished(String category) {
         return eventRepository.findByCategoryAndPublished(category)
+                .stream()
+                .map(eventMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EventSummary> findRecentlyAddedPublished() {
+        return eventRepository.findRecentlyAddedPublished()
+                .stream()
+                .map(eventMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<EventSummary> findUpcomingPublishedTop3(Instant referenceDate) {
+        Instant ref = referenceDate != null ? referenceDate : Instant.now();
+        return eventRepository.findUpcomingPublishedTop3(ref)
+                .stream()
+                .map(eventMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public Optional<Instant> findFurthestPublishedEventDate() {
+        return eventRepository.findFurthestPublishedEventDate();
+    }
+
+    @Override
+    public List<EventSummary> searchEventsFuzzy(String query, String venue) {
+        return eventRepository.searchEventsFuzzy(query, venue)
                 .stream()
                 .map(eventMapper::toDomain)
                 .toList();

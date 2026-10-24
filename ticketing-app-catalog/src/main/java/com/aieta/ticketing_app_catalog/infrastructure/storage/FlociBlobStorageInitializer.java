@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -16,7 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
 /**
- * Ensures that the mock Azure Blob Storage container and sample venue seat map layout
+ * Ensures that the mock Azure Blob Storage container and sample venue seat map layouts
  * are provisioned on the Floci-AZ emulator (http://localhost:4577/devstoreaccount1).
  */
 @Component
@@ -43,6 +46,7 @@ public class FlociBlobStorageInitializer implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         try {
             ensureContainerExists();
+            seedAllVenueSeatMaps();
             seedEstadioNacionalSeatMap();
         } catch (Exception e) {
             log.warn("Floci-AZ Blob Storage initialization skipped or unavailable: {}", e.getMessage());
@@ -69,6 +73,43 @@ public class FlociBlobStorageInitializer implements ApplicationRunner {
         }
     }
 
+    private void seedAllVenueSeatMaps() {
+        try {
+            PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            Resource[] resources = resolver.getResources("classpath:seat-maps/*.json");
+            for (Resource resource : resources) {
+                String filename = resource.getFilename();
+                if (filename == null) continue;
+                try (InputStream is = resource.getInputStream()) {
+                    String jsonContent = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                    uploadBlob(filename, jsonContent);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to seed classpath seat-maps to Floci-AZ: {}", e.getMessage());
+        }
+    }
+
+    private void uploadBlob(String blobName, String jsonContent) {
+        try {
+            String blobUrl = blobEndpoint + "/" + venuesContainer + "/" + blobName;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(blobUrl))
+                    .header("x-ms-blob-type", "BlockBlob")
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(jsonContent, StandardCharsets.UTF_8))
+                    .timeout(Duration.ofSeconds(3))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 201 || response.statusCode() == 200) {
+                log.info("Provisioned venue seat map [{}] on Floci-AZ: {}", blobName, blobUrl);
+            }
+        } catch (Exception e) {
+            log.debug("Floci-AZ uploadBlob [{}]: {}", blobName, e.getMessage());
+        }
+    }
+
     private void seedEstadioNacionalSeatMap() {
         try {
             String blobName = "estadio-nacional-seatmap.json";
@@ -78,45 +119,30 @@ public class FlociBlobStorageInitializer implements ApplicationRunner {
             {
               "venueId": "ven_estadio_nacional",
               "venueName": "Estadio Nacional Julio Martínez Prádanos",
-              "canvas": {
-                "width": 1920,
-                "height": 1080
-              },
+              "canvasWidth": 1920,
+              "canvasHeight": 1080,
               "sectors": [
                 {
-                  "sectorId": "sec_coldplay_vip",
+                  "id": "sec_coldplay_vip",
                   "name": "Cancha VIP Front",
                   "type": "GENERAL_ADMISSION",
-                  "polygon": [[500, 300], [1420, 300], [1420, 600], [500, 600]],
-                  "color": "#4A90E2"
+                  "shapeType": "POLYGON",
+                  "points": [[500, 300], [1420, 300], [1420, 600], [500, 600]],
+                  "capacity": 5000
                 },
                 {
-                  "sectorId": "sec_coldplay_andes",
+                  "id": "sec_coldplay_andes",
                   "name": "Tribuna Andes",
                   "type": "NUMBERED_SEATS",
-                  "polygon": [[200, 200], [450, 200], [450, 800], [200, 800]],
-                  "color": "#E94E77",
-                  "rows": 40,
-                  "seatsPerRow": 30
+                  "shapeType": "POLYGON",
+                  "points": [[200, 200], [450, 200], [450, 800], [200, 800]],
+                  "capacity": 12000
                 }
               ]
             }
             """;
 
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(blobUrl))
-                    .header("x-ms-blob-type", "BlockBlob")
-                    .header("Content-Type", "application/json")
-                    .PUT(HttpRequest.BodyPublishers.ofString(layoutJson, StandardCharsets.UTF_8))
-                    .timeout(Duration.ofSeconds(3))
-                    .build();
-
-            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 201 || response.statusCode() == 200) {
-                log.info("Successfully provisioned venue seat map blob on Floci-AZ: {}", blobUrl);
-            } else {
-                log.info("Seat map blob upload returned status: {}", response.statusCode());
-            }
+            uploadBlob(blobName, layoutJson);
         } catch (Exception e) {
             log.debug("Floci-AZ seed blob: {}", e.getMessage());
         }

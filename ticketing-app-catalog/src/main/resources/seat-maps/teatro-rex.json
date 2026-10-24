@@ -1,0 +1,137 @@
+{
+  "venueId": "teatro-rex",
+  "venueName": "Teatro Rex (Buenos Aires)",
+  "venueType": "TEATRO_HISTORICO",
+  "canvasWidth": 900,
+  "canvasHeight": 910,
+  "viewBox": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 900,
+    "maxY": 910
+  },
+  "stage": {
+    "x": 230,
+    "y": 35,
+    "width": 440,
+    "height": 65,
+    "label": "PROSCENIO / ESCENARIO TEATRAL",
+    "shape": "RECTANGLE"
+  },
+  "sectors": [
+    {
+      "id": "sec-rex-palcos-izq",
+      "name": "Palcos Bajos Izquierda",
+      "type": "VIP",
+      "shapeType": "POLYGON",
+      "color": "rgba(234, 179, 8, 0.28)",
+      "strokeColor": "#eab308",
+      "capacity": 100,
+      "points": [
+        [60, 120],
+        [185, 120],
+        [185, 420],
+        [60, 420]
+      ],
+      "labelPosition": [122, 270]
+    },
+    {
+      "id": "sec-rex-platea-platino",
+      "name": "Platea Platino (Filas 1–12)",
+      "type": "VIP",
+      "shapeType": "GRID",
+      "color": "rgba(16, 185, 129, 0.25)",
+      "strokeColor": "#10b981",
+      "capacity": 700,
+      "x": 215,
+      "y": 120,
+      "width": 470,
+      "height": 135
+    },
+    {
+      "id": "sec-rex-platea-oro",
+      "name": "Platea Oro (Filas 13–25)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "GRID",
+      "color": "rgba(56, 189, 248, 0.25)",
+      "strokeColor": "#38bdf8",
+      "capacity": 850,
+      "x": 215,
+      "y": 275,
+      "width": 470,
+      "height": 145
+    },
+    {
+      "id": "sec-rex-palcos-der",
+      "name": "Palcos Bajos Derecha",
+      "type": "VIP",
+      "shapeType": "POLYGON",
+      "color": "rgba(234, 179, 8, 0.28)",
+      "strokeColor": "#eab308",
+      "capacity": 100,
+      "points": [
+        [715, 120],
+        [840, 120],
+        [840, 420],
+        [715, 420]
+      ],
+      "labelPosition": [778, 270]
+    },
+    {
+      "id": "sec-rex-super-pullman",
+      "name": "Super Pullman (Primer Piso)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(168, 85, 247, 0.25)",
+      "strokeColor": "#a855f7",
+      "capacity": 650,
+      "points": [
+        [60, 450],
+        [190, 450],
+        [210, 480],
+        [690, 480],
+        [710, 450],
+        [840, 450],
+        [840, 580],
+        [60, 580]
+      ],
+      "labelPosition": [500, 530]
+    },
+    {
+      "id": "sec-rex-pullman",
+      "name": "Pullman (Segundo Nivel)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(236, 72, 153, 0.25)",
+      "strokeColor": "#ec4899",
+      "capacity": 600,
+      "points": [
+        [60, 600],
+        [180, 600],
+        [200, 625],
+        [700, 625],
+        [720, 600],
+        [840, 600],
+        [840, 725],
+        [60, 725]
+      ],
+      "labelPosition": [500, 675]
+    },
+    {
+      "id": "sec-rex-tertulia",
+      "name": "Tertulia Superior",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(156, 163, 175, 0.25)",
+      "strokeColor": "#9ca3af",
+      "capacity": 262,
+      "points": [
+        [60, 745],
+        [840, 745],
+        [840, 870],
+        [60, 870]
+      ],
+      "labelPosition": [500, 810]
+    }
+  ]
+}

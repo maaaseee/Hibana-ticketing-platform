@@ -83,7 +83,7 @@ class EventJpaRepositoryIT {
         assertEquals("evt_coldplay_2026", event.id());
         assertEquals("Estadio Nacional Julio Martínez Prádanos", event.venue().name());
         assertNotNull(event.mediaJson());
-        assertTrue(event.mediaJson().contains("banner.webp"));
+        assertTrue(event.mediaJson().contains("coldplay"));
     }
 
     @Test
@@ -91,5 +91,43 @@ class EventJpaRepositoryIT {
     void shouldReturnEmptyForNonExistentId() {
         Optional<EventSummary> optionalEvent = eventRepositoryPort.findById("evt_non_existent_9999");
         assertTrue(optionalEvent.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should retrieve top 3 recently added published events")
+    void shouldFindRecentlyAddedPublishedEvents() {
+        List<EventSummary> recent = eventRepositoryPort.findRecentlyAddedPublished();
+        assertNotNull(recent);
+        assertFalse(recent.isEmpty());
+        assertTrue(recent.size() <= 3);
+        assertTrue(recent.stream().allMatch(e -> e.status() == EventStatus.PUBLISHED));
+    }
+
+    @Test
+    @DisplayName("Should retrieve top 3 upcoming published events closest to navigation date")
+    void shouldFindUpcomingPublishedTop3Events() {
+        List<EventSummary> upcoming = eventRepositoryPort.findUpcomingPublishedTop3(java.time.Instant.now());
+        assertNotNull(upcoming);
+        assertFalse(upcoming.isEmpty());
+        assertTrue(upcoming.size() <= 3);
+        assertTrue(upcoming.stream().allMatch(e -> e.status() == EventStatus.PUBLISHED));
+    }
+
+    @Test
+    @DisplayName("Should find furthest published event date")
+    void shouldFindFurthestPublishedEventDate() {
+        Optional<java.time.Instant> furthestDate = eventRepositoryPort.findFurthestPublishedEventDate();
+        assertNotNull(furthestDate);
+        assertTrue(furthestDate.isPresent());
+        assertTrue(furthestDate.get().isAfter(java.time.Instant.now()));
+    }
+
+    @Test
+    @DisplayName("Should perform typo-tolerant fuzzy search matching 'Colplay' to Coldplay")
+    void shouldFuzzySearchEventsWithTypos() {
+        List<EventSummary> results = eventRepositoryPort.searchEventsFuzzy("Colplay", null);
+        assertNotNull(results);
+        assertFalse(results.isEmpty(), "Fuzzy search with typo 'Colplay' should match Coldplay");
+        assertTrue(results.stream().anyMatch(e -> "evt_coldplay_2026".equals(e.id())));
     }
 }

@@ -1,0 +1,56 @@
+{
+  "venueId": "ven_estadio_nacional",
+  "venueName": "Estadio Nacional Julio Martínez Prádanos",
+  "venueType": "ESTADIO_MASIVO",
+  "canvasWidth": 1000,
+  "canvasHeight": 850,
+  "viewBox": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 1000,
+    "maxY": 850
+  },
+  "stage": {
+    "x": 350,
+    "y": 40,
+    "width": 300,
+    "height": 60,
+    "label": "ESCENARIO PRINCIPAL",
+    "shape": "RECTANGLE"
+  },
+  "sectors": [
+    {
+      "id": "sec_coldplay_vip",
+      "name": "Cancha VIP Front",
+      "type": "VIP",
+      "shapeType": "POLYGON",
+      "color": "rgba(234, 179, 8, 0.25)",
+      "strokeColor": "#eab308",
+      "capacity": 5000,
+      "standingArea": true,
+      "points": [
+        [320, 120],
+        [680, 120],
+        [680, 320],
+        [320, 320]
+      ],
+      "labelPosition": [500, 220]
+    },
+    {
+      "id": "sec_coldplay_andes",
+      "name": "Tribuna Andes",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(56, 189, 248, 0.20)",
+      "strokeColor": "#38bdf8",
+      "capacity": 12000,
+      "points": [
+        [720, 140],
+        [880, 140],
+        [880, 600],
+        [720, 600]
+      ],
+      "labelPosition": [800, 370]
+    }
+  ]
+}

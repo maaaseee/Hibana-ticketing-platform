@@ -1,18 +1,31 @@
 package com.aieta.ticketing_app_catalog.infrastructure.api;
 
+import com.aieta.ticketing_app_catalog.application.query.get_catalog_metadata.GetCatalogMetadataQuery;
 import com.aieta.ticketing_app_catalog.application.query.get_event_by_id.GetEventByIdQuery;
+import com.aieta.ticketing_app_catalog.application.query.get_home_highlights.GetHomeHighlightsQuery;
 import com.aieta.ticketing_app_catalog.application.query.get_upcoming_events.GetUpcomingEventsQuery;
+import com.aieta.ticketing_app_catalog.application.query.search_events.SearchEventsQuery;
 import com.aieta.ticketing_app_catalog.common.mediator.Mediator;
+import com.aieta.ticketing_app_catalog.domain.entity.CatalogMetadata;
 import com.aieta.ticketing_app_catalog.domain.entity.EventSectorSummary;
 import com.aieta.ticketing_app_catalog.domain.entity.EventSummary;
+import com.aieta.ticketing_app_catalog.domain.entity.HomeHighlights;
+import com.aieta.ticketing_app_catalog.domain.entity.VenueSummary;
+import com.aieta.ticketing_app_catalog.infrastructure.api.dto.CatalogMetadataResponse;
 import com.aieta.ticketing_app_catalog.infrastructure.api.dto.EventResponse;
+import com.aieta.ticketing_app_catalog.infrastructure.api.dto.HomeHighlightsResponse;
 import com.aieta.ticketing_app_catalog.infrastructure.api.dto.SectorResponse;
+import com.aieta.ticketing_app_catalog.infrastructure.api.dto.VenueResponse;
+import com.aieta.ticketing_app_catalog.infrastructure.cache.CatalogCacheService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 
@@ -22,15 +35,76 @@ public class EventController {
 
     private final Mediator mediator;
     private final ObjectMapper objectMapper;
+    private final CatalogCacheService cacheService;
 
-    public EventController(Mediator mediator, ObjectMapper objectMapper) {
+    public EventController(Mediator mediator, ObjectMapper objectMapper, CatalogCacheService cacheService) {
         this.mediator = mediator;
         this.objectMapper = objectMapper;
+        this.cacheService = cacheService;
     }
 
     @GetMapping(version = "1.0")
-    public ResponseEntity<List<EventResponse>> getUpcomingEvents(@RequestParam(name = "category", required = false) String category) {
-        List<EventSummary> events = mediator.dispatch(new GetUpcomingEventsQuery(category));
+    public ResponseEntity<List<EventResponse>> getUpcomingEvents(
+            @RequestParam(name = "category", required = false) String category,
+            @RequestParam(name = "q", required = false) String query,
+            @RequestParam(name = "venue", required = false) String venue) {
+        List<EventSummary> events;
+        if ((query != null && !query.isBlank()) || (venue != null && !venue.isBlank())) {
+            events = mediator.dispatch(new SearchEventsQuery(query, venue));
+        } else {
+            events = mediator.dispatch(new GetUpcomingEventsQuery(category));
+        }
+        List<EventResponse> response = events.stream().map(this::mapToResponse).toList();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/highlights", version = "1.0")
+    public ResponseEntity<HomeHighlightsResponse> getHomeHighlights(
+            @RequestParam(name = "referenceDate", required = false) Instant referenceDate) {
+        String cacheKey = referenceDate != null
+                ? "catalog:highlights:" + referenceDate.getEpochSecond() / 3600
+                : "catalog:highlights:latest";
+
+        HomeHighlightsResponse response = cacheService.getOrFetch(
+                cacheKey,
+                Duration.ofMinutes(10),
+                HomeHighlightsResponse.class,
+                () -> {
+                    HomeHighlights highlights = mediator.dispatch(new GetHomeHighlightsQuery(referenceDate));
+                    List<EventResponse> recentResponses = highlights.recentlyAdded().stream().map(this::mapToResponse).toList();
+                    List<EventResponse> upcomingResponses = highlights.upcoming().stream().map(this::mapToResponse).toList();
+                    return new HomeHighlightsResponse(recentResponses, upcomingResponses);
+                }
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300, stale-while-revalidate=600")
+                .body(response);
+    }
+
+    @GetMapping(path = "/meta", version = "1.0")
+    public ResponseEntity<CatalogMetadataResponse> getCatalogMetadata() {
+        CatalogMetadataResponse response = cacheService.getOrFetch(
+                "catalog:metadata",
+                Duration.ofMinutes(10),
+                CatalogMetadataResponse.class,
+                () -> {
+                    CatalogMetadata meta = mediator.dispatch(new GetCatalogMetadataQuery());
+                    List<VenueResponse> venueResponses = meta.venues().stream().map(this::mapVenueResponse).toList();
+                    return new CatalogMetadataResponse(meta.furthestEventDate(), venueResponses);
+                }
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300, stale-while-revalidate=600")
+                .body(response);
+    }
+
+    @GetMapping(path = "/search", version = "1.0")
+    public ResponseEntity<List<EventResponse>> searchEvents(
+            @RequestParam(name = "q", required = false) String query,
+            @RequestParam(name = "venue", required = false) String venue) {
+        List<EventSummary> events = mediator.dispatch(new SearchEventsQuery(query, venue));
         List<EventResponse> response = events.stream().map(this::mapToResponse).toList();
         return ResponseEntity.ok(response);
     }
@@ -55,6 +129,7 @@ public class EventController {
 
         String bannerUrl = extractJsonField(event.mediaJson(), "bannerUrl");
         String posterUrl = extractJsonField(event.mediaJson(), "posterUrl");
+        String description = extractJsonField(event.mediaJson(), "description");
 
         return new EventResponse(
                 event.id(),
@@ -75,6 +150,8 @@ public class EventController {
                 currency,
                 bannerUrl,
                 posterUrl,
+                description,
+                event.salesPolicyJson(),
                 sectorResponses
         );
     }
@@ -90,6 +167,19 @@ public class EventController {
                 sector.serviceFee(),
                 total,
                 sector.currency()
+        );
+    }
+
+    private VenueResponse mapVenueResponse(VenueSummary venue) {
+        return new VenueResponse(
+                venue.id(),
+                venue.name(),
+                venue.city(),
+                venue.country(),
+                venue.address(),
+                venue.latitude(),
+                venue.longitude(),
+                venue.seatMapUrl()
         );
     }
 

@@ -1,0 +1,1155 @@
+{
+  "venueId": "estadio-monumental",
+  "venueName": "Estadio Monumental (Buenos Aires)",
+  "venueType": "ESTADIO_MASIVO",
+  "canvasWidth": 1200,
+  "canvasHeight": 1040,
+  "viewBox": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 1200,
+    "maxY": 1040
+  },
+  "stage": {
+    "x": 410,
+    "y": 190,
+    "width": 380,
+    "height": 70,
+    "label": "ESCENARIO PRINCIPAL",
+    "shape": "RECTANGLE"
+  },
+  "sectors": [
+    {
+      "id": "sec-monumental-campo-vip",
+      "name": "Campo Delantero VIP",
+      "type": "VIP",
+      "shapeType": "POLYGON",
+      "color": "rgba(234, 179, 8, 0.28)",
+      "strokeColor": "#eab308",
+      "capacity": 12000,
+      "standingArea": true,
+      "points": [
+        [
+          380,
+          275
+        ],
+        [
+          820,
+          275
+        ],
+        [
+          820,
+          420
+        ],
+        [
+          380,
+          420
+        ]
+      ],
+      "labelPosition": [
+        600,
+        345
+      ]
+    },
+    {
+      "id": "sec-monumental-campo-general",
+      "name": "Campo General Trasero",
+      "type": "GENERAL_ADMISSION",
+      "shapeType": "POLYGON",
+      "color": "rgba(16, 185, 129, 0.25)",
+      "strokeColor": "#10b981",
+      "capacity": 16000,
+      "standingArea": true,
+      "points": [
+        [
+          380,
+          435
+        ],
+        [
+          820,
+          435
+        ],
+        [
+          840,
+          560
+        ],
+        [
+          760,
+          680
+        ],
+        [
+          600,
+          725
+        ],
+        [
+          440,
+          680
+        ],
+        [
+          360,
+          560
+        ]
+      ],
+      "labelPosition": [
+        600,
+        485
+      ]
+    },
+    {
+      "id": "control_tecnico_foh",
+      "name": "Control Técnico / FOH",
+      "type": "TECHNICAL",
+      "shapeType": "POLYGON",
+      "color": "rgba(100, 116, 139, 0.50)",
+      "strokeColor": "#94a3b8",
+      "capacity": 0,
+      "vendible": false,
+      "selectable": false,
+      "points": [
+        [
+          520,
+          560
+        ],
+        [
+          680,
+          560
+        ],
+        [
+          680,
+          620
+        ],
+        [
+          520,
+          620
+        ]
+      ],
+      "labelPosition": [
+        600,
+        590
+      ]
+    },
+    {
+      "id": "tribuna_sivori_norte_tecnica",
+      "name": "Estructura Sívori (Detrás Escenario)",
+      "type": "TECHNICAL",
+      "shapeType": "POLYGON",
+      "color": "rgba(51, 65, 85, 0.45)",
+      "strokeColor": "#64748b",
+      "capacity": 0,
+      "vendible": false,
+      "selectable": false,
+      "points": [
+        [
+          312,
+          144
+        ],
+        [
+          355,
+          117
+        ],
+        [
+          401,
+          95
+        ],
+        [
+          449,
+          78
+        ],
+        [
+          498,
+          65
+        ],
+        [
+          549,
+          58
+        ],
+        [
+          600,
+          55
+        ],
+        [
+          651,
+          58
+        ],
+        [
+          702,
+          65
+        ],
+        [
+          751,
+          78
+        ],
+        [
+          799,
+          95
+        ],
+        [
+          845,
+          117
+        ],
+        [
+          888,
+          144
+        ],
+        [
+          765,
+          310
+        ],
+        [
+          740,
+          295
+        ],
+        [
+          714,
+          282
+        ],
+        [
+          687,
+          273
+        ],
+        [
+          658,
+          266
+        ],
+        [
+          629,
+          261
+        ],
+        [
+          600,
+          260
+        ],
+        [
+          571,
+          261
+        ],
+        [
+          542,
+          266
+        ],
+        [
+          513,
+          273
+        ],
+        [
+          486,
+          282
+        ],
+        [
+          460,
+          295
+        ],
+        [
+          435,
+          310
+        ]
+      ],
+      "labelPosition": [
+        600,
+        110
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-alta-sanmartin-norte",
+      "name": "Platea San Martín Alta (Visión Reducida)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(249, 115, 22, 0.25)",
+      "strokeColor": "#f97316",
+      "capacity": 3000,
+      "points": [
+        [
+          146,
+          346
+        ],
+        [
+          160,
+          316
+        ],
+        [
+          176,
+          287
+        ],
+        [
+          194,
+          260
+        ],
+        [
+          214,
+          234
+        ],
+        [
+          236,
+          209
+        ],
+        [
+          260,
+          186
+        ],
+        [
+          319,
+          247
+        ],
+        [
+          299,
+          266
+        ],
+        [
+          281,
+          286
+        ],
+        [
+          264,
+          308
+        ],
+        [
+          249,
+          330
+        ],
+        [
+          236,
+          353
+        ],
+        [
+          224,
+          378
+        ]
+      ],
+      "labelPosition": [
+        229,
+        284
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-alta-sanmartin",
+      "name": "Platea San Martín Alta",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(236, 72, 153, 0.28)",
+      "strokeColor": "#ec4899",
+      "capacity": 8000,
+      "points": [
+        [
+          272,
+          866
+        ],
+        [
+          234,
+          829
+        ],
+        [
+          200,
+          788
+        ],
+        [
+          171,
+          744
+        ],
+        [
+          147,
+          697
+        ],
+        [
+          129,
+          648
+        ],
+        [
+          117,
+          598
+        ],
+        [
+          111,
+          546
+        ],
+        [
+          111,
+          494
+        ],
+        [
+          117,
+          442
+        ],
+        [
+          129,
+          392
+        ],
+        [
+          211,
+          415
+        ],
+        [
+          201,
+          457
+        ],
+        [
+          196,
+          499
+        ],
+        [
+          196,
+          541
+        ],
+        [
+          201,
+          583
+        ],
+        [
+          211,
+          625
+        ],
+        [
+          226,
+          665
+        ],
+        [
+          245,
+          703
+        ],
+        [
+          269,
+          739
+        ],
+        [
+          297,
+          772
+        ],
+        [
+          329,
+          802
+        ]
+      ],
+      "labelPosition": [
+        170,
+        636
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-baja-sanmartin-norte",
+      "name": "Platea San Martín Baja (Visión Reducida)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(249, 115, 22, 0.28)",
+      "strokeColor": "#f97316",
+      "capacity": 2500,
+      "points": [
+        [
+          238,
+          383
+        ],
+        [
+          249,
+          360
+        ],
+        [
+          262,
+          338
+        ],
+        [
+          277,
+          316
+        ],
+        [
+          293,
+          295
+        ],
+        [
+          310,
+          276
+        ],
+        [
+          329,
+          257
+        ],
+        [
+          405,
+          333
+        ],
+        [
+          392,
+          346
+        ],
+        [
+          379,
+          360
+        ],
+        [
+          368,
+          375
+        ],
+        [
+          358,
+          390
+        ],
+        [
+          348,
+          406
+        ],
+        [
+          340,
+          423
+        ]
+      ],
+      "labelPosition": [
+        322,
+        345
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-baja-sanmartin",
+      "name": "Platea San Martín Baja / Media",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(14, 165, 233, 0.28)",
+      "strokeColor": "#0ea5e9",
+      "capacity": 6500,
+      "points": [
+        [
+          339,
+          791
+        ],
+        [
+          308,
+          762
+        ],
+        [
+          281,
+          730
+        ],
+        [
+          258,
+          696
+        ],
+        [
+          239,
+          659
+        ],
+        [
+          225,
+          621
+        ],
+        [
+          215,
+          581
+        ],
+        [
+          211,
+          540
+        ],
+        [
+          211,
+          500
+        ],
+        [
+          215,
+          459
+        ],
+        [
+          225,
+          419
+        ],
+        [
+          331,
+          448
+        ],
+        [
+          324,
+          477
+        ],
+        [
+          320,
+          505
+        ],
+        [
+          320,
+          535
+        ],
+        [
+          324,
+          563
+        ],
+        [
+          331,
+          592
+        ],
+        [
+          341,
+          619
+        ],
+        [
+          355,
+          645
+        ],
+        [
+          371,
+          670
+        ],
+        [
+          391,
+          693
+        ],
+        [
+          413,
+          713
+        ]
+      ],
+      "labelPosition": [
+        278,
+        606
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-alta-belgrano-norte",
+      "name": "Platea Belgrano Alta (Visión Reducida)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(249, 115, 22, 0.25)",
+      "strokeColor": "#f97316",
+      "capacity": 3000,
+      "points": [
+        [
+          940,
+          186
+        ],
+        [
+          964,
+          209
+        ],
+        [
+          986,
+          234
+        ],
+        [
+          1006,
+          260
+        ],
+        [
+          1024,
+          287
+        ],
+        [
+          1040,
+          316
+        ],
+        [
+          1054,
+          346
+        ],
+        [
+          976,
+          378
+        ],
+        [
+          964,
+          353
+        ],
+        [
+          951,
+          330
+        ],
+        [
+          936,
+          308
+        ],
+        [
+          919,
+          286
+        ],
+        [
+          901,
+          266
+        ],
+        [
+          881,
+          247
+        ]
+      ],
+      "labelPosition": [
+        971,
+        284
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-alta-belgrano",
+      "name": "Platea Belgrano Alta",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(236, 72, 153, 0.28)",
+      "strokeColor": "#ec4899",
+      "capacity": 8000,
+      "points": [
+        [
+          1071,
+          392
+        ],
+        [
+          1083,
+          442
+        ],
+        [
+          1089,
+          494
+        ],
+        [
+          1089,
+          546
+        ],
+        [
+          1083,
+          598
+        ],
+        [
+          1071,
+          648
+        ],
+        [
+          1053,
+          697
+        ],
+        [
+          1029,
+          744
+        ],
+        [
+          1000,
+          788
+        ],
+        [
+          966,
+          829
+        ],
+        [
+          928,
+          866
+        ],
+        [
+          871,
+          802
+        ],
+        [
+          903,
+          772
+        ],
+        [
+          931,
+          739
+        ],
+        [
+          955,
+          703
+        ],
+        [
+          974,
+          665
+        ],
+        [
+          989,
+          625
+        ],
+        [
+          999,
+          583
+        ],
+        [
+          1004,
+          541
+        ],
+        [
+          1004,
+          499
+        ],
+        [
+          999,
+          457
+        ],
+        [
+          989,
+          415
+        ]
+      ],
+      "labelPosition": [
+        1030,
+        636
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-baja-belgrano-norte",
+      "name": "Platea Belgrano Baja (Visión Reducida)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(249, 115, 22, 0.28)",
+      "strokeColor": "#f97316",
+      "capacity": 2500,
+      "points": [
+        [
+          871,
+          257
+        ],
+        [
+          890,
+          276
+        ],
+        [
+          907,
+          295
+        ],
+        [
+          923,
+          316
+        ],
+        [
+          938,
+          337
+        ],
+        [
+          951,
+          360
+        ],
+        [
+          962,
+          383
+        ],
+        [
+          860,
+          423
+        ],
+        [
+          852,
+          406
+        ],
+        [
+          842,
+          390
+        ],
+        [
+          832,
+          375
+        ],
+        [
+          821,
+          360
+        ],
+        [
+          808,
+          346
+        ],
+        [
+          795,
+          333
+        ]
+      ],
+      "labelPosition": [
+        878,
+        345
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-baja-belgrano",
+      "name": "Platea Belgrano Baja / Media",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "POLYGON",
+      "color": "rgba(14, 165, 233, 0.28)",
+      "strokeColor": "#0ea5e9",
+      "capacity": 6500,
+      "points": [
+        [
+          975,
+          419
+        ],
+        [
+          985,
+          459
+        ],
+        [
+          989,
+          500
+        ],
+        [
+          989,
+          540
+        ],
+        [
+          985,
+          581
+        ],
+        [
+          975,
+          621
+        ],
+        [
+          961,
+          659
+        ],
+        [
+          942,
+          696
+        ],
+        [
+          919,
+          730
+        ],
+        [
+          892,
+          762
+        ],
+        [
+          861,
+          791
+        ],
+        [
+          787,
+          713
+        ],
+        [
+          809,
+          693
+        ],
+        [
+          829,
+          670
+        ],
+        [
+          845,
+          645
+        ],
+        [
+          859,
+          619
+        ],
+        [
+          869,
+          592
+        ],
+        [
+          876,
+          563
+        ],
+        [
+          880,
+          535
+        ],
+        [
+          880,
+          505
+        ],
+        [
+          876,
+          477
+        ],
+        [
+          869,
+          448
+        ]
+      ],
+      "labelPosition": [
+        922,
+        606
+      ]
+    },
+    {
+      "id": "sec-monumental-centenario-baja",
+      "name": "Tribuna Centenario Media / Baja",
+      "type": "GENERAL_ADMISSION",
+      "shapeType": "POLYGON",
+      "color": "rgba(217, 119, 6, 0.28)",
+      "strokeColor": "#d97706",
+      "capacity": 8000,
+      "points": [
+        [
+          840,
+          808
+        ],
+        [
+          797,
+          835
+        ],
+        [
+          751,
+          856
+        ],
+        [
+          702,
+          872
+        ],
+        [
+          652,
+          882
+        ],
+        [
+          600,
+          885
+        ],
+        [
+          548,
+          882
+        ],
+        [
+          498,
+          872
+        ],
+        [
+          449,
+          856
+        ],
+        [
+          403,
+          835
+        ],
+        [
+          360,
+          808
+        ],
+        [
+          428,
+          725
+        ],
+        [
+          458,
+          744
+        ],
+        [
+          491,
+          760
+        ],
+        [
+          527,
+          771
+        ],
+        [
+          563,
+          778
+        ],
+        [
+          600,
+          780
+        ],
+        [
+          637,
+          778
+        ],
+        [
+          673,
+          771
+        ],
+        [
+          709,
+          760
+        ],
+        [
+          742,
+          744
+        ],
+        [
+          772,
+          725
+        ]
+      ],
+      "labelPosition": [
+        600,
+        830
+      ]
+    },
+    {
+      "id": "sec-monumental-centenario-alta",
+      "name": "Tribuna Centenario Alta",
+      "type": "GENERAL_ADMISSION",
+      "shapeType": "POLYGON",
+      "color": "rgba(249, 115, 22, 0.28)",
+      "strokeColor": "#f97316",
+      "capacity": 8567,
+      "points": [
+        [
+          902,
+          886
+        ],
+        [
+          848,
+          921
+        ],
+        [
+          790,
+          949
+        ],
+        [
+          728,
+          969
+        ],
+        [
+          665,
+          981
+        ],
+        [
+          600,
+          985
+        ],
+        [
+          535,
+          981
+        ],
+        [
+          472,
+          969
+        ],
+        [
+          410,
+          949
+        ],
+        [
+          352,
+          921
+        ],
+        [
+          298,
+          886
+        ],
+        [
+          351,
+          819
+        ],
+        [
+          395,
+          848
+        ],
+        [
+          443,
+          870
+        ],
+        [
+          494,
+          887
+        ],
+        [
+          546,
+          897
+        ],
+        [
+          600,
+          900
+        ],
+        [
+          654,
+          897
+        ],
+        [
+          706,
+          887
+        ],
+        [
+          757,
+          870
+        ],
+        [
+          805,
+          848
+        ],
+        [
+          849,
+          819
+        ]
+      ],
+      "labelPosition": [
+        600,
+        935
+      ]
+    }
+  ]
+}

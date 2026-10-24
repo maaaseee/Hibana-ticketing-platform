@@ -23,7 +23,9 @@ public class GetEventByIdQueryHandler implements RequestHandler<GetEventByIdQuer
         if (query.eventId() == null || query.eventId().isBlank()) {
             throw new InvalidEventIdentifierException("Event ID cannot be null or blank");
         }
-        return eventRepositoryPort.findById(query.eventId().trim())
+        String idOrSlug = query.eventId().trim();
+        return eventRepositoryPort.findById(idOrSlug)
+                .or(() -> eventRepositoryPort.findBySlug(idOrSlug))
                 .orElseThrow(() -> new EventNotFoundException(query.eventId()));
     }
 

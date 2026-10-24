@@ -23,5 +23,7 @@ public record EventResponse(
         String currency,
         String bannerUrl,
         String posterUrl,
+        String description,
+        String salesPolicyJson,
         List<SectorResponse> sectors
 ) {}
