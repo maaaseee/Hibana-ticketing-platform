@@ -71,14 +71,25 @@ function navigateTo(routeName: string) {
 </script>
 
 <template>
-  <!-- Top Global App Bar ocupando el 100% del width con estilo difuminado (vignette/blur) y tipografía ampliada -->
-  <header
-    class="sticky top-0 z-40 border-b border-border-subtle/80 w-full backdrop-blur-xl transition-all"
-    style="background: linear-gradient(to bottom, rgba(11, 19, 30, 0.94) 0%, rgba(11, 19, 30, 0.82) 75%, rgba(11, 19, 30, 0.70) 100%);"
-  >
+  <!-- Top Global App Bar ocupando el 100% del width con fondo degradado que se desvanece suavemente hacia abajo -->
+  <header class="sticky top-0 z-40 w-full transition-all">
+    <!-- Capa de fondo con degradado y desenfoque progresivo (fade-out hacia abajo sin corte abrupto) -->
+    <div
+      class="absolute inset-0 -z-10 pointer-events-none select-none backdrop-blur-xl"
+      style="
+        background: linear-gradient(to bottom, rgba(11, 19, 30, 0.98) 0%, rgba(11, 19, 30, 0.88) 45%, rgba(11, 19, 30, 0.40) 78%, rgba(11, 19, 30, 0) 100%);
+        -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.35) 78%, rgba(0, 0, 0, 0) 100%);
+        mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0.35) 78%, rgba(0, 0, 0, 0) 100%);
+      "
+    />
     <div class="flex justify-between items-center w-full px-4 sm:px-6 lg:px-10 h-16">
       <!-- Brand (Left) -->
-      <RouterLink to="/" class="flex items-center gap-2 group shrink-0">
+      <RouterLink to="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
+        <img
+          src="/logo.png"
+          alt="Amaryllis Tickets"
+          class="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_12px_rgba(134,207,251,0.45)] group-hover:scale-105 transition-transform duration-300"
+        />
         <span class="font-display text-2xl lg:text-3xl font-black text-primary tracking-tight group-hover:text-on-primary-container transition-colors">
           Amaryllis
         </span>
@@ -200,7 +211,7 @@ function navigateTo(routeName: string) {
 
             <DropdownMenuPortal>
               <DropdownMenuContent
-                class="bg-surface-card border border-border-subtle rounded-2xl p-2 shadow-2xl z-50 min-w-[240px] text-sm outline-none animate-in fade-in-50 zoom-in-95"
+                class="bg-surface-card border border-border-subtle rounded-2xl p-2 shadow-2xl z-50 min-w-60 text-sm outline-none animate-in fade-in-50 zoom-in-95"
                 :side-offset="8"
                 align="end"
               >
@@ -269,7 +280,12 @@ function navigateTo(routeName: string) {
         <!-- Header de la Sidebar -->
         <div class="flex flex-col gap-6">
           <div class="flex items-center justify-between pb-4 border-b border-border-subtle">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5">
+              <img
+                src="/logo.png"
+                alt="Amaryllis Logo"
+                class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(134,207,251,0.4)]"
+              />
               <span class="font-display text-2xl font-black text-primary tracking-tight">Amaryllis</span>
             </div>
             <DialogClose

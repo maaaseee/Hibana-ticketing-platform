@@ -1,8 +1,6 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-:root {
+@theme {
   /* Surface Architecture (Abyssal Luminescence - Softened Canvas) */
   --color-canvas-base: #111a28;
   --color-surface: #142032;
@@ -104,42 +102,49 @@
   --color-on-error-container: #ffdad6;
   --color-background: #0c141f;
   --color-on-background: #dbe3f3;
+
+  /* Typography */
+  --font-sans: 'Hanken Grotesk', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-headline: 'Space Grotesk', sans-serif;
+  --font-body: 'Hanken Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-skyvia: 'Skyvia', 'Space Grotesk', sans-serif;
+  --font-ink: 'Skyvia', 'Space Grotesk', sans-serif;
 }
 
-@layer base {
-  @font-face {
-    font-family: 'Skyvia';
-    src: url('/fonts/SkyviaDemo-Bold.otf') format('opentype');
-    font-weight: 700;
-    font-style: normal;
-    font-display: swap;
-  }
+@font-face {
+  font-family: 'Skyvia';
+  src: url('/fonts/SkyviaDemo-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
 
-  html,
-  body {
-    margin: 0;
-    padding: 0;
-    background-color: #0c141f;
-    color: #dbe3f3;
-  }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0c141f;
+  color: #dbe3f3;
+}
 
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
 
-  ::-webkit-scrollbar-track {
-    background: #0c141f;
-  }
+::-webkit-scrollbar-track {
+  background: #0c141f;
+}
 
-  ::-webkit-scrollbar-thumb {
-    background: #23354d;
-    border-radius: 3px;
-  }
+::-webkit-scrollbar-thumb {
+  background: #23354d;
+  border-radius: 3px;
+}
 
-  ::-webkit-scrollbar-thumb:hover {
-    background: #38bdf8;
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
 }
 
 .material-symbols-outlined {

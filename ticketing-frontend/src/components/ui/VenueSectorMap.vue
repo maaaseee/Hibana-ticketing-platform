@@ -26,29 +26,56 @@ const loading = ref(true)
 const error = ref<string | null>(null)
 const hoveredSector = ref<SectorGeometry | null>(null)
 
-// Mapear los nombres de archivos .json según el venueId
+// Mapear los nombres de archivos .json según el venueId o URL remota
 function resolveVenueJson(id?: string): string {
   if (!id) return '/seat-maps/arena-buenos-aires.json'
   if (id.includes('monumental')) return '/seat-maps/estadio-monumental.json'
   if (id.includes('rex')) return '/seat-maps/teatro-rex.json'
+  if (id.includes('nacional')) return '/seat-maps/estadio-nacional.json'
   if (id.includes('arena')) return '/seat-maps/arena-buenos-aires.json'
+  if (id.startsWith('http://') || id.startsWith('https://')) return id
+  if (id.startsWith('/')) return id
   return `/seat-maps/${id}.json`
 }
 
 async function loadVenueMap() {
   loading.value = true
   error.value = null
-  const url = resolveVenueJson(props.venueId)
+  const relPath = resolveVenueJson(props.venueId)
 
   try {
-    const res = await fetch(url)
+    const origin = typeof window !== 'undefined' && window.location?.origin && window.location.origin !== 'null'
+      ? window.location.origin
+      : 'http://localhost'
+    const fullUrl = relPath.startsWith('http') ? relPath : `${origin}${relPath}`
+    let res = await fetch(fullUrl)
+    if (!res.ok && relPath.startsWith('http')) {
+      const filename = relPath.substring(relPath.lastIndexOf('/') + 1)
+      res = await fetch(`${origin}/seat-maps/${filename}`)
+    }
     if (!res.ok) {
       throw new Error(`No se pudo cargar el mapa (${res.status})`)
     }
     const data: VenueSeatMapLayout = await res.json()
     layout.value = data
   } catch (err: any) {
-    console.warn('Error loading seat map json:', err)
+    if (relPath.startsWith('http')) {
+      try {
+        const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost'
+        const filename = relPath.substring(relPath.lastIndexOf('/') + 1)
+        const fallbackRes = await fetch(`${origin}/seat-maps/${filename}`)
+        if (fallbackRes.ok) {
+          const data: VenueSeatMapLayout = await fallbackRes.json()
+          layout.value = data
+          return
+        }
+      } catch {
+        // Ignorar y registrar error original
+      }
+    }
+    if (import.meta.env?.MODE !== 'test') {
+      console.warn('Error loading seat map json:', err)
+    }
     error.value = err?.message || 'Error al cargar mapa'
   } finally {
     loading.value = false
@@ -140,11 +167,16 @@ function splitSectorLabel(name: string): { line1: string; line2?: string } {
 // Obtener precio correspondiente al sector según la lista de precios de la función
 function getSectorPrice(sec: SectorGeometry): number | undefined {
   if (!props.sectorsPricing || props.sectorsPricing.length === 0) return undefined
-  // 1. Coincidencia por ID
-  const byId = props.sectorsPricing.find(p => p.id === sec.id)
+  // 1. Coincidencia por ID (exacta o por sufijo/prefijo)
+  const byId = props.sectorsPricing.find(p => p.id === sec.id || p.id.endsWith(sec.id) || sec.id.endsWith(p.id))
   if (byId) return byId.price
 
-  // 2. Coincidencia por Tipo o Nombre aproximado
+  // 2. Coincidencia por Nombre
+  const normSec = sec.name.trim().toLowerCase()
+  const byName = props.sectorsPricing.find(p => p.name.trim().toLowerCase() === normSec)
+  if (byName) return byName.price
+
+  // 3. Coincidencia por Tipo
   const byType = props.sectorsPricing.find(p => p.type === sec.type)
   if (byType) return byType.price
 

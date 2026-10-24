@@ -16,63 +16,194 @@ const route = useRoute()
       <slot />
     </main>
 
-    <!-- Global Footer -->
-    <footer class="bg-surface-container-lowest border-t border-border-subtle py-10 px-4 md:px-10 mt-auto">
-      <div class="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-sm">
-        <div class="flex flex-col gap-2">
-          <span class="font-display font-bold text-lg text-primary tracking-tight">Amaryllis</span>
-          <p class="text-muted-light text-xs leading-relaxed">
-            High-concurrency cloud ticketing platform. Microservices event-driven architecture, distributed Redlock seat reservations, and transactional outbox zero-oversell guarantee.
-          </p>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <span class="font-mono text-xs uppercase text-outline tracking-wider">Architecture & Standards</span>
-          <ul class="text-xs text-muted-light space-y-1.5 font-mono">
-            <li class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-[14px] text-secondary">verified</span>
-              <span>Java 25 & Spring Boot 4</span>
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-[14px] text-primary">lock</span>
-              <span>Atomic Redlock 10m TTL</span>
-            </li>
-            <li class="flex items-center gap-1.5">
-              <span class="material-symbols-outlined text-[14px] text-tertiary">account_balance_wallet</span>
-              <span>Transactional Outbox Saga</span>
-            </li>
-          </ul>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <span class="font-mono text-xs uppercase text-outline tracking-wider">Navigation</span>
-          <ul class="text-xs text-muted-light space-y-1.5">
-            <li><RouterLink to="/events" class="hover:text-primary transition-colors">Events Catalog</RouterLink></li>
-            <li><RouterLink to="/tickets" class="hover:text-primary transition-colors">My Active Tickets</RouterLink></li>
-            <li><RouterLink to="/help" class="hover:text-primary transition-colors">Help Center & Resolution</RouterLink></li>
-            <li><RouterLink to="/support" class="hover:text-primary transition-colors">Amaryllis Support AI</RouterLink></li>
-          </ul>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <span class="font-mono text-xs uppercase text-outline tracking-wider">Gateway & Infrastructure</span>
-          <div class="bg-surface-container-deep p-3 rounded-lg border border-border-subtle flex flex-col gap-1.5">
-            <div class="flex items-center justify-between text-xs">
-              <span class="text-outline">Rate Limiting:</span>
-              <span class="text-secondary font-mono flex items-center gap-1">
-                <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 100 req/min
+    <!-- Global Commercial B2C Footer (Option 1: Official Entertainment & Trust Platform) -->
+    <footer class="bg-surface-container-lowest border-t border-border-subtle pt-14 pb-12 px-4 sm:px-6 lg:px-10 mt-auto text-high-emphasis">
+      <div class="max-w-7xl mx-auto">
+        <!-- Main 4-Column Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 pb-12 border-b border-border-subtle/60 text-sm">
+          
+          <!-- Column 1: Brand & Purpose -->
+          <div class="flex flex-col gap-4">
+            <RouterLink to="/" class="flex items-center gap-2.5 group shrink-0">
+              <img
+                src="/logo.png"
+                alt="Amaryllis Logo"
+                class="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(134,207,251,0.4)]"
+              />
+              <span class="font-display font-black text-2xl text-primary tracking-tight group-hover:text-on-primary-container transition-colors">
+                Amaryllis
               </span>
+            </RouterLink>
+            <p class="text-muted-light text-xs leading-relaxed max-w-xs">
+              Plataforma oficial de venta de entradas para los mayores recitales, festivales en vivo y espectáculos teatrales de Buenos Aires. Entradas 100% oficiales y transferencias seguras.
+            </p>
+            <div class="flex items-center gap-3 pt-1">
+              <a
+                href="#"
+                class="w-8 h-8 rounded-full bg-surface-card hover:bg-surface-interactive border border-border-subtle flex items-center justify-center text-medium-emphasis hover:text-primary transition-colors"
+                aria-label="Instagram"
+              >
+                <span class="material-symbols-outlined text-sm">photo_camera</span>
+              </a>
+              <a
+                href="#"
+                class="w-8 h-8 rounded-full bg-surface-card hover:bg-surface-interactive border border-border-subtle flex items-center justify-center text-medium-emphasis hover:text-primary transition-colors"
+                aria-label="X / Twitter"
+              >
+                <span class="material-symbols-outlined text-sm">tag</span>
+              </a>
+              <a
+                href="#"
+                class="w-8 h-8 rounded-full bg-surface-card hover:bg-surface-interactive border border-border-subtle flex items-center justify-center text-medium-emphasis hover:text-primary transition-colors"
+                aria-label="YouTube"
+              >
+                <span class="material-symbols-outlined text-sm">play_circle</span>
+              </a>
+              <a
+                href="#"
+                class="w-8 h-8 rounded-full bg-surface-card hover:bg-surface-interactive border border-border-subtle flex items-center justify-center text-medium-emphasis hover:text-primary transition-colors"
+                aria-label="Spotify"
+              >
+                <span class="material-symbols-outlined text-sm">headphones</span>
+              </a>
             </div>
-            <div class="flex items-center justify-between text-xs pt-1 border-t border-border-subtle/50">
-              <span class="text-outline">Virtual Waiting Room:</span>
-              <span class="text-primary font-mono">Redis FIFO Ready</span>
+          </div>
+
+          <!-- Column 2: Cartelera & Recintos -->
+          <div class="flex flex-col gap-3">
+            <span class="font-display text-xs uppercase font-bold text-white tracking-wider">Cartelera & Shows</span>
+            <ul class="text-xs text-muted-light space-y-2.5">
+              <li>
+                <RouterLink :to="{ name: 'events-catalog' }" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  <span>Recitales en Estadio Monumental</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'events-catalog' }" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  <span>Shows en Arena Buenos Aires</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'events-catalog' }" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                  <span>Temporada Teatro Rex</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'events-catalog' }" class="hover:text-primary transition-colors">
+                  Festivales & Música Urbana
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'events-catalog' }" class="hover:text-primary transition-colors">
+                  Conferencias & Congresos
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Column 3: Atención al Espectador -->
+          <div class="flex flex-col gap-3">
+            <span class="font-display text-xs uppercase font-bold text-white tracking-wider">Atención al Espectador</span>
+            <ul class="text-xs text-muted-light space-y-2.5">
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="hover:text-primary transition-colors">
+                  Centro de Ayuda & Preguntas Frecuentes
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'tickets' }" class="hover:text-primary transition-colors">
+                  Mis Entradas & Canje Digital
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="hover:text-primary transition-colors">
+                  Promociones Bancarias & Cuotas
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="hover:text-primary transition-colors">
+                  Accesibilidad en Recintos (PMR)
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'support-chat' }" class="hover:text-primary transition-colors flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm text-primary">chat</span>
+                  <span>Asistente de Soporte en Vivo</span>
+                </RouterLink>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Column 4: Transparencia & Consumidor -->
+          <div class="flex flex-col gap-3">
+            <span class="font-display text-xs uppercase font-bold text-white tracking-wider">Transparencia & Legal</span>
+            <ul class="text-xs text-muted-light space-y-2.5">
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="text-primary hover:underline font-semibold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-sm">undo</span>
+                  <span>Botón de Arrepentimiento</span>
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="hover:text-primary transition-colors">
+                  Defensa de las y los Consumidores
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="hover:text-primary transition-colors">
+                  Términos y Condiciones de Compra
+                </RouterLink>
+              </li>
+              <li>
+                <RouterLink :to="{ name: 'help' }" class="hover:text-primary transition-colors">
+                  Políticas de Privacidad & Protección de Datos
+                </RouterLink>
+              </li>
+              <li>
+                <a href="mailto:contacto@amaryllis-tickets.com" class="hover:text-primary transition-colors">
+                  Contacto Comercial & Productores
+                </a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        <!-- Middle Trust Badges & Payment Methods Strip -->
+        <div class="py-6 border-b border-border-subtle/40 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-light">
+          <!-- Medios de Pago -->
+          <div class="flex flex-wrap items-center gap-2 text-medium-emphasis">
+            <span class="font-mono text-[11px] uppercase tracking-wider text-muted-light mr-1">Medios de Pago:</span>
+            <span class="px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle font-mono text-[11px] font-bold text-white">VISA</span>
+            <span class="px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle font-mono text-[11px] font-bold text-white">Mastercard</span>
+            <span class="px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle font-mono text-[11px] font-bold text-white">AMEX</span>
+            <span class="px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle font-mono text-[11px] font-semibold text-primary">Santander</span>
+            <span class="px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle font-mono text-[11px] font-semibold text-primary">Galicia</span>
+            <span class="px-2.5 py-1 rounded-md bg-surface-card border border-border-subtle font-mono text-[11px] font-semibold text-secondary">MODO</span>
+          </div>
+
+          <!-- Security Badges -->
+          <div class="flex items-center gap-4 text-xs font-mono text-medium-emphasis">
+            <div class="flex items-center gap-1.5 text-secondary">
+              <span class="material-symbols-outlined text-[16px]">verified_user</span>
+              <span>Compra 100% Oficial</span>
+            </div>
+            <span class="text-border-subtle">•</span>
+            <div class="flex items-center gap-1.5 text-primary">
+              <span class="material-symbols-outlined text-[16px]">lock</span>
+              <span>Encriptación SSL 256-bit</span>
             </div>
           </div>
         </div>
-      </div>
-      <div class="max-w-[1280px] mx-auto mt-8 pt-4 border-t border-border-subtle/50 flex flex-col sm:flex-row items-center justify-between text-xs text-outline font-mono">
-        <span>© 2026 Amaryllis Software. All rights reserved.</span>
-        <span>B2C Public Client • www.amaryllis-tickets.com</span>
+
+        <!-- Bottom Copyright Line -->
+        <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-outline font-body">
+          <p>© 2026 Amaryllis Tickets S.A. Todos los derechos reservados.</p>
+          <p class="font-mono text-[11px]">Av. Figueroa Alcorta 7597, Núñez, Ciudad Autónoma de Buenos Aires, Argentina</p>
+        </div>
       </div>
     </footer>
 

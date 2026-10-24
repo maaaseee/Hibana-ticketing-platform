@@ -168,12 +168,12 @@ watch(() => [props.seats, props.selectedSeats], () => {
 </script>
 
 <template>
-  <div class="relative w-full h-[520px] bg-surface rounded-xl overflow-hidden border border-border-subtle flex items-center justify-center">
+  <div class="relative w-full h-130 bg-surface rounded-xl overflow-hidden border border-border-subtle flex items-center justify-center">
     <canvas
       ref="canvasRef"
       width="740"
       height="480"
-      class="w-full h-full max-w-[740px] max-h-[480px]"
+      class="w-full h-full max-w-185 max-h-120"
       role="img"
       aria-label="Mapa interactivo de butacas del recinto"
       @mousemove="handleMouseMove"
