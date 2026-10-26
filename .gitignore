@@ -1,3 +1,8 @@
+# Build & Gradle Artifacts
+.gradle/
+**/build/
+**/.gradle/
+
 graphify-out
 node_modules
 
