@@ -18,7 +18,7 @@ import { useCatalogStore } from '../stores/catalog'
 import { useTicketingStore } from '../stores/ticketing'
 import { useQueueStore } from '../stores/queue'
 import type { VenueSeatMapLayout } from '../types'
-import defaultArenaLayout from '../../public/seat-maps/arena-buenos-aires.json'
+import defaultArenaLayout from '../seat-maps/arena-buenos-aires.json'
 
 interface GeneralSector {
   id: string

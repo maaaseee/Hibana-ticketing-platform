@@ -633,64 +633,53 @@ function handleSectorClick(sec: SectorGeometry) {
         <span>Rueda o botones para zoom</span>
       </div>
 
-      <!-- Ficha de Sector / Inspector POI Estilo Google Maps -->
+      <!-- Ficha de Sector Simplificada: Nombre, Precio mínimo y Capacidad -->
       <transition name="fade">
         <div
           v-if="activeSector && interactive"
-          class="sector-inspector-card absolute top-4 left-4 max-w-xs sm:max-w-sm w-full bg-[#0c1c2e]/95 border border-[#0099ff]/50 rounded-2xl p-4 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2.5 animate-in fade-in-0 duration-150"
+          :class="[
+            'sector-inspector-card absolute top-4 left-4 max-w-[260px] sm:max-w-[280px] w-full bg-[#0c1c2e]/95 border border-[#0099ff]/50 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2.5 animate-in fade-in-0 duration-150',
+            selectedSector ? 'pointer-events-auto' : 'pointer-events-none'
+          ]"
         >
-          <div class="flex items-start justify-between gap-3">
+          <!-- Nombre del Sector -->
+          <div class="flex items-center justify-between gap-2.5">
             <div class="flex items-center gap-2.5 min-w-0">
               <span
-                class="w-4 h-4 rounded-full border border-white/50 shrink-0 shadow-sm"
+                class="w-3.5 h-3.5 rounded-full border border-white/50 shrink-0 shadow-sm"
                 :style="{ backgroundColor: activeSector.color || activeSector.strokeColor }"
               ></span>
-              <div class="flex flex-col min-w-0">
-                <span class="font-display font-black text-sm sm:text-base text-white tracking-tight leading-snug truncate">
-                  {{ activeSector.name }}
-                </span>
-                <span class="font-mono text-[10px] text-muted-light uppercase tracking-wider truncate">
-                  {{ activeSector.type.replace(/_/g, ' ') }}
-                </span>
-              </div>
+              <span class="font-display font-black text-sm sm:text-base text-white tracking-tight truncate">
+                {{ activeSector.name }}
+              </span>
             </div>
 
             <button
               v-if="selectedSector"
               @click.stop="selectedSector = null"
               type="button"
-              class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-muted-light hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-muted-light hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0 pointer-events-auto"
               title="Cerrar detalles"
             >
               <span class="material-symbols-outlined text-sm">close</span>
             </button>
           </div>
 
-          <!-- Bloque de Precio Oficial y Disponibilidad -->
-          <div class="p-3 rounded-xl bg-[#071322] border border-[#1e3a5f]/60 flex items-center justify-between gap-3">
-            <div class="flex flex-col">
-              <span class="font-mono text-[10px] text-muted-light uppercase">Precio por entrada</span>
-              <span v-if="getSectorPrice(activeSector)" class="font-display font-black text-lg sm:text-xl text-[#00d2ff]">
-                ${{ getSectorPrice(activeSector)?.toLocaleString('es-AR') }}
-                <span class="text-xs font-mono text-white/80">ARS</span>
-              </span>
-              <span v-else class="font-mono text-xs text-muted-light italic">
-                Consultar en boletería
-              </span>
-            </div>
-
-            <span
-              :class="[
-                'px-2.5 py-1 rounded-full text-xs font-mono font-bold border shadow-xs whitespace-nowrap',
-                getSectorStatusClasses(activeSector)
-              ]"
-            >
-              {{ getSectorStatusLabel(activeSector) }}
+          <!-- Precio Mínimo de Entrada -->
+          <div class="flex items-baseline justify-between pt-2 border-t border-[#1e3a5f]/60 text-xs">
+            <span class="font-mono text-muted-light">Precio mínimo:</span>
+            <span v-if="getSectorPrice(activeSector)" class="font-display font-extrabold text-sm sm:text-base text-[#00d2ff]">
+              ${{ getSectorPrice(activeSector)?.toLocaleString('es-AR') }}
+              <span class="text-[10px] font-mono text-white/80">ARS</span>
+            </span>
+            <span v-else class="font-mono text-xs text-muted-light italic">
+              Consultar en boletería
             </span>
           </div>
 
-          <div class="flex items-center justify-between text-[11px] font-mono text-muted-light pt-1 border-t border-border-subtle/40">
-            <span>Capacidad oficial:</span>
+          <!-- Capacidad -->
+          <div class="flex items-center justify-between text-xs font-mono text-muted-light">
+            <span>Capacidad:</span>
             <span class="text-white font-bold">{{ (activeSector.capacity || 1000).toLocaleString('es-AR') }} lugares</span>
           </div>
         </div>

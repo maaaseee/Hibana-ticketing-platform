@@ -876,142 +876,91 @@ function goToStressTestQueue() {
           </div>
         </div>
 
-        <!-- Sticky Sidebar: Unified Purchase Card Widget matching user design (5 cols) -->
+        <!-- Sticky Sidebar: Unified Purchase Card Widget matching Movistar Arena design (5 cols) -->
         <div class="lg:col-span-5">
           <div class="sticky top-20 flex flex-col gap-6">
             <!-- Main Unified Card -->
-            <div class="rounded-3xl overflow-hidden border border-border-structural/80 bg-[#0c1c2e] shadow-2xl flex flex-col">
+            <div class="rounded-2xl overflow-hidden border border-[#18395b] bg-[#0f263e] shadow-2xl flex flex-col">
               <!-- Top Vibrant Blue Header: Entradas desde $ 75.000 -->
               <div
                 class="bg-[#0084d1] px-6 py-5 flex items-center justify-between text-white"
                 data-testid="banner-min-price-badge"
               >
                 <span class="font-display font-extrabold text-xl sm:text-2xl tracking-tight">Entradas desde</span>
-                <div class="flex items-baseline gap-1">
+                <div class="flex items-baseline gap-1.5">
                   <span class="font-display font-black text-3xl sm:text-4xl tracking-tight">$ {{ formattedMinPrice }}</span>
                   <span class="sr-only">${{ minPrice }} {{ primaryCurrency }}</span>
                 </div>
               </div>
 
               <!-- Available Functions List -->
-              <div class="divide-y divide-border-structural/60 bg-[#0c1c2e]">
+              <div class="divide-y divide-[#18395b] bg-[#0f263e]">
                 <div
                   v-for="fn in functions"
                   :key="fn.id"
-                  class="p-4 sm:p-5 flex flex-col gap-3.5 transition-colors hover:bg-[#10243a]"
+                  class="px-5 py-5 sm:px-6 sm:py-5 flex items-center justify-between gap-4 transition-colors hover:bg-[#132f4c]"
                   data-testid="function-row"
                 >
-                  <!-- Fila Superior: Fecha Destacada, Nombre del Día y Botón Comprar asegurado a la derecha -->
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-3 min-w-0">
-                      <!-- High Contrast Date Box -->
-                      <div class="w-16 h-18 sm:w-18 sm:h-20 rounded-2xl bg-linear-to-br from-[#0284c7] via-[#0369a1] to-[#1e3a8a] border-2 border-[#38bdf8] flex flex-col items-center justify-center shrink-0 shadow-lg shadow-sky-500/25">
-                        <span class="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight drop-shadow">
-                          {{ parseFunctionDate(fn).day }}
-                        </span>
-                        <span class="mt-1 px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-xs">
-                          {{ parseFunctionDate(fn).month }}
-                        </span>
-                        <span class="sr-only">{{ fn.formattedDate }}</span>
-                      </div>
+                  <div class="flex items-center gap-4 sm:gap-5 min-w-0">
+                    <!-- Date Box matching Movistar Arena design -->
+                    <div class="w-18 h-18 sm:w-20 sm:h-20 rounded-xl border-2 border-[#0092e6] bg-[#0f263e] flex flex-col items-center justify-center shrink-0 shadow-sm">
+                      <span class="text-2xl sm:text-3xl font-black text-white leading-none">
+                        {{ parseFunctionDate(fn).day }}
+                      </span>
+                      <span class="text-xs sm:text-sm font-semibold text-white mt-1 leading-none capitalize">
+                        {{ parseFunctionDate(fn).month }}
+                      </span>
+                      <span class="sr-only">{{ fn.formattedDate }}</span>
+                    </div>
 
-                      <!-- Información textual de la fecha y estado -->
-                      <div class="flex flex-col min-w-0">
-                        <span class="font-display font-extrabold text-sm sm:text-base text-white truncate leading-tight">
-                          {{ fn.formattedDate }}
-                        </span>
-                        <div class="flex items-center gap-2 mt-1">
-                          <span
-                            :class="[
-                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border',
-                              getFunctionStatusClass(fn.status)
-                            ]"
-                          >
-                            {{ getFunctionStatusLabel(fn.status) }}
+                    <!-- Horarios Movistar Arena Style -->
+                    <div class="flex flex-col">
+                      <span class="text-[#ff2b56] text-xs font-bold font-mono tracking-wider uppercase">
+                        HORARIOS
+                      </span>
+                      <div class="flex items-center gap-5 sm:gap-7 mt-1">
+                        <div>
+                          <span class="block text-white font-bold text-sm sm:text-base leading-tight">
+                            {{ cleanTime(fn.doorsOpen) }}
                           </span>
+                          <span class="block text-slate-400 font-sans text-xs mt-0.5">Puertas</span>
+                          <span class="sr-only">Apertura de puertas: {{ fn.doorsOpen }}</span>
+                        </div>
+                        <div>
+                          <span class="block text-white font-bold text-sm sm:text-base leading-tight">
+                            {{ cleanTime(fn.showStart) }}
+                          </span>
+                          <span class="block text-slate-400 font-sans text-xs mt-0.5">Show</span>
+                          <span class="sr-only">Inicio del show: {{ fn.showStart }}</span>
                         </div>
                       </div>
-                    </div>
-
-                    <!-- Botón Comprar: Siempre visible y alineado a la derecha sin desbordes -->
-                    <div class="shrink-0">
-                      <button
-                        @click="goToPurchase(fn)"
-                        :disabled="fn.status === 'SOLD_OUT'"
-                        :class="[
-                          'px-6 sm:px-7 py-2.5 rounded-full font-display font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center shadow-lg cursor-pointer',
-                          fn.status === 'SOLD_OUT'
-                            ? 'bg-surface-interactive text-outline border border-border-subtle cursor-not-allowed'
-                            : 'bg-[#00e5ff] hover:bg-[#33ebff] text-slate-950 hover:scale-105 active:scale-95 shadow-[#00e5ff]/30'
-                        ]"
-                      >
-                        <span>{{ fn.status === 'SOLD_OUT' ? 'Agotado' : 'Comprar' }}</span>
-                      </button>
+                      <span class="sr-only">{{ getFunctionStatusLabel(fn.status) }}</span>
                     </div>
                   </div>
 
-                  <!-- Fila Inferior: Pill Segmentado con los 3 Horarios ocupando el 100% del ancho -->
-                  <div class="grid grid-cols-3 rounded-xl sm:rounded-full overflow-hidden border border-slate-700/60 shadow-md divide-x divide-white/10 w-full text-center">
-                    <!-- Apertura / Puertas (Emerald/Verde) -->
-                    <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-emerald-950/80 text-emerald-300">
-                      <span class="material-symbols-outlined text-[14px] text-emerald-400 shrink-0">door_front</span>
-                      <div class="flex flex-col leading-none text-left sm:text-center">
-                        <span class="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Apertura</span>
-                        <span class="font-display font-extrabold text-xs text-white whitespace-nowrap">{{ cleanTime(fn.doorsOpen) }}</span>
-                      </div>
-                      <span class="sr-only">Apertura de puertas: {{ fn.doorsOpen }}</span>
-                    </div>
-
-                    <!-- Show (Amber/Naranja cálido) -->
-                    <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-amber-950/80 text-amber-300">
-                      <span class="material-symbols-outlined text-[14px] text-amber-400 shrink-0">music_note</span>
-                      <div class="flex flex-col leading-none text-left sm:text-center">
-                        <span class="text-[9px] font-mono text-amber-400 font-bold uppercase tracking-wider">Show</span>
-                        <span class="font-display font-extrabold text-xs text-white whitespace-nowrap">{{ cleanTime(fn.showStart) }}</span>
-                      </div>
-                      <span class="sr-only">Inicio del show: {{ fn.showStart }}</span>
-                    </div>
-
-                    <!-- Salida estimada (Violet/Púrpura) -->
-                    <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-purple-950/80 text-purple-300">
-                      <span class="material-symbols-outlined text-[14px] text-purple-400 shrink-0">logout</span>
-                      <div class="flex flex-col leading-none text-left sm:text-center">
-                        <span class="text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">Salida</span>
-                        <span class="font-display font-extrabold text-xs text-white whitespace-nowrap">{{ getEstimatedExit(fn.showStart) }}</span>
-                      </div>
-                    </div>
+                  <!-- Botón Comprar: Exactamente el estilo Movistar Arena (cyan/azul pill con texto negro, gris si SOLD_OUT) -->
+                  <div class="shrink-0">
+                    <button
+                      @click="goToPurchase(fn)"
+                      :disabled="fn.status === 'SOLD_OUT'"
+                      :class="[
+                        'px-7 sm:px-8 py-3 rounded-full font-display font-black text-sm sm:text-base transition-all flex items-center justify-center shadow-md',
+                        fn.status === 'SOLD_OUT'
+                          ? 'bg-slate-700/90 text-slate-400 border border-slate-600/60 cursor-not-allowed shadow-none'
+                          : 'bg-[#0099ff] hover:bg-[#0086e6] active:scale-95 text-black hover:shadow-lg cursor-pointer'
+                      ]"
+                    >
+                      <span>{{ fn.status === 'SOLD_OUT' ? 'Agotado' : 'Comprar' }}</span>
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <!-- Stress Test Simulation Banner for Virtual Waiting Room -->
-              <div class="mt-4 p-4 rounded-2xl bg-[#101825] border border-border-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-xl bg-[#00688f]/20 border border-[#00688f]/40 flex items-center justify-center text-[#86cffb]">
-                    <span class="material-symbols-outlined text-[20px]">speed</span>
-                  </div>
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <span class="font-display font-bold text-white text-sm">Stress Test: Fila de Acceso Virtual</span>
-                      <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-semibold">Simulación</span>
-                    </div>
-                    <p class="font-body text-xs text-muted-light mt-0.5">Pon a prueba el sistema de concurrencia y sala de espera distribuida (Redis Sorted Sets).</p>
-                  </div>
-                </div>
-                <button
-                  @click="goToStressTestQueue"
-                  class="px-5 py-2.5 rounded-xl bg-[#00688f] hover:bg-[#0084ff] text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
-                >
-                  <span>Entrar a la Fila</span>
-                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-                </button>
-              </div>
-
-              <!-- Accordions: Medios de pago & Estacionamiento (Ambos colapsados por defecto) -->
+              <!-- Accordions: Medios de pago & Estacionamiento (Inmediatamente debajo de la fila de compra) -->
               <AccordionRoot
                 type="multiple"
                 v-model="openSidebarAccordions"
-                class="w-full divide-y divide-border-structural/60 border-t border-border-structural/80"
+                class="w-full divide-y divide-[#18395b] border-t border-[#18395b]"
               >
                 <!-- Section C: Medios de pago -->
                 <AccordionItem
@@ -1021,20 +970,20 @@ function goToStressTestQueue() {
                 >
                   <AccordionHeader class="flex">
                     <AccordionTrigger
-                      class="w-full flex items-center justify-between p-4 sm:p-5 font-display text-sm sm:text-base font-bold text-white hover:bg-[#10243a] transition-colors group cursor-pointer outline-none"
+                      class="w-full flex items-center justify-between p-4 sm:p-5 font-display text-sm sm:text-base font-bold text-white hover:bg-[#132f4c] transition-colors group cursor-pointer outline-none"
                     >
                       <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-[#10b981] text-2xl font-bold">credit_card</span>
-                        <span>Medios de pago</span>
+                        <span class="material-symbols-outlined text-[#52d92e] text-2xl font-bold">add_card</span>
+                        <span class="text-white font-bold text-base sm:text-lg">Medios de pago</span>
                         <span class="sr-only">Medios de Pago y Financiación - Hasta 6 cuotas sin interés</span>
                       </div>
-                      <span class="material-symbols-outlined text-muted-light text-xl transition-transform duration-200 group-data-[state=open]:rotate-180">
+                      <span class="material-symbols-outlined text-white text-xl transition-transform duration-200 group-data-[state=open]:rotate-180">
                         expand_more
                       </span>
                     </AccordionTrigger>
                   </AccordionHeader>
 
-                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-border-structural/40 bg-[#081524]/70 text-sm">
+                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-[#18395b]/60 bg-[#0a1c30]/90 text-sm">
                     <div class="space-y-3 pt-2">
                       <!-- Tarjetas de promociones bancarias con imágenes oficiales -->
                       <div
@@ -1084,20 +1033,20 @@ function goToStressTestQueue() {
                 >
                   <AccordionHeader class="flex">
                     <AccordionTrigger
-                      class="w-full flex items-center justify-between p-4 sm:p-5 font-display text-sm sm:text-base font-bold text-white hover:bg-[#10243a] transition-colors group cursor-pointer outline-none"
+                      class="w-full flex items-center justify-between p-4 sm:p-5 font-display text-sm sm:text-base font-bold text-white hover:bg-[#132f4c] transition-colors group cursor-pointer outline-none"
                     >
                       <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-[#10b981] text-2xl font-bold">directions_car</span>
-                        <span>Estacionamiento</span>
+                        <span class="material-symbols-outlined text-[#52d92e] text-2xl font-bold">directions_car</span>
+                        <span class="text-white font-bold text-base sm:text-lg">Estacionamiento</span>
                         <span class="sr-only">Estacionamiento Oficial y Accesos - Estacionamiento disponible</span>
                       </div>
-                      <span class="material-symbols-outlined text-muted-light text-xl transition-transform duration-200 group-data-[state=open]:rotate-180">
+                      <span class="material-symbols-outlined text-white text-xl transition-transform duration-200 group-data-[state=open]:rotate-180">
                         expand_more
                       </span>
                     </AccordionTrigger>
                   </AccordionHeader>
 
-                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-border-structural/40 bg-[#081524]/70 text-sm">
+                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-[#18395b]/60 bg-[#0a1c30]/90 text-sm">
                     <div class="space-y-3 pt-2">
                       <div class="flex flex-col gap-1">
                         <h4 class="font-display text-sm font-bold text-high-emphasis">{{ parkingInfo.title }}</h4>
@@ -1128,6 +1077,29 @@ function goToStressTestQueue() {
                   </AccordionContent>
                 </AccordionItem>
               </AccordionRoot>
+            </div>
+
+            <!-- Stress Test Simulation Banner for Virtual Waiting Room (Exterior a la tarjeta principal) -->
+            <div class="p-4 rounded-2xl bg-[#101825] border border-border-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-[#00688f]/20 border border-[#00688f]/40 flex items-center justify-center text-[#86cffb]">
+                  <span class="material-symbols-outlined text-[20px]">speed</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-display font-bold text-white text-sm">Stress Test: Fila de Acceso Virtual</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-semibold">Simulación</span>
+                  </div>
+                  <p class="font-body text-xs text-muted-light mt-0.5">Pon a prueba el sistema de concurrencia y sala de espera distribuida (Redis Sorted Sets).</p>
+                </div>
+              </div>
+              <button
+                @click="goToStressTestQueue"
+                class="px-5 py-2.5 rounded-xl bg-[#00688f] hover:bg-[#0084ff] text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+              >
+                <span>Entrar a la Fila</span>
+                <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+              </button>
             </div>
 
             <!-- Redlock & Zero-overselling Guarantee Trust Badges -->

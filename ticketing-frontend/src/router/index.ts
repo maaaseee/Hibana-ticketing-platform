@@ -35,7 +35,12 @@ const router = createRouter({
         {
           path: 'event/:id/queue',
           name: 'queue',
-          component: QueueView
+          component: QueueView,
+          meta: {
+            hideNavbar: true,
+            hideFooter: true,
+            fullscreen: true
+          }
         },
         {
           path: 'event/:id/seats',
