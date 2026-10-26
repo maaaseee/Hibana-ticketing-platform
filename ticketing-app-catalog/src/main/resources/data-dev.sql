@@ -36,13 +36,13 @@ INSERT INTO events (
     'PUBLISHED',
     'CONCERT',
     ARRAY['Rock', 'Pop', 'Alternative'],
-    '2026-10-27 18:00:00+00',
-    '2026-10-27 21:00:00+00',
-    '2026-10-28 00:00:00+00',
+    '2026-10-27 18:00:00-03',
+    '2026-10-27 21:00:00-03',
+    '2026-10-28 00:00:00-03',
     'America/Santiago',
     '{"bannerUrl":"/images/events/coldplay-tour.jpg","posterUrl":"/images/events/coldplay-tour.jpg"}'::jsonb,
     '{"maxTicketsPerUser":4,"waitingRoomEnabled":true}'::jsonb,
-    '2026-05-15 10:00:00+00'
+    '2026-05-15 10:00:00-03'
 ),
 (
     'river-stadium-rockfest',
@@ -53,13 +53,13 @@ INSERT INTO events (
     'PUBLISHED',
     'CONCERT',
     ARRAY['Rock', 'Alternative', 'Hard Rock'],
-    '2026-11-05 18:00:00+00',
-    '2026-11-05 21:00:00+00',
-    '2026-11-06 01:00:00+00',
+    '2026-11-05 18:00:00-03',
+    '2026-11-05 21:00:00-03',
+    '2026-11-06 01:00:00-03',
     'America/Argentina/Buenos_Aires',
     '{"bannerUrl":"https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=1200&q=80","posterUrl":"https://images.unsplash.com/photo-1540039155733-5bb30b53aa14?auto=format&fit=crop&w=800&q=80"}'::jsonb,
     '{"maxTicketsPerUser":6,"waitingRoomEnabled":true}'::jsonb,
-    '2026-06-10 11:30:00+00'
+    '2026-06-10 11:30:00-03'
 ),
 (
     'symphony-of-lights',
@@ -70,13 +70,13 @@ INSERT INTO events (
     'PUBLISHED',
     'CONCERT',
     ARRAY['Orchestral', 'Indie', 'Visuals'],
-    '2026-11-15 18:00:00+00',
-    '2026-11-15 20:00:00+00',
-    '2026-11-15 23:30:00+00',
+    '2026-11-15 18:00:00-03',
+    '2026-11-15 20:00:00-03',
+    '2026-11-15 23:30:00-03',
     'America/Argentina/Buenos_Aires',
     '{"bannerUrl":"https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1200&q=80","posterUrl":"https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=800&q=80"}'::jsonb,
     '{"maxTicketsPerUser":4,"waitingRoomEnabled":false}'::jsonb,
-    '2026-06-25 16:00:00+00'
+    '2026-06-25 16:00:00-03'
 ),
 (
     'chronos-fest-2026',
@@ -87,13 +87,13 @@ INSERT INTO events (
     'PUBLISHED',
     'CONCERT',
     ARRAY['Electronic', 'Techno', 'Melodic'],
-    '2026-11-24 18:30:00+00',
-    '2026-11-24 21:00:00+00',
-    '2026-11-25 04:00:00+00',
+    '2026-11-24 18:30:00-03',
+    '2026-11-24 21:00:00-03',
+    '2026-11-25 04:00:00-03',
     'America/Argentina/Buenos_Aires',
     '{"bannerUrl":"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1200&q=80","posterUrl":"https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80"}'::jsonb,
     '{"maxTicketsPerUser":4,"waitingRoomEnabled":true}'::jsonb,
-    '2026-10-21 15:00:00+00'
+    '2026-10-21 15:00:00-03'
 ),
 (
     'opera-clasica-verano',
@@ -104,13 +104,13 @@ INSERT INTO events (
     'PUBLISHED',
     'THEATER',
     ARRAY['Opera', 'Classical', 'Acoustic'],
-    '2026-12-10 19:00:00+00',
-    '2026-12-10 20:30:00+00',
-    '2026-12-10 23:00:00+00',
+    '2026-12-10 19:00:00-03',
+    '2026-12-10 20:30:00-03',
+    '2026-12-10 23:00:00-03',
     'America/Argentina/Buenos_Aires',
     '{"bannerUrl":"https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1200&q=80","posterUrl":"https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80"}'::jsonb,
     '{"maxTicketsPerUser":4,"waitingRoomEnabled":false}'::jsonb,
-    '2026-10-22 17:00:00+00'
+    '2026-10-22 17:00:00-03'
 ),
 (
     'cloud-native-devcon',
@@ -121,13 +121,13 @@ INSERT INTO events (
     'PUBLISHED',
     'CONFERENCE',
     ARRAY['Technology', 'AI', 'Cloud'],
-    '2027-05-22 08:00:00+00',
-    '2027-05-22 09:30:00+00',
-    '2027-05-22 18:00:00+00',
+    '2027-05-22 08:00:00-03',
+    '2027-05-22 09:30:00-03',
+    '2027-05-22 18:00:00-03',
     'America/Argentina/Buenos_Aires',
     '{"bannerUrl":"https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80","posterUrl":"https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80"}'::jsonb,
     '{"maxTicketsPerUser":2,"waitingRoomEnabled":false}'::jsonb,
-    '2026-10-23 20:00:00+00'
+    '2026-10-23 20:00:00-03'
 ),
 (
     'ado-hibana-world-tour',
@@ -138,9 +138,9 @@ INSERT INTO events (
     'PUBLISHED',
     'CONCERT',
     ARRAY['J-Pop', 'Rock', 'Electronic', 'Anime'],
-    '2026-11-18 18:00:00+00',
-    '2026-11-18 20:30:00+00',
-    '2026-11-18 23:30:00+00',
+    '2026-11-18 18:00:00-03',
+    '2026-11-18 20:30:00-03',
+    '2026-11-18 23:30:00-03',
     'America/Argentina/Buenos_Aires',
     '{"bannerUrl":"/images/events/ado-hibana-world-tour.png","posterUrl":"/images/events/ado-hibana-world-tour.png"}'::jsonb,
     '{"maxTicketsPerUser":4,"waitingRoomEnabled":true,"functions":[{"id":"fn-ado-1","dateIso":"2026-11-18T20:30:00","formattedDate":"Miércoles 18 de Noviembre de 2026","doorsOpen":"18:00 hs","showStart":"20:30 hs","status":"AVAILABLE"},{"id":"fn-ado-2","dateIso":"2026-11-19T20:30:00","formattedDate":"Jueves 19 de Noviembre de 2026","doorsOpen":"18:00 hs","showStart":"20:30 hs","status":"AVAILABLE"}]}'::jsonb,

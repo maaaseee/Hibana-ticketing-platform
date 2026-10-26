@@ -36,16 +36,20 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
       }) || matchedVenue?.sectors || [])
 
   const startsAtDate = backend.startsAt ? new Date(backend.startsAt) : new Date()
+  const eventTimezone = backend.timezone || 'America/Argentina/Buenos_Aires'
   const formattedDate = startsAtDate.toLocaleDateString('es-AR', {
     weekday: 'long',
     day: '2-digit',
     month: 'long',
     year: 'numeric',
+    timeZone: eventTimezone
   })
   const timeFormatted = startsAtDate.toLocaleTimeString('es-AR', {
     hour: '2-digit',
     minute: '2-digit',
-  }) + ' HRS'
+    hour12: false,
+    timeZone: eventTimezone
+  }) + ' hs'
 
   let functions: EventFunction[] = (backend as any).functions || []
   let maxTicketsPerUser = 4
@@ -69,7 +73,9 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
         id: `fn-${backend.id}-1`,
         dateIso: backend.startsAt || new Date().toISOString(),
         formattedDate,
-        doorsOpen: backend.doorsOpenAt ? new Date(backend.doorsOpenAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' hs' : '18:00 hs',
+        doorsOpen: backend.doorsOpenAt
+          ? new Date(backend.doorsOpenAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: eventTimezone }) + ' hs'
+          : '18:00 hs',
         showStart: timeFormatted,
         status: 'AVAILABLE'
       }
@@ -90,7 +96,9 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
     date: formattedDate,
     dateIso: backend.startsAt || new Date().toISOString(),
     time: timeFormatted,
-    doorsOpen: backend.doorsOpenAt ? new Date(backend.doorsOpenAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' HRS' : '18:00 HRS',
+    doorsOpen: backend.doorsOpenAt
+      ? new Date(backend.doorsOpenAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: eventTimezone }) + ' hs'
+      : '18:00 hs',
     venue: venueName,
     venueId,
     location,

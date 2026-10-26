@@ -231,7 +231,11 @@ function parseFunctionDate(fn: EventFunction): { day: string; month: string } {
 
 function cleanTime(timeStr?: string): string {
   if (!timeStr) return '20:00 hs'
-  return timeStr.replace(/HRS/i, 'hs').replace(/p\.\s*m\./i, 'hs').trim()
+  const match = timeStr.match(/(\d{1,2}:\d{2})/)
+  if (match && match[1]) {
+    return `${match[1]} hs`
+  }
+  return timeStr.replace(/HRS/gi, '').replace(/p\.\s*m\./gi, '').replace(/hs/gi, '').trim() + ' hs'
 }
 
 const primaryCurrency = computed(() => {
@@ -894,79 +898,88 @@ function goToStressTestQueue() {
                 <div
                   v-for="fn in functions"
                   :key="fn.id"
-                  class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors hover:bg-[#10243a]"
+                  class="p-4 sm:p-5 flex flex-col gap-3.5 transition-colors hover:bg-[#10243a]"
                   data-testid="function-row"
                 >
-                  <!-- High Contrast Date Box -->
-                  <div class="flex items-center gap-4">
-                    <div class="w-20 h-22 rounded-2xl bg-linear-to-br from-[#0284c7] via-[#0369a1] to-[#1e3a8a] border-2 border-[#38bdf8] flex flex-col items-center justify-center shrink-0 shadow-lg shadow-sky-500/25">
-                      <span class="text-3xl font-black text-white leading-none tracking-tight drop-shadow">
-                        {{ parseFunctionDate(fn).day }}
-                      </span>
-                      <span class="mt-1 px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-xs">
-                        {{ parseFunctionDate(fn).month }}
-                      </span>
-                      <span class="sr-only">{{ fn.formattedDate }}</span>
+                  <!-- Fila Superior: Fecha Destacada, Nombre del Día y Botón Comprar asegurado a la derecha -->
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <!-- High Contrast Date Box -->
+                      <div class="w-16 h-18 sm:w-18 sm:h-20 rounded-2xl bg-linear-to-br from-[#0284c7] via-[#0369a1] to-[#1e3a8a] border-2 border-[#38bdf8] flex flex-col items-center justify-center shrink-0 shadow-lg shadow-sky-500/25">
+                        <span class="text-2xl sm:text-3xl font-black text-white leading-none tracking-tight drop-shadow">
+                          {{ parseFunctionDate(fn).day }}
+                        </span>
+                        <span class="mt-1 px-1.5 py-0.5 rounded bg-amber-400 text-slate-950 text-[10px] sm:text-[11px] font-black uppercase tracking-wider shadow-xs">
+                          {{ parseFunctionDate(fn).month }}
+                        </span>
+                        <span class="sr-only">{{ fn.formattedDate }}</span>
+                      </div>
+
+                      <!-- Información textual de la fecha y estado -->
+                      <div class="flex flex-col min-w-0">
+                        <span class="font-display font-extrabold text-sm sm:text-base text-white truncate leading-tight">
+                          {{ fn.formattedDate }}
+                        </span>
+                        <div class="flex items-center gap-2 mt-1">
+                          <span
+                            :class="[
+                              'inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold font-mono border',
+                              getFunctionStatusClass(fn.status)
+                            ]"
+                          >
+                            {{ getFunctionStatusLabel(fn.status) }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    <!-- Horarios Entrada / Show / Salida con colores de alto contraste -->
-                    <div class="flex flex-col gap-2 min-w-0">
-                      <div class="flex items-center gap-2">
-                        <span class="text-[11px] font-mono font-black text-rose-400 uppercase tracking-wider flex items-center gap-1">
-                          <span class="material-symbols-outlined text-[14px]">schedule</span>
-                          <span>HORARIOS</span>
-                        </span>
-                        <span class="sr-only">{{ getFunctionStatusLabel(fn.status) }}</span>
-                      </div>
-
-                      <!-- Horario Unificado: Apertura, Show y Salida dentro de un solo Pill Segmentado -->
-                      <div class="inline-flex items-stretch rounded-xl sm:rounded-full overflow-hidden border border-slate-700/60 shadow-md divide-x divide-white/10 w-fit max-w-full">
-                        <!-- Apertura / Puertas (Emerald/Verde) -->
-                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-950/80 text-emerald-300">
-                          <span class="material-symbols-outlined text-[15px] text-emerald-400 shrink-0">door_front</span>
-                          <div class="flex flex-col leading-none">
-                            <span class="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Apertura</span>
-                            <span class="font-display font-extrabold text-xs sm:text-sm text-white whitespace-nowrap">{{ cleanTime(fn.doorsOpen) }}</span>
-                          </div>
-                          <span class="sr-only">Apertura de puertas: {{ fn.doorsOpen }}</span>
-                        </div>
-
-                        <!-- Show (Amber/Naranja cálido) -->
-                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-950/80 text-amber-300">
-                          <span class="material-symbols-outlined text-[15px] text-amber-400 shrink-0">music_note</span>
-                          <div class="flex flex-col leading-none">
-                            <span class="text-[9px] font-mono text-amber-400 font-bold uppercase tracking-wider">Show</span>
-                            <span class="font-display font-extrabold text-xs sm:text-sm text-white whitespace-nowrap">{{ cleanTime(fn.showStart) }}</span>
-                          </div>
-                          <span class="sr-only">Inicio del show: {{ fn.showStart }}</span>
-                        </div>
-
-                        <!-- Salida estimada (Violet/Púrpura) -->
-                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-950/80 text-purple-300">
-                          <span class="material-symbols-outlined text-[15px] text-purple-400 shrink-0">logout</span>
-                          <div class="flex flex-col leading-none">
-                            <span class="text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">Salida</span>
-                            <span class="font-display font-extrabold text-xs sm:text-sm text-white whitespace-nowrap">{{ getEstimatedExit(fn.showStart) }}</span>
-                          </div>
-                        </div>
-                      </div>
+                    <!-- Botón Comprar: Siempre visible y alineado a la derecha sin desbordes -->
+                    <div class="shrink-0">
+                      <button
+                        @click="goToPurchase(fn)"
+                        :disabled="fn.status === 'SOLD_OUT'"
+                        :class="[
+                          'px-6 sm:px-7 py-2.5 rounded-full font-display font-extrabold text-xs sm:text-sm transition-all flex items-center justify-center shadow-lg cursor-pointer',
+                          fn.status === 'SOLD_OUT'
+                            ? 'bg-surface-interactive text-outline border border-border-subtle cursor-not-allowed'
+                            : 'bg-[#00e5ff] hover:bg-[#33ebff] text-slate-950 hover:scale-105 active:scale-95 shadow-[#00e5ff]/30'
+                        ]"
+                      >
+                        <span>{{ fn.status === 'SOLD_OUT' ? 'Agotado' : 'Comprar' }}</span>
+                      </button>
                     </div>
                   </div>
 
-                  <!-- Comprar Button -->
-                  <div class="shrink-0 self-end sm:self-center">
-                    <button
-                      @click="goToPurchase(fn)"
-                      :disabled="fn.status === 'SOLD_OUT'"
-                      :class="[
-                        'px-7 sm:px-8 py-2.5 sm:py-3 rounded-full font-display font-extrabold text-sm sm:text-base transition-all flex items-center justify-center shadow-lg cursor-pointer',
-                        fn.status === 'SOLD_OUT'
-                          ? 'bg-surface-interactive text-outline border border-border-subtle cursor-not-allowed'
-                          : 'bg-[#00e5ff] hover:bg-[#33ebff] text-slate-950 hover:scale-105 active:scale-95 shadow-[#00e5ff]/30'
-                      ]"
-                    >
-                      <span>{{ fn.status === 'SOLD_OUT' ? 'Agotado' : 'Comprar' }}</span>
-                    </button>
+                  <!-- Fila Inferior: Pill Segmentado con los 3 Horarios ocupando el 100% del ancho -->
+                  <div class="grid grid-cols-3 rounded-xl sm:rounded-full overflow-hidden border border-slate-700/60 shadow-md divide-x divide-white/10 w-full text-center">
+                    <!-- Apertura / Puertas (Emerald/Verde) -->
+                    <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-emerald-950/80 text-emerald-300">
+                      <span class="material-symbols-outlined text-[14px] text-emerald-400 shrink-0">door_front</span>
+                      <div class="flex flex-col leading-none text-left sm:text-center">
+                        <span class="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Apertura</span>
+                        <span class="font-display font-extrabold text-xs text-white whitespace-nowrap">{{ cleanTime(fn.doorsOpen) }}</span>
+                      </div>
+                      <span class="sr-only">Apertura de puertas: {{ fn.doorsOpen }}</span>
+                    </div>
+
+                    <!-- Show (Amber/Naranja cálido) -->
+                    <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-amber-950/80 text-amber-300">
+                      <span class="material-symbols-outlined text-[14px] text-amber-400 shrink-0">music_note</span>
+                      <div class="flex flex-col leading-none text-left sm:text-center">
+                        <span class="text-[9px] font-mono text-amber-400 font-bold uppercase tracking-wider">Show</span>
+                        <span class="font-display font-extrabold text-xs text-white whitespace-nowrap">{{ cleanTime(fn.showStart) }}</span>
+                      </div>
+                      <span class="sr-only">Inicio del show: {{ fn.showStart }}</span>
+                    </div>
+
+                    <!-- Salida estimada (Violet/Púrpura) -->
+                    <div class="flex items-center justify-center gap-1.5 px-2 py-1.5 bg-purple-950/80 text-purple-300">
+                      <span class="material-symbols-outlined text-[14px] text-purple-400 shrink-0">logout</span>
+                      <div class="flex flex-col leading-none text-left sm:text-center">
+                        <span class="text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">Salida</span>
+                        <span class="font-display font-extrabold text-xs text-white whitespace-nowrap">{{ getEstimatedExit(fn.showStart) }}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
