@@ -6,18 +6,30 @@ const route = useRoute()
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-canvas-base text-high-emphasis font-body selection:bg-primary-container selection:text-white">
+  <div
+    class="min-h-screen flex flex-col bg-canvas-base text-high-emphasis font-body selection:bg-primary-container selection:text-white"
+    :class="{ 'h-screen overflow-hidden': route.meta.fullscreen }"
+  >
     <!-- Navbar global encapsulada en su propio componente con soporte de Sidebar móvil -->
-    <AppNavbar />
+    <AppNavbar v-if="!route.meta.hideNavbar" />
 
     <!-- Main View Outlet -->
-    <main class="flex-1 w-full pb-16 lg:pb-0">
+    <main
+      class="flex-1 w-full"
+      :class="{
+        'pb-16 lg:pb-0': !route.meta.fullscreen,
+        'h-full overflow-hidden flex flex-col': route.meta.fullscreen
+      }"
+    >
       <RouterView />
       <slot />
     </main>
 
     <!-- Global Commercial B2C Footer (Option 1: Official Entertainment & Trust Platform) -->
-    <footer class="bg-surface-container-lowest border-t border-border-subtle pt-14 pb-12 px-4 sm:px-6 lg:px-10 mt-auto text-high-emphasis">
+    <footer
+      v-if="!route.meta.hideFooter"
+      class="bg-surface-container-lowest border-t border-border-subtle pt-14 pb-12 px-4 sm:px-6 lg:px-10 mt-auto text-high-emphasis"
+    >
       <div class="max-w-7xl mx-auto">
         <!-- Main 4-Column Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-8 pb-12 border-b border-border-subtle/60 text-sm">
@@ -208,7 +220,10 @@ const route = useRoute()
     </footer>
 
     <!-- BottomNavBar (Mobile Only) -->
-    <nav class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface-dim shadow-[0px_-4px_20px_rgba(0,0,0,0.5)] border-t border-border-subtle">
+    <nav
+      v-if="!route.meta.hideNavbar"
+      class="lg:hidden fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface-dim shadow-[0px_-4px_20px_rgba(0,0,0,0.5)] border-t border-border-subtle"
+    >
       <RouterLink
         to="/"
         class="flex flex-col items-center justify-center py-1 px-4 rounded-xl transition-all"

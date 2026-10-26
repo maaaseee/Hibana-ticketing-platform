@@ -33,7 +33,7 @@ export const useCatalogStore = defineStore('catalog', () => {
 
   // Home Highlights Cache in SessionStorage
   const HIGHLIGHTS_STORAGE_KEY = 'amaryllis_highlights_cache'
-  const HIGHLIGHTS_TTL_MS = 10 * 60 * 1000 // 10 minutes
+  const HIGHLIGHTS_TTL_MS = import.meta.env.DEV ? 5000 : 10 * 60 * 1000 // 5s in dev, 10 min in prod
 
   const homeHighlights = ref<{ recentlyAdded: EventItem[]; upcoming: EventItem[] }>({
     recentlyAdded: [],
@@ -229,7 +229,9 @@ export const useCatalogStore = defineStore('catalog', () => {
       'symphony-in-code': 'opera-clasica-verano',
       'electronica-open-air': 'electronica-sunset',
       'neon-nights-techno': 'chronos-fest-2026',
-      'design-systems-workshop': 'global-tech-summit'
+      'design-systems-workshop': 'global-tech-summit',
+      'evt_ado_2026': events.value.some(e => e.id === 'ado-hibana-world-tour') ? 'ado-hibana-world-tour' : 'symphony-of-lights',
+      'evt-stellar-2026': events.value.some(e => e.id === 'ado-hibana-world-tour') ? 'ado-hibana-world-tour' : 'symphony-of-lights'
     }
 
     const mappedId = aliasMap[id]

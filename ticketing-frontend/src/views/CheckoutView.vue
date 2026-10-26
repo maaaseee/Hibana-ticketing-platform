@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '../stores/catalog'
 import { useTicketingStore } from '../stores/ticketing'
@@ -31,6 +31,22 @@ const cardCvc = ref('888')
 const isProcessing = ref(false)
 const orderCompleted = ref(false)
 const orderId = ref('')
+const showTimeExpiredModal = ref(false)
+
+watch(
+  () => ticketingStore.isTimerExpired,
+  (expired) => {
+    if (expired && !orderCompleted.value) {
+      showTimeExpiredModal.value = true
+    }
+  }
+)
+
+function handleReturnToSeats() {
+  showTimeExpiredModal.value = false
+  ticketingStore.resetAndRestartTimer(600)
+  router.push({ name: 'seat-selection', params: { id: eventId.value } })
+}
 
 async function handleCompleteOrder() {
   if (selectedSeats.value.length === 0) return
@@ -95,10 +111,20 @@ function navigateToTickets() {
     </div>
 
     <!-- Active Redlock Timer Pill -->
-    <div v-if="ticketingStore.isLockActive" class="flex items-center justify-between p-3.5 rounded-xl bg-primary-500/10 border border-primary-500/20 text-xs text-primary-300">
+    <div
+      v-if="ticketingStore.isLockActive"
+      class="flex items-center justify-between p-3.5 rounded-xl border text-xs transition-colors"
+      :class="ticketingStore.lockTimeRemaining <= 120 ? 'bg-rose-950/80 border-rose-500/50 text-rose-300 animate-pulse' : 'bg-primary-500/10 border-primary-500/20 text-primary-300'"
+    >
       <div class="flex items-center gap-2">
-        <span class="w-2 h-2 rounded-full bg-primary-400 animate-pulse"></span>
-        <span>Asientos reservados vía Redis Redlock: <strong>{{ ticketingStore.formattedLockTime }}</strong> restantes</span>
+        <span
+          class="w-2 h-2 rounded-full"
+          :class="ticketingStore.lockTimeRemaining <= 120 ? 'bg-rose-400' : 'bg-primary-400 animate-pulse'"
+        ></span>
+        <span>
+          {{ ticketingStore.lockTimeRemaining <= 120 ? '¡Tiempo Crítico! ' : 'Asientos reservados vía Redis Redlock: ' }}
+          <strong :class="ticketingStore.lockTimeRemaining <= 120 ? 'text-rose-200' : 'text-primary-200'">{{ ticketingStore.formattedLockTime }}</strong> restantes
+        </span>
       </div>
       <span class="font-mono text-text-muted hidden sm:inline">Transacción revierte al expirar el tiempo</span>
     </div>
@@ -348,6 +374,41 @@ function navigateToTickets() {
           </button>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Time Expired Modal Dialog -->
+    <div
+      v-if="showTimeExpiredModal"
+      class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+    >
+      <div class="w-full max-w-lg bg-[#141c27] border border-rose-500/40 rounded-3xl p-8 shadow-2xl text-center space-y-6">
+        <div class="w-20 h-20 mx-auto rounded-full bg-rose-500/20 border-2 border-rose-400 text-rose-400 flex items-center justify-center shadow-lg shadow-rose-500/20">
+          <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+
+        <div class="space-y-2">
+          <span class="text-xs font-mono font-bold text-rose-400 uppercase tracking-widest">
+            Tiempo de Reserva Expirado
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold font-display text-text-primary">
+            Tus Asientos Fueron Liberados
+          </h2>
+          <p class="text-sm text-text-secondary max-w-sm mx-auto">
+            El tiempo límite de 10 minutos para completar el pago ha expirado. Para permitir que otros compradores accedan equitativamente, las butacas fueron devueltas al inventario general.
+          </p>
+        </div>
+
+        <div class="pt-2">
+          <button
+            @click="handleReturnToSeats"
+            class="w-full py-3.5 px-6 rounded-xl font-bold bg-[#00688f] hover:bg-[#005a7d] text-white shadow-lg cursor-pointer transition-all font-mono text-sm"
+          >
+            Volver a Seleccionar Butacas &rarr;
+          </button>
+        </div>
       </div>
     </div>
 

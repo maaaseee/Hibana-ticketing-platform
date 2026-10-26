@@ -53,6 +53,7 @@ export interface VenueInfo {
   address: string
   capacity: number
   type: 'ESTADIO_MASIVO' | 'ARENA_CUBIERTO' | 'TEATRO_HISTORICO'
+  imageUrl?: string
   parking: VenueParking
   transit?: VenueTransit
   paymentMethods: PaymentPromotion[]
@@ -85,6 +86,7 @@ export interface EventItem {
   doorsOpen?: string
   venueMapUrl?: string
   seatMapUrl?: string
+  venueImageUrl?: string
   functions: EventFunction[]
   sectors: SectorPricing[]
   parking: VenueParking
@@ -92,6 +94,11 @@ export interface EventItem {
   paymentPromotions: PaymentPromotion[]
   availableDates?: string[]
   ticketTypes?: { name: string; price: number }[]
+  maxTicketsPerUser?: number
+  salesPolicy?: {
+    maxTicketsPerUser?: number
+    waitingRoomEnabled?: boolean
+  }
 }
 
 export interface Seat {
@@ -154,11 +161,14 @@ export type SectorShapeType = 'GRID' | 'ARC' | 'POLYGON' | 'PATH'
 export interface BaseSectorGeometry {
   id: string
   name: string
+  shortLabel?: string
+  subLabel?: string
   type: 'VIP' | 'NUMBERED_SEATS' | 'GENERAL_ADMISSION' | 'TECHNICAL'
   shapeType: SectorShapeType
   color: string
   strokeColor: string
   capacity: number
+  price?: number
   labelPosition?: [number, number]
   vendible?: boolean
   selectable?: boolean
@@ -264,6 +274,7 @@ export interface CatalogEventResponse {
   venueCity?: string
   venueAddress?: string
   seatMapUrl?: string
+  venueImageUrl?: string
   minPrice: number
   currency: string
   bannerUrl?: string

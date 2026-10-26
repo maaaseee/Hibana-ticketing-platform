@@ -67,7 +67,9 @@ export const mockEvents: EventItem[] = [
       'Jueves 15 de Octubre de 2026 - 20:00 hs',
       'Viernes 16 de Octubre de 2026 - 20:00 hs'
     ],
-    ticketTypes: buildTicketTypes(arenaVenue.sectors)
+    ticketTypes: buildTicketTypes(arenaVenue.sectors),
+    maxTicketsPerUser: 4,
+    salesPolicy: { maxTicketsPerUser: 4, waitingRoomEnabled: true }
   },
   {
     id: 'chronos-fest-2026',
@@ -119,7 +121,9 @@ export const mockEvents: EventItem[] = [
       'Sábado 24 de Octubre de 2026 - 21:00 hs',
       'Domingo 25 de Octubre de 2026 - 21:00 hs'
     ],
-    ticketTypes: buildTicketTypes(arenaVenue.sectors)
+    ticketTypes: buildTicketTypes(arenaVenue.sectors),
+    maxTicketsPerUser: 4,
+    salesPolicy: { maxTicketsPerUser: 4, waitingRoomEnabled: true }
   },
   {
     id: 'coldplay-music-spheres',
@@ -180,7 +184,9 @@ export const mockEvents: EventItem[] = [
       'Sábado 07 de Noviembre de 2026 - 21:00 hs',
       'Domingo 08 de Noviembre de 2026 - 21:00 hs'
     ],
-    ticketTypes: buildTicketTypes(monumentalVenue.sectors)
+    ticketTypes: buildTicketTypes(monumentalVenue.sectors),
+    maxTicketsPerUser: 6,
+    salesPolicy: { maxTicketsPerUser: 6, waitingRoomEnabled: true }
   },
   {
     id: 'global-tech-summit',
@@ -318,7 +324,9 @@ export const mockEvents: EventItem[] = [
     availableDates: [
       'Sábado 05 de Diciembre de 2026 - 16:00 hs'
     ],
-    ticketTypes: buildTicketTypes(monumentalVenue.sectors)
+    ticketTypes: buildTicketTypes(monumentalVenue.sectors),
+    maxTicketsPerUser: 6,
+    salesPolicy: { maxTicketsPerUser: 6, waitingRoomEnabled: true }
   },
   {
     id: 'urban-trap-festival',
@@ -361,7 +369,9 @@ export const mockEvents: EventItem[] = [
     availableDates: [
       'Sábado 12 de Diciembre de 2026 - 18:00 hs'
     ],
-    ticketTypes: buildTicketTypes(monumentalVenue.sectors)
+    ticketTypes: buildTicketTypes(monumentalVenue.sectors),
+    maxTicketsPerUser: 6,
+    salesPolicy: { maxTicketsPerUser: 6, waitingRoomEnabled: true }
   },
   {
     id: 'opera-clasica-verano',
@@ -456,7 +466,9 @@ export const mockEvents: EventItem[] = [
       'Lunes 25 de Enero de 2027 - 09:00 hs',
       'Martes 26 de Enero de 2027 - 09:00 hs'
     ],
-    ticketTypes: buildTicketTypes(arenaVenue.sectors)
+    ticketTypes: buildTicketTypes(arenaVenue.sectors),
+    maxTicketsPerUser: 4,
+    salesPolicy: { maxTicketsPerUser: 4, waitingRoomEnabled: true }
   },
   {
     id: 'electronica-sunset',

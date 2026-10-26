@@ -40,7 +40,12 @@ const router = createRouter({
         {
           path: 'event/:id/seats',
           name: 'seat-selection',
-          component: SeatSelectionView
+          component: SeatSelectionView,
+          meta: {
+            hideNavbar: true,
+            hideFooter: true,
+            fullscreen: true
+          }
         },
         {
           path: 'event/:id/checkout',

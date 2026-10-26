@@ -308,9 +308,22 @@ const venueCoordinates = computed(() => {
 
 const mapEmbedUrl = computed(() => {
   const { lat, lng } = venueCoordinates.value
-  const d = 0.008
-  const bbox = `${(lng - d).toFixed(6)}%2C${(lat - d).toFixed(6)}%2C${(lng + d).toFixed(6)}%2C${(lat + d).toFixed(6)}`
-  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(6)}%2C${lng.toFixed(6)}`
+  return `https://maps.google.com/maps?q=${lat},${lng}&hl=es&z=15&output=embed`
+})
+
+const venueExteriorImage = computed<string | null>(() => {
+  if (event.value?.venueImageUrl) {
+    return event.value.venueImageUrl
+  }
+  if (currentVenue.value?.imageUrl) {
+    return currentVenue.value.imageUrl
+  }
+  const vId = (event.value?.venueId || currentVenue.value?.id || '').toLowerCase()
+  const vName = (event.value?.venue || currentVenue.value?.name || '').toLowerCase()
+  if (vId.includes('arena') || vName.includes('arena')) {
+    return '/images/venues/arena_buenos_aires.jpg'
+  }
+  return null
 })
 
 const eventDescription = computed(() => {
@@ -451,6 +464,17 @@ function goToPurchase(fn: EventFunction) {
     })
   }
 }
+
+function goToStressTestQueue() {
+  const ev = event.value
+  if (!ev) return
+  queue.enterQueue(ev.id)
+  router.push({
+    name: 'queue',
+    params: { id: ev.id },
+    query: { stressTest: 'true' }
+  })
+}
 </script>
 
 <template>
@@ -476,13 +500,6 @@ function goToPurchase(fn: EventFunction) {
                 <span class="inline-block px-3 py-1 bg-surface-card text-primary border border-border-subtle font-mono text-xs font-semibold rounded-md tracking-wide uppercase">
                   {{ event.category || 'Música & Conciertos' }}
                 </span>
-                <span
-                  data-testid="inline-min-price-badge"
-                  class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-primary-container/80 text-primary border border-primary/30 font-mono text-xs font-bold shadow-sm"
-                >
-                  <span>Entradas desde</span>
-                  <span class="text-white">${{ minPrice }} {{ primaryCurrency }}</span>
-                </span>
               </div>
               <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-extrabold text-high-emphasis tracking-tight mb-3">
                 {{ event.title }}
@@ -494,7 +511,7 @@ function goToPurchase(fn: EventFunction) {
               <!-- Countdown Urgency Bar (por debajo del título y tags del concierto) -->
               <div
                 v-if="countdownFormatted"
-                class="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-2xl bg-gradient-to-r from-[#0a192f]/95 via-[#0f2847]/95 to-[#0a192f]/95 border border-[#0099ff]/50 shadow-xl backdrop-blur-md"
+                class="w-full flex items-center justify-center gap-3 px-5 py-3.5 rounded-2xl bg-linear-to-r from-navy-dark/95 via-[#0f2847]/95 to-navy-dark/95 border border-[#0099ff]/50 shadow-xl backdrop-blur-md"
                 data-testid="concert-countdown-bar"
               >
                 <span class="material-symbols-outlined text-[22px] text-[#00d2ff] animate-pulse">timer</span>
@@ -518,8 +535,27 @@ function goToPurchase(fn: EventFunction) {
                 </div>
               </div>
 
+              <!-- Vista exterior del recinto (Arena Buenos Aires) -->
+              <div
+                v-if="venueExteriorImage"
+                class="w-full h-44 rounded-xl overflow-hidden border border-border-subtle mt-2 relative group shadow-inner"
+                data-testid="venue-exterior-image"
+              >
+                <img
+                  :src="venueExteriorImage"
+                  :alt="event.venue"
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div class="absolute inset-0 bg-linear-to-t from-black/85 via-black/25 to-transparent flex items-end p-3">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-black/60 border border-white/20 text-[11px] font-mono text-white/95 backdrop-blur-md">
+                    <span class="material-symbols-outlined text-[14px] text-primary">photo_camera</span>
+                    <span>Fachada y acceso exterior</span>
+                  </span>
+                </div>
+              </div>
+
               <!-- Seat Map Preview with Accessible Radix Dialog Modal -->
-              <DialogRoot>
+              <DialogRoot v-else>
                 <DialogTrigger as-child>
                   <button
                     class="w-full h-44 rounded-xl overflow-hidden border border-border-subtle mt-2 bg-surface-container-deep relative flex items-center justify-center group hover:border-primary/60 transition-all cursor-pointer p-2 shadow-inner"
@@ -610,7 +646,7 @@ function goToPurchase(fn: EventFunction) {
                     {{ event.lineup ? 'Lineup' : 'Géneros y Estilo' }}
                   </p>
                   <p class="font-body text-sm text-high-emphasis font-medium leading-relaxed">
-                    {{ event.lineup || (event.genres && event.genres.length > 0 ? event.genres.join(' • ') : event.category || 'Música en vivo') }}
+                    {{ event.lineup || (Array.isArray(event.genre) ? event.genre.join(' • ') : event.genre || event.category || 'Música en vivo') }}
                   </p>
                 </div>
               </div>
@@ -695,64 +731,46 @@ function goToPurchase(fn: EventFunction) {
             </div>
           </div>
 
-          <!-- Section E: Sector Pricing Breakdown Table -->
-          <div class="bg-surface-card rounded-xl p-6 border border-border-subtle shadow-xl flex flex-col gap-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-border-subtle">
-              <div>
-                <h2 class="font-display text-xl font-bold text-high-emphasis">Tabla de Precios por Sector</h2>
-                <p class="font-mono text-xs text-muted-light">
-                  Valores base oficiales para {{ event.venue }}
-                </p>
+          <!-- Section E: Plano Interactivo del Escenario & Precios por Sector (Estilo Google Maps) -->
+          <div
+            class="bg-surface-card rounded-2xl p-6 border border-border-subtle shadow-xl flex flex-col gap-4"
+            data-testid="interactive-venue-map-section"
+          >
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border-subtle">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-surface-interactive border border-border-subtle flex items-center justify-center text-primary shrink-0 shadow-sm">
+                  <span class="material-symbols-outlined text-[22px]">stadium</span>
+                </div>
+                <div>
+                  <h2 class="font-display text-xl font-bold text-high-emphasis">Plano Interactivo & Precios por Sector</h2>
+                  <p class="font-mono text-xs text-muted-light">{{ event.venue }} • Mapa del escenario y ubicaciones</p>
+                </div>
               </div>
-              <div class="flex items-center gap-2 font-mono text-xs text-primary">
-                <span class="material-symbols-outlined text-[16px]">info</span>
-                <span>Precios finales sin cargos ocultos</span>
+
+              <!-- Indicador destacado de que los precios se exploran desde el mapa -->
+              <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-mono font-bold shadow-xs">
+                <span class="material-symbols-outlined text-[16px] animate-pulse">touch_app</span>
+                <span>Precios visibles al interactuar en el mapa</span>
               </div>
             </div>
 
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse" data-testid="sector-price-table">
-                <thead>
-                  <tr class="border-b border-border-subtle text-[11px] font-mono uppercase tracking-wider text-muted-light">
-                    <th class="py-3 px-3">Sector</th>
-                    <th class="py-3 px-3">Tipo / Ubicación</th>
-                    <th class="py-3 px-3">Precio Base</th>
-                    <th class="py-3 px-3">Disponibilidad</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y border-border-subtle/50 font-body text-sm">
-                  <tr
-                    v-for="sec in sectors"
-                    :key="sec.id"
-                    class="hover:bg-surface-interactive/50 transition-colors"
-                    data-testid="sector-row"
-                  >
-                    <td class="py-3.5 px-3 font-semibold text-high-emphasis">
-                      <div class="flex flex-col">
-                        <span>{{ sec.name }}</span>
-                        <span v-if="sec.description" class="font-mono text-[11px] text-muted-light font-normal">
-                          {{ sec.description }}
-                        </span>
-                      </div>
-                    </td>
-                    <td class="py-3.5 px-3 font-mono text-xs text-medium-emphasis">
-                      <span class="px-2 py-1 rounded bg-surface-container-deep border border-border-subtle">
-                        {{ formatSectorType(sec.type) }}
-                      </span>
-                    </td>
-                    <td class="py-3.5 px-3 font-display font-bold text-white">
-                      ${{ sec.price }} <span class="font-mono text-xs text-primary font-normal">{{ sec.currency }}</span>
-                    </td>
-                    <td class="py-3.5 px-3">
-                      <span
-                        :class="['px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase border', getSectorStatusClass(sec.status)]"
-                      >
-                        {{ getSectorStatusLabel(sec.status) }}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <!-- Banner Explicativo de Navegación Interactiva -->
+            <div class="p-3.5 rounded-xl bg-surface-container-deep/80 border border-border-subtle flex items-start gap-3">
+              <span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">explore</span>
+              <p class="font-body text-xs text-medium-emphasis leading-relaxed">
+                <strong class="text-white font-semibold">Exploración interactiva estilo Google Maps:</strong>
+                Haz clic o pasa el cursor sobre cada sector del plano para consultar su <span class="text-primary font-bold">precio oficial</span>, tipo de ubicación y disponibilidad. Puedes <strong class="text-white">arrastrar para moverte</strong> por el recinto y usar los controles o la <strong class="text-white">rueda del mouse (+ / -)</strong> para hacer zoom sobre el escenario.
+              </p>
+            </div>
+
+            <!-- Contenedor del Mapa Interactivo -->
+            <div class="relative w-full h-115 sm:h-140 rounded-2xl overflow-hidden bg-[#071322] border border-border-structural/80 shadow-2xl">
+              <VenueSectorMap
+                :venue-id="event.seatMapUrl || event.venueId || currentVenue?.id"
+                :sectors-pricing="sectors"
+                :compact="false"
+                :interactive="true"
+              />
             </div>
           </div>
 
@@ -780,10 +798,10 @@ function goToPurchase(fn: EventFunction) {
               </a>
             </div>
 
-            <!-- Mapa Interactivo del Recinto (OpenStreetMap con marker sin bloqueos X-Frame) -->
+            <!-- Mapa de Ubicación del Recinto (Google Maps) -->
             <div class="relative w-full h-64 sm:h-72 rounded-xl overflow-hidden border border-border-subtle bg-surface">
               <iframe
-                title="Mapa de ubicación del recinto del evento"
+                title="Mapa de ubicación del recinto en Google Maps"
                 width="100%"
                 height="100%"
                 style="border:0;"
@@ -858,7 +876,7 @@ function goToPurchase(fn: EventFunction) {
         <div class="lg:col-span-5">
           <div class="sticky top-20 flex flex-col gap-6">
             <!-- Main Unified Card -->
-            <div class="rounded-3xl overflow-hidden border border-[#1e3a5f]/80 bg-[#0c1c2e] shadow-2xl flex flex-col">
+            <div class="rounded-3xl overflow-hidden border border-border-structural/80 bg-[#0c1c2e] shadow-2xl flex flex-col">
               <!-- Top Vibrant Blue Header: Entradas desde $ 75.000 -->
               <div
                 class="bg-[#0084d1] px-6 py-5 flex items-center justify-between text-white"
@@ -872,7 +890,7 @@ function goToPurchase(fn: EventFunction) {
               </div>
 
               <!-- Available Functions List -->
-              <div class="divide-y divide-[#1e3a5f]/60 bg-[#0c1c2e]">
+              <div class="divide-y divide-border-structural/60 bg-[#0c1c2e]">
                 <div
                   v-for="fn in functions"
                   :key="fn.id"
@@ -881,7 +899,7 @@ function goToPurchase(fn: EventFunction) {
                 >
                   <!-- High Contrast Date Box -->
                   <div class="flex items-center gap-4">
-                    <div class="w-20 h-22 rounded-2xl bg-gradient-to-br from-[#0284c7] via-[#0369a1] to-[#1e3a8a] border-2 border-[#38bdf8] flex flex-col items-center justify-center shrink-0 shadow-lg shadow-sky-500/25">
+                    <div class="w-20 h-22 rounded-2xl bg-linear-to-br from-[#0284c7] via-[#0369a1] to-[#1e3a8a] border-2 border-[#38bdf8] flex flex-col items-center justify-center shrink-0 shadow-lg shadow-sky-500/25">
                       <span class="text-3xl font-black text-white leading-none tracking-tight drop-shadow">
                         {{ parseFunctionDate(fn).day }}
                       </span>
@@ -901,33 +919,34 @@ function goToPurchase(fn: EventFunction) {
                         <span class="sr-only">{{ getFunctionStatusLabel(fn.status) }}</span>
                       </div>
 
-                      <div class="flex flex-wrap items-center gap-2">
-                        <!-- Puertas (Emerald/Verde) -->
-                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 shadow-xs">
-                          <span class="material-symbols-outlined text-[15px] text-emerald-400">door_front</span>
+                      <!-- Horario Unificado: Apertura, Show y Salida dentro de un solo Pill Segmentado -->
+                      <div class="inline-flex items-stretch rounded-xl sm:rounded-full overflow-hidden border border-slate-700/60 shadow-md divide-x divide-white/10 w-fit max-w-full">
+                        <!-- Apertura / Puertas (Emerald/Verde) -->
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-950/80 text-emerald-300">
+                          <span class="material-symbols-outlined text-[15px] text-emerald-400 shrink-0">door_front</span>
                           <div class="flex flex-col leading-none">
-                            <span class="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Puertas</span>
-                            <span class="font-display font-extrabold text-xs sm:text-sm text-white">{{ cleanTime(fn.doorsOpen) }}</span>
+                            <span class="text-[9px] font-mono text-emerald-400 font-bold uppercase tracking-wider">Apertura</span>
+                            <span class="font-display font-extrabold text-xs sm:text-sm text-white whitespace-nowrap">{{ cleanTime(fn.doorsOpen) }}</span>
                           </div>
                           <span class="sr-only">Apertura de puertas: {{ fn.doorsOpen }}</span>
                         </div>
 
                         <!-- Show (Amber/Naranja cálido) -->
-                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-950/80 border border-amber-500/50 text-amber-300 shadow-xs">
-                          <span class="material-symbols-outlined text-[15px] text-amber-400">music_note</span>
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-950/80 text-amber-300">
+                          <span class="material-symbols-outlined text-[15px] text-amber-400 shrink-0">music_note</span>
                           <div class="flex flex-col leading-none">
                             <span class="text-[9px] font-mono text-amber-400 font-bold uppercase tracking-wider">Show</span>
-                            <span class="font-display font-extrabold text-xs sm:text-sm text-white">{{ cleanTime(fn.showStart) }}</span>
+                            <span class="font-display font-extrabold text-xs sm:text-sm text-white whitespace-nowrap">{{ cleanTime(fn.showStart) }}</span>
                           </div>
                           <span class="sr-only">Inicio del show: {{ fn.showStart }}</span>
                         </div>
 
                         <!-- Salida estimada (Violet/Púrpura) -->
-                        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-500/50 text-purple-300 shadow-xs">
-                          <span class="material-symbols-outlined text-[15px] text-purple-400">logout</span>
+                        <div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-950/80 text-purple-300">
+                          <span class="material-symbols-outlined text-[15px] text-purple-400 shrink-0">logout</span>
                           <div class="flex flex-col leading-none">
                             <span class="text-[9px] font-mono text-purple-400 font-bold uppercase tracking-wider">Salida</span>
-                            <span class="font-display font-extrabold text-xs sm:text-sm text-white">{{ getEstimatedExit(fn.showStart) }}</span>
+                            <span class="font-display font-extrabold text-xs sm:text-sm text-white whitespace-nowrap">{{ getEstimatedExit(fn.showStart) }}</span>
                           </div>
                         </div>
                       </div>
@@ -952,11 +971,34 @@ function goToPurchase(fn: EventFunction) {
                 </div>
               </div>
 
+              <!-- Stress Test Simulation Banner for Virtual Waiting Room -->
+              <div class="mt-4 p-4 rounded-2xl bg-[#101825] border border-border-subtle flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-xl bg-[#00688f]/20 border border-[#00688f]/40 flex items-center justify-center text-[#86cffb]">
+                    <span class="material-symbols-outlined text-[20px]">speed</span>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-display font-bold text-white text-sm">Stress Test: Fila de Acceso Virtual</span>
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-cyan-950 text-cyan-300 border border-cyan-500/40 font-semibold">Simulación</span>
+                    </div>
+                    <p class="font-body text-xs text-muted-light mt-0.5">Pon a prueba el sistema de concurrencia y sala de espera distribuida (Redis Sorted Sets).</p>
+                  </div>
+                </div>
+                <button
+                  @click="goToStressTestQueue"
+                  class="px-5 py-2.5 rounded-xl bg-[#00688f] hover:bg-[#0084ff] text-white font-mono text-xs font-bold transition-all flex items-center gap-1.5 shadow-md cursor-pointer shrink-0"
+                >
+                  <span>Entrar a la Fila</span>
+                  <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </button>
+              </div>
+
               <!-- Accordions: Medios de pago & Estacionamiento (Ambos colapsados por defecto) -->
               <AccordionRoot
                 type="multiple"
                 v-model="openSidebarAccordions"
-                class="w-full divide-y divide-[#1e3a5f]/60 border-t border-[#1e3a5f]/80"
+                class="w-full divide-y divide-border-structural/60 border-t border-border-structural/80"
               >
                 <!-- Section C: Medios de pago -->
                 <AccordionItem
@@ -979,7 +1021,7 @@ function goToPurchase(fn: EventFunction) {
                     </AccordionTrigger>
                   </AccordionHeader>
 
-                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-[#1e3a5f]/40 bg-[#081524]/70 text-sm">
+                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-border-structural/40 bg-[#081524]/70 text-sm">
                     <div class="space-y-3 pt-2">
                       <!-- Tarjetas de promociones bancarias con imágenes oficiales -->
                       <div
@@ -1042,7 +1084,7 @@ function goToPurchase(fn: EventFunction) {
                     </AccordionTrigger>
                   </AccordionHeader>
 
-                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-[#1e3a5f]/40 bg-[#081524]/70 text-sm">
+                  <AccordionContent class="overflow-hidden data-[state=closed]:hidden p-4 sm:p-5 pt-1 border-t border-border-structural/40 bg-[#081524]/70 text-sm">
                     <div class="space-y-3 pt-2">
                       <div class="flex flex-col gap-1">
                         <h4 class="font-display text-sm font-bold text-high-emphasis">{{ parkingInfo.title }}</h4>

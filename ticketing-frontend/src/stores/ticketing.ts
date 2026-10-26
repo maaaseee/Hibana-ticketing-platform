@@ -30,6 +30,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
   // Redlock 10-minute (600s) atomic lock timer
   const lockTimeRemaining = ref<number>(600)
   const isLockActive = ref<boolean>(false)
+  const isTimerExpired = ref<boolean>(false)
   let lockTimerInterval: any = null
 
   // Generated grid of seats
@@ -81,16 +82,23 @@ export const useTicketingStore = defineStore('ticketing', () => {
   function startLockTimer(countdownSeconds = 600) {
     lockTimeRemaining.value = countdownSeconds
     isLockActive.value = true
+    isTimerExpired.value = false
 
     if (lockTimerInterval) clearInterval(lockTimerInterval)
     lockTimerInterval = setInterval(() => {
       if (lockTimeRemaining.value > 0) {
         lockTimeRemaining.value--
       } else {
+        isTimerExpired.value = true
         releaseExpiredLocks()
         clearInterval(lockTimerInterval)
       }
     }, 1000)
+  }
+
+  function resetAndRestartTimer(countdownSeconds = 600) {
+    isTimerExpired.value = false
+    startLockTimer(countdownSeconds)
   }
 
   async function toggleSeat(seatId: string, userId = 'usr_guest_frontoffice') {
@@ -223,6 +231,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
     errorNotification,
     lockTimeRemaining,
     isLockActive,
+    isTimerExpired,
     formattedLockTime,
     subtotal,
     serviceFee,
@@ -232,6 +241,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
     confirmAllActiveReservations,
     startLockTimer,
     resetLockTimer,
+    resetAndRestartTimer,
     releaseExpiredLocks,
   }
 })

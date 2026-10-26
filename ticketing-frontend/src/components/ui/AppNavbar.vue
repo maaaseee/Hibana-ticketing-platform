@@ -115,7 +115,7 @@ function navigateTo(routeName: string) {
             class="text-medium-emphasis hover:text-primary transition-colors duration-200 py-1.5 px-1 relative"
             :class="route.path.startsWith('/events') || route.path.startsWith('/event/') ? 'text-primary font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full' : ''"
           >
-            Shows & Events
+            Eventos
           </RouterLink>
 
           <!-- Venues & FAQ -->
@@ -124,7 +124,7 @@ function navigateTo(routeName: string) {
             class="text-medium-emphasis hover:text-primary transition-colors duration-200 py-1.5 px-1 relative"
             :class="route.path.startsWith('/help') ? 'text-primary font-bold after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:rounded-full' : ''"
           >
-            Venues & FAQ
+            Preguntas frecuentes
           </RouterLink>
         </nav>
 
@@ -227,7 +227,7 @@ function navigateTo(routeName: string) {
                 >
                   <div class="flex items-center gap-2.5">
                     <span class="material-symbols-outlined text-[18px] text-primary">confirmation_number</span>
-                    <span class="font-semibold">Mis Entradas (My Tickets)</span>
+                    <span class="font-semibold">Mis Entradas</span>
                   </div>
                   <span class="px-2 py-0.5 rounded-full bg-primary-container/30 text-primary border border-primary/30 font-mono text-[10px] font-bold">
                     3 activas

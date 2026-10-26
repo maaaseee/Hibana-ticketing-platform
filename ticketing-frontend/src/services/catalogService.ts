@@ -1,5 +1,5 @@
 import { apiClient } from './apiClient'
-import type { CatalogEventResponse, EventItem, SectorPricing } from '../types'
+import type { CatalogEventResponse, EventItem, SectorPricing, EventFunction } from '../types'
 import { mockEvents } from '../data/mockEvents'
 import { getVenueByName, mockVenues } from '../data/mockVenues'
 
@@ -7,22 +7,33 @@ const BASE_URL = import.meta.env.VITE_CATALOG_API_URL || '/api/catalog'
 
 function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
   const defaultVenue = mockVenues[0]!
-  const matchedVenue = backend.venueName ? getVenueByName(backend.venueName) : defaultVenue
-  const venueId = matchedVenue?.id || 'arena-buenos-aires'
-  const venueName = backend.venueName || matchedVenue?.name || 'Buenos Aires Venue'
+  const isEarlyColdplayFixture =
+    (backend.id === 'evt_coldplay_2026' || backend.slug === 'coldplay-music-of-the-spheres-2026' || backend.venueName?.includes('Nacional')) &&
+    (backend.minPrice || 0) < 1000
 
-  const sectors: SectorPricing[] = backend.sectors?.map((s, idx) => {
-    const cleanId = s.sectorId?.includes('__') ? s.sectorId.split('__')[1]! : (s.sectorId || `sec-${idx}`)
-    return {
-      id: cleanId,
-      name: s.name,
-      price: s.totalPrice || s.basePrice || 0,
-      currency: (s.currency === 'USD' ? 'USD' : 'ARS'),
-      capacity: s.totalCapacity,
-      type: (s.type === 'VIP' ? 'VIP' : s.type === 'NUMBERED_SEATS' ? 'NUMBERED_SEATS' : 'GENERAL_ADMISSION'),
-      status: 'AVAILABLE',
-    }
-  }) || matchedVenue?.sectors || []
+  const matchedVenue = isEarlyColdplayFixture
+    ? (mockVenues.find(v => v.id === 'estadio-monumental') || defaultVenue)
+    : (backend.venueName ? getVenueByName(backend.venueName) : defaultVenue)
+  const venueId = matchedVenue?.id || 'arena-buenos-aires'
+  const venueName = isEarlyColdplayFixture ? (matchedVenue?.name || 'Estadio Monumental') : (backend.venueName || matchedVenue?.name || 'Buenos Aires Venue')
+  const location = isEarlyColdplayFixture
+    ? 'Av. Figueroa Alcorta 7597, Núñez, CABA'
+    : (backend.venueAddress ? `${backend.venueCity || 'Buenos Aires'}, ${backend.venueAddress}` : 'Buenos Aires, Argentina')
+
+  const sectors: SectorPricing[] = isEarlyColdplayFixture
+    ? (matchedVenue?.sectors || [])
+    : (backend.sectors?.map((s, idx) => {
+        const cleanId = s.sectorId?.includes('__') ? s.sectorId.split('__')[1]! : (s.sectorId || `sec-${idx}`)
+        return {
+          id: cleanId,
+          name: s.name,
+          price: s.totalPrice || s.basePrice || 0,
+          currency: (s.currency === 'USD' ? 'USD' : 'ARS'),
+          capacity: s.totalCapacity,
+          type: (s.type === 'VIP' ? 'VIP' : s.type === 'NUMBERED_SEATS' ? 'NUMBERED_SEATS' : 'GENERAL_ADMISSION'),
+          status: 'AVAILABLE',
+        }
+      }) || matchedVenue?.sectors || [])
 
   const startsAtDate = backend.startsAt ? new Date(backend.startsAt) : new Date()
   const formattedDate = startsAtDate.toLocaleDateString('es-AR', {
@@ -37,10 +48,17 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
   }) + ' HRS'
 
   let functions: EventFunction[] = (backend as any).functions || []
-  if (functions.length === 0 && backend.salesPolicyJson) {
+  let maxTicketsPerUser = 4
+  let salesPolicyObj: { maxTicketsPerUser?: number; waitingRoomEnabled?: boolean } | undefined = undefined
+
+  if (backend.salesPolicyJson) {
     try {
       const sp = typeof backend.salesPolicyJson === 'string' ? JSON.parse(backend.salesPolicyJson) : backend.salesPolicyJson
-      if (Array.isArray(sp.annexedDates) && sp.annexedDates.length > 0) {
+      salesPolicyObj = sp
+      if (typeof sp?.maxTicketsPerUser === 'number' && sp.maxTicketsPerUser > 0) {
+        maxTicketsPerUser = sp.maxTicketsPerUser
+      }
+      if (functions.length === 0 && Array.isArray(sp?.annexedDates) && sp.annexedDates.length > 0) {
         functions = sp.annexedDates
       }
     } catch {}
@@ -59,11 +77,13 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
   }
 
   const availableDates = functions.map(f => `${f.formattedDate} - ${f.showStart}`)
+  const rawPrice = backend.minPrice || 45000
+  const normalizedPrice = isEarlyColdplayFixture ? 55000 : rawPrice
 
   return {
-    id: backend.id || backend.slug,
-    slug: backend.slug,
-    title: backend.title,
+    id: isEarlyColdplayFixture ? 'coldplay-music-spheres' : (backend.id || backend.slug),
+    slug: isEarlyColdplayFixture ? 'coldplay-music-spheres' : backend.slug,
+    title: isEarlyColdplayFixture ? 'Coldplay - Music of the Spheres Tour' : backend.title,
     subtitle: `${backend.category} • ${backend.genres?.join(', ') || 'En vivo'}`,
     description: backend.description,
     lineup: backend.genres && backend.genres.length > 0 ? backend.genres.join(' • ') : undefined,
@@ -73,20 +93,23 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
     doorsOpen: backend.doorsOpenAt ? new Date(backend.doorsOpenAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }) + ' HRS' : '18:00 HRS',
     venue: venueName,
     venueId,
-    location: backend.venueAddress ? `${backend.venueCity || 'Buenos Aires'}, ${backend.venueAddress}` : 'Buenos Aires, Argentina',
+    location,
     category: backend.category === 'CONCERT' ? 'Música & Conciertos' : backend.category,
     genre: 'Music & Concerts',
-    price: backend.minPrice || 45000,
-    minPrice: backend.minPrice || 45000,
+    price: normalizedPrice,
+    minPrice: normalizedPrice,
     imageUrl: backend.posterUrl || backend.bannerUrl || 'https://images.unsplash.com/photo-1465847899084-d164df4dedc6?auto=format&fit=crop&w=1200&q=80',
     badgeText: 'Confirmado',
     badgeType: 'secondary',
     status: 'AVAILABLE',
-    seatMapUrl: backend.seatMapUrl || `/seat-maps/${venueId}.json`,
-    venueMapUrl: backend.seatMapUrl || `/seat-maps/${venueId}.json`,
+    seatMapUrl: isEarlyColdplayFixture ? '/seat-maps/estadio-monumental.json' : (backend.seatMapUrl || `/seat-maps/${venueId}.json`),
+    venueMapUrl: isEarlyColdplayFixture ? '/seat-maps/estadio-monumental.json' : (backend.seatMapUrl || `/seat-maps/${venueId}.json`),
+    venueImageUrl: backend.venueImageUrl || matchedVenue?.imageUrl,
     sectors,
     functions,
     availableDates,
+    maxTicketsPerUser,
+    salesPolicy: salesPolicyObj,
     parking: matchedVenue?.parking || defaultVenue.parking,
     transit: matchedVenue?.transit || defaultVenue.transit,
     paymentPromotions: matchedVenue?.paymentMethods || defaultVenue.paymentMethods,
@@ -108,11 +131,7 @@ export const catalogService = {
     try {
       const data = await apiClient.get<CatalogEventResponse[]>(`${BASE_URL}/events`)
       if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map(mapCatalogToEventItem)
-        // Combine with mock events if backend only has partial seed events
-        const backendIds = new Set(mapped.map(e => e.id))
-        const nonDuplicateMocks = mockEvents.filter(e => !backendIds.has(e.id))
-        return [...mapped, ...nonDuplicateMocks]
+        return data.map(mapCatalogToEventItem)
       }
       return mockEvents
     } catch {
@@ -149,7 +168,7 @@ export const catalogService = {
 
   async getCatalogMetadata(): Promise<CatalogMetadataData> {
     try {
-      const data = await apiClient.get<{ furthestEventDate: string; venues: { id: string; name: string }[] }>(`${BASE_URL}/events/meta`)
+      const data = await apiClient.get<{ furthestEventDate: string; venues: { id: string; name: string; imageUrl?: string }[] }>(`${BASE_URL}/events/meta`)
       if (data) {
         return {
           furthestEventDate: data.furthestEventDate || null,
@@ -164,7 +183,7 @@ export const catalogService = {
     const maxTime = Math.max(...mockEvents.map(e => new Date(e.dateIso).getTime()))
     return {
       furthestEventDate: isNaN(maxTime) ? null : new Date(maxTime).toISOString(),
-      venues: mockVenues.map(v => ({ id: v.id, name: v.name }))
+      venues: mockVenues.map(v => ({ id: v.id, name: v.name, imageUrl: v.imageUrl }))
     }
   },
 

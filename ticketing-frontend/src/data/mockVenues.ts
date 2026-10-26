@@ -10,6 +10,7 @@ export const mockVenues: VenueInfo[] = [
     address: 'Av. Figueroa Alcorta 7597, Núñez, CABA',
     capacity: 84567,
     type: 'ESTADIO_MASIVO',
+    imageUrl: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80',
     parking: {
       available: true,
       title: 'Estacionamiento Oficial Tiro Federal & Ciudad Universitaria',
@@ -192,6 +193,7 @@ export const mockVenues: VenueInfo[] = [
     address: 'Humboldt 450, Villa Crespo, CABA',
     capacity: 15000,
     type: 'ARENA_CUBIERTO',
+    imageUrl: '/images/venues/arena_buenos_aires.jpg',
     parking: {
       available: true,
       title: 'Estacionamiento Subterráneo Techado Arena Buenos Aires',
@@ -333,6 +335,7 @@ export const mockVenues: VenueInfo[] = [
     address: 'Av. Corrientes 857, San Nicolás, CABA',
     capacity: 3262,
     type: 'TEATRO_HISTORICO',
+    imageUrl: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1200&q=80',
     parking: {
       available: true,
       title: 'Convenio Garajes Comerciales Corrientes y Sarmiento',

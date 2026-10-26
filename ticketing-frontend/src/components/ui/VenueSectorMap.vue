@@ -25,6 +25,104 @@ const layout = ref<VenueSeatMapLayout | null>(null)
 const loading = ref(true)
 const error = ref<string | null>(null)
 const hoveredSector = ref<SectorGeometry | null>(null)
+const selectedSector = ref<SectorGeometry | null>(null)
+
+// Google Maps Style Navigation & Exploration State
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const isDragging = ref(false)
+const dragStart = ref({ x: 0, y: 0 })
+const initialPan = ref({ x: 0, y: 0 })
+const hasDragged = ref(false)
+
+const activeSector = computed(() => selectedSector.value || hoveredSector.value)
+
+function zoomIn() {
+  zoom.value = Math.min(parseFloat((zoom.value + 0.25).toFixed(2)), 3.5)
+}
+
+function zoomOut() {
+  zoom.value = Math.max(parseFloat((zoom.value - 0.25).toFixed(2)), 0.7)
+}
+
+function resetView() {
+  zoom.value = 1
+  panX.value = 0
+  panY.value = 0
+  selectedSector.value = null
+}
+
+function handleWheel(e: WheelEvent) {
+  if (!props.interactive || props.compact) return
+  const delta = e.deltaY < 0 ? 0.15 : -0.15
+  const newZoom = Math.min(Math.max(zoom.value + delta, 0.7), 3.5)
+  zoom.value = parseFloat(newZoom.toFixed(2))
+}
+
+function handleMouseDown(e: MouseEvent) {
+  if (!props.interactive || props.compact) return
+  if ((e.target as HTMLElement)?.closest('.map-control-btn') || (e.target as HTMLElement)?.closest('.sector-inspector-card')) return
+  isDragging.value = true
+  hasDragged.value = false
+  dragStart.value = { x: e.clientX, y: e.clientY }
+  initialPan.value = { x: panX.value, y: panY.value }
+}
+
+function handleMouseMove(e: MouseEvent) {
+  if (!isDragging.value) return
+  const dx = e.clientX - dragStart.value.x
+  const dy = e.clientY - dragStart.value.y
+  if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+    hasDragged.value = true
+  }
+  panX.value = initialPan.value.x + dx
+  panY.value = initialPan.value.y + dy
+}
+
+function handleMouseUp() {
+  isDragging.value = false
+}
+
+// Soporte gestual táctil para dispositivos móviles (Pan & Pinch to zoom)
+let initialTouchDist = 0
+function handleTouchStart(e: TouchEvent) {
+  if (!props.interactive || props.compact) return
+  if (e.touches.length === 1 && e.touches[0]) {
+    isDragging.value = true
+    hasDragged.value = false
+    dragStart.value = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+    initialPan.value = { x: panX.value, y: panY.value }
+  } else if (e.touches.length === 2 && e.touches[0] && e.touches[1]) {
+    const t1 = e.touches[0]
+    const t2 = e.touches[1]
+    initialTouchDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
+  }
+}
+
+function handleTouchMove(e: TouchEvent) {
+  if (e.touches.length === 1 && isDragging.value && e.touches[0]) {
+    const dx = e.touches[0].clientX - dragStart.value.x
+    const dy = e.touches[0].clientY - dragStart.value.y
+    if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      hasDragged.value = true
+    }
+    panX.value = initialPan.value.x + dx
+    panY.value = initialPan.value.y + dy
+  } else if (e.touches.length === 2 && initialTouchDist > 0 && e.touches[0] && e.touches[1]) {
+    const t1 = e.touches[0]
+    const t2 = e.touches[1]
+    const currentDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY)
+    const factor = currentDist / initialTouchDist
+    zoom.value = Math.min(Math.max(parseFloat((zoom.value * factor).toFixed(2)), 0.7), 3.5)
+    initialTouchDist = currentDist
+  }
+}
+
+function handleTouchEnd() {
+  isDragging.value = false
+  initialTouchDist = 0
+}
 
 // Mapear los nombres de archivos .json según el venueId o URL remota
 function resolveVenueJson(id?: string): string {
@@ -183,15 +281,72 @@ function getSectorPrice(sec: SectorGeometry): number | undefined {
   return undefined
 }
 
+function getSectorPricingInfo(sec: SectorGeometry): SectorPricing | undefined {
+  if (!props.sectorsPricing || props.sectorsPricing.length === 0) return undefined
+  return props.sectorsPricing.find(p =>
+    p.id === sec.id ||
+    p.id.endsWith(sec.id) ||
+    sec.id.endsWith(p.id) ||
+    p.name.trim().toLowerCase() === sec.name.trim().toLowerCase() ||
+    p.type === sec.type
+  )
+}
+
+function getSectorStatusLabel(sec: SectorGeometry): string {
+  if (sec.selectable === false || sec.vendible === false) return 'Técnico'
+  const info = getSectorPricingInfo(sec)
+  switch (info?.status) {
+    case 'AVAILABLE':
+      return 'Disponible'
+    case 'FEW_SEATS':
+      return 'Últimos lugares'
+    case 'SOLD_OUT':
+      return 'Agotado'
+    default:
+      return 'Disponible'
+  }
+}
+
+function getSectorStatusClasses(sec: SectorGeometry): string {
+  if (sec.selectable === false || sec.vendible === false) {
+    return 'bg-amber-950/80 text-amber-300 border-amber-800/60'
+  }
+  const info = getSectorPricingInfo(sec)
+  switch (info?.status) {
+    case 'AVAILABLE':
+      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
+    case 'FEW_SEATS':
+      return 'bg-amber-950/80 text-amber-400 border-amber-800/60'
+    case 'SOLD_OUT':
+      return 'bg-rose-950/80 text-rose-400 border-rose-800/60'
+    default:
+      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
+  }
+}
+
 function handleSectorClick(sec: SectorGeometry) {
   if (!props.interactive) return
-  if (sec.selectable === false || sec.vendible === false) return
+  if (hasDragged.value) return
+  selectedSector.value = sec
   emit('select-sector', sec)
 }
 </script>
 
 <template>
-  <div class="relative w-full h-full flex flex-col items-center justify-center select-none overflow-hidden">
+  <div
+    class="relative w-full h-full flex flex-col items-center justify-center select-none overflow-hidden"
+    :class="[
+      interactive && !compact ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''
+    ]"
+    @wheel.prevent="handleWheel"
+    @mousedown="handleMouseDown"
+    @mousemove="handleMouseMove"
+    @mouseup="handleMouseUp"
+    @mouseleave="handleMouseUp"
+    @touchstart="handleTouchStart"
+    @touchmove="handleTouchMove"
+    @touchend="handleTouchEnd"
+  >
     <!-- Estado de carga -->
     <div v-if="loading" class="flex flex-col items-center justify-center gap-2 p-8 text-primary">
       <span class="material-symbols-outlined text-3xl animate-spin">progress_activity</span>
@@ -205,10 +360,10 @@ function handleSectorClick(sec: SectorGeometry) {
     </div>
 
     <!-- Renderizado vectorial reactivo del mapa -->
-    <div v-else class="relative w-full h-full flex items-center justify-center">
+    <div v-else class="relative w-full h-full flex items-center justify-center overflow-hidden">
       <svg
         :viewBox="`0 0 ${layout.canvasWidth} ${layout.canvasHeight}`"
-        class="w-full h-full max-h-full transition-all duration-300 drop-shadow-md"
+        class="w-full h-full max-h-full transition-all duration-75 drop-shadow-md select-none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <!-- Filtros y Efectos Luminiscentes -->
@@ -219,231 +374,324 @@ function handleSectorClick(sec: SectorGeometry) {
           </filter>
         </defs>
 
-        <!-- Fondo del Recinto Esquemático -->
-        <rect
-          x="10"
-          y="10"
-          :width="layout.canvasWidth - 20"
-          :height="layout.canvasHeight - 20"
-          rx="24"
-          fill="rgba(12, 20, 31, 0.65)"
-          stroke="rgba(35, 53, 77, 0.7)"
-          stroke-width="1.5"
-          stroke-dasharray="6 6"
-        />
-
-        <!-- Escenario (Stage) -->
-        <g v-if="layout.stage" class="stage-group">
-          <!-- Rectángulo / Tarima del Escenario -->
+        <!-- Matriz de Transformación Pan & Zoom estilo Google Maps -->
+        <g
+          :transform="`translate(${panX}, ${panY}) scale(${zoom})`"
+          :style="{
+            transformOrigin: `${layout.canvasWidth / 2}px ${layout.canvasHeight / 2}px`,
+            transition: isDragging ? 'none' : 'transform 0.15s ease-out'
+          }"
+        >
+          <!-- Fondo del Recinto Esquemático -->
           <rect
-            :x="layout.stage.x"
-            :y="layout.stage.y"
-            :width="layout.stage.width"
-            :height="layout.stage.height"
-            rx="8"
-            fill="#00688f"
-            stroke="#86cffb"
-            stroke-width="2.5"
-            class="transition-all"
+            x="10"
+            y="10"
+            :width="layout.canvasWidth - 20"
+            :height="layout.canvasHeight - 20"
+            rx="24"
+            fill="rgba(12, 20, 31, 0.65)"
+            stroke="rgba(35, 53, 77, 0.7)"
+            stroke-width="1.5"
+            stroke-dasharray="6 6"
           />
 
-          <!-- Label del Escenario -->
-          <text
-            :x="layout.stage.x + layout.stage.width / 2"
-            :y="layout.stage.y + layout.stage.height / 2 + 5"
-            text-anchor="middle"
-            fill="#ffffff"
-            font-family="Space Grotesk, sans-serif"
-            font-weight="bold"
-            :font-size="compact ? '12' : '15'"
-            letter-spacing="0.08em"
-            class="pointer-events-none select-none"
-          >
-            {{ layout.stage.label || 'ESCENARIO PRINCIPAL' }}
-          </text>
-        </g>
+          <!-- Escenario (Stage) -->
+          <g v-if="layout.stage" class="stage-group">
+            <!-- Rectángulo / Tarima del Escenario -->
+            <rect
+              :x="layout.stage.x"
+              :y="layout.stage.y"
+              :width="layout.stage.width"
+              :height="layout.stage.height"
+              rx="8"
+              fill="#00688f"
+              stroke="#86cffb"
+              stroke-width="2.5"
+              class="transition-all"
+            />
 
-        <!-- Sectores Vectoriales del Recinto -->
-        <g class="sectors-layer">
-          <g
-            v-for="sec in layout.sectors"
-            :key="sec.id"
-            @mouseenter="hoveredSector = sec"
-            @mouseleave="hoveredSector = null"
-            @click="handleSectorClick(sec)"
-            :class="[
-              'sector-group transition-all duration-200',
-              (sec.selectable === false || sec.vendible === false)
-                ? 'cursor-not-allowed opacity-90'
-                : (interactive ? 'cursor-pointer' : 'cursor-default'),
-              hoveredSector?.id === sec.id ? 'opacity-100 filter-drop-shadow' : 'opacity-85 hover:opacity-100'
-            ]"
-          >
-            <!-- 1. Sector GRID / Rectangular (Plateas Teatro o Salas) -->
-            <template v-if="sec.shapeType === 'GRID'">
-              <rect
-                :x="sec.x"
-                :y="sec.y"
-                :width="sec.width"
-                :height="sec.height"
-                rx="6"
-                :fill="sec.color"
-                :stroke="hoveredSector?.id === sec.id ? '#ffffff' : sec.strokeColor"
-                :stroke-width="hoveredSector?.id === sec.id ? 3 : 1.5"
-                class="transition-all"
-              />
-              <text
-                :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)"
-                :y="(sec.labelPosition ? sec.labelPosition[1] : (sec.y + sec.height / 2)) + 4"
-                text-anchor="middle"
-                fill="#f1f5f9"
-                font-family="Space Grotesk, sans-serif"
-                font-weight="600"
-                :font-size="compact ? '9' : '11'"
-                class="pointer-events-none select-none drop-shadow"
-              >
-                <template v-if="splitSectorLabel(sec.name).line2">
-                  <tspan :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)" dy="-5">{{ splitSectorLabel(sec.name).line1 }}</tspan>
-                  <tspan :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)" dy="13">{{ splitSectorLabel(sec.name).line2 }}</tspan>
-                </template>
-                <template v-else>
-                  {{ sec.name }}
-                </template>
-              </text>
-            </template>
+            <!-- Label del Escenario -->
+            <text
+              :x="layout.stage.x + layout.stage.width / 2"
+              :y="layout.stage.y + layout.stage.height / 2 + 5"
+              text-anchor="middle"
+              fill="#ffffff"
+              font-family="Space Grotesk, sans-serif"
+              font-weight="bold"
+              :font-size="compact ? '12' : '15'"
+              letter-spacing="0.08em"
+              class="pointer-events-none select-none"
+            >
+              {{ layout.stage.label || 'ESCENARIO PRINCIPAL' }}
+            </text>
+          </g>
 
-            <!-- 2. Sector POLYGON (Campo VIP, Campo General, Gradas, Codos) -->
-            <template v-else-if="sec.shapeType === 'POLYGON'">
-              <path
-                :d="getPolygonPath(sec.points)"
-                :fill="sec.color"
-                :stroke="hoveredSector?.id === sec.id ? '#ffffff' : sec.strokeColor"
-                :stroke-width="hoveredSector?.id === sec.id ? 3 : 1.8"
-                class="transition-all"
-              />
-              <text
-                :x="sec.labelPosition ? sec.labelPosition[0] : 0"
-                :y="sec.labelPosition ? sec.labelPosition[1] : 0"
-                text-anchor="middle"
-                fill="#f1f5f9"
-                font-family="Space Grotesk, sans-serif"
-                font-weight="600"
-                :font-size="compact ? '10' : '12'"
-                class="pointer-events-none select-none drop-shadow"
-              >
-                <template v-if="splitSectorLabel(sec.name).line2">
-                  <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="-5">{{ splitSectorLabel(sec.name).line1 }}</tspan>
-                  <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="14">{{ splitSectorLabel(sec.name).line2 }}</tspan>
-                </template>
-                <template v-else>
-                  {{ sec.name }}
-                </template>
-              </text>
-            </template>
+          <!-- Sectores Vectoriales del Recinto -->
+          <g class="sectors-layer">
+            <g
+              v-for="sec in layout.sectors"
+              :key="sec.id"
+              @mouseenter="hoveredSector = sec"
+              @mouseleave="hoveredSector = null"
+              @click="handleSectorClick(sec)"
+              :class="[
+                'sector-group transition-all duration-200',
+                (sec.selectable === false || sec.vendible === false)
+                  ? 'cursor-not-allowed opacity-90'
+                  : (interactive ? 'cursor-pointer' : 'cursor-default'),
+                (hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? 'opacity-100 filter-drop-shadow' : 'opacity-85 hover:opacity-100'
+              ]"
+            >
+              <!-- 1. Sector GRID / Rectangular (Plateas Teatro o Salas) -->
+              <template v-if="sec.shapeType === 'GRID'">
+                <rect
+                  :x="sec.x"
+                  :y="sec.y"
+                  :width="sec.width"
+                  :height="sec.height"
+                  rx="6"
+                  :fill="sec.color"
+                  :stroke="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? '#ffffff' : sec.strokeColor"
+                  :stroke-width="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? 3 : 1.5"
+                  class="transition-all"
+                />
+                <text
+                  :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)"
+                  :y="(sec.labelPosition ? sec.labelPosition[1] : (sec.y + sec.height / 2)) + 4"
+                  text-anchor="middle"
+                  fill="#f1f5f9"
+                  font-family="Space Grotesk, sans-serif"
+                  font-weight="700"
+                  :font-size="compact ? '9' : (sec.shortLabel ? '12' : '11')"
+                  class="pointer-events-none select-none drop-shadow"
+                >
+                  <template v-if="sec.shortLabel">
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)" :dy="sec.subLabel ? '-3' : '3'" font-size="12" font-weight="800">{{ sec.shortLabel }}</tspan>
+                    <tspan v-if="sec.subLabel" :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)" dy="12" font-size="8" fill="#e2e8f0" font-weight="600">{{ sec.subLabel }}</tspan>
+                  </template>
+                  <template v-else-if="splitSectorLabel(sec.name).line2">
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)" dy="-5">{{ splitSectorLabel(sec.name).line1 }}</tspan>
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : (sec.x + sec.width / 2)" dy="13">{{ splitSectorLabel(sec.name).line2 }}</tspan>
+                  </template>
+                  <template v-else>
+                    {{ sec.name }}
+                  </template>
+                </text>
+              </template>
 
-            <!-- 3. Sector PATH (SVG directo de trazado arquitectónico) -->
-            <template v-else-if="sec.shapeType === 'PATH'">
-              <path
-                :d="sec.pathData"
-                :fill="sec.color"
-                :stroke="hoveredSector?.id === sec.id ? '#ffffff' : sec.strokeColor"
-                :stroke-width="hoveredSector?.id === sec.id ? 3 : 1.8"
-                class="transition-all"
-              />
-              <text
-                :x="sec.labelPosition ? sec.labelPosition[0] : 0"
-                :y="sec.labelPosition ? sec.labelPosition[1] : 0"
-                text-anchor="middle"
-                fill="#f1f5f9"
-                font-family="Space Grotesk, sans-serif"
-                font-weight="600"
-                :font-size="compact ? '10' : '12'"
-                class="pointer-events-none select-none drop-shadow"
-              >
-                <template v-if="splitSectorLabel(sec.name).line2">
-                  <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="-5">{{ splitSectorLabel(sec.name).line1 }}</tspan>
-                  <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="14">{{ splitSectorLabel(sec.name).line2 }}</tspan>
-                </template>
-                <template v-else>
-                  {{ sec.name }}
-                </template>
-              </text>
-            </template>
+              <!-- 2. Sector POLYGON (Campo VIP, Campo General, Gradas, Codos) -->
+              <template v-else-if="sec.shapeType === 'POLYGON'">
+                <path
+                  :d="getPolygonPath(sec.points)"
+                  :fill="sec.color"
+                  :stroke="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? '#ffffff' : sec.strokeColor"
+                  :stroke-width="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? 3 : 1.8"
+                  class="transition-all"
+                />
+                <text
+                  :x="sec.labelPosition ? sec.labelPosition[0] : 0"
+                  :y="sec.labelPosition ? sec.labelPosition[1] : 0"
+                  text-anchor="middle"
+                  fill="#f1f5f9"
+                  font-family="Space Grotesk, sans-serif"
+                  font-weight="700"
+                  :font-size="compact ? '10' : (sec.shortLabel ? '12' : '12')"
+                  class="pointer-events-none select-none drop-shadow"
+                >
+                  <template v-if="sec.shortLabel">
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" :dy="sec.subLabel ? '-3' : '3'" font-size="12" font-weight="800">{{ sec.shortLabel }}</tspan>
+                    <tspan v-if="sec.subLabel" :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="12" font-size="8" fill="#e2e8f0" font-weight="600">{{ sec.subLabel }}</tspan>
+                  </template>
+                  <template v-else-if="splitSectorLabel(sec.name).line2">
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="-5">{{ splitSectorLabel(sec.name).line1 }}</tspan>
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="14">{{ splitSectorLabel(sec.name).line2 }}</tspan>
+                  </template>
+                  <template v-else>
+                    {{ sec.name }}
+                  </template>
+                </text>
+              </template>
 
-            <!-- 4. Sector ARC (Plateas Curvadas / Gradas Concéntricas) -->
-            <template v-else-if="sec.shapeType === 'ARC'">
-              <path
-                :d="getArcPath(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)"
-                :fill="sec.color"
-                :stroke="hoveredSector?.id === sec.id ? '#ffffff' : sec.strokeColor"
-                :stroke-width="hoveredSector?.id === sec.id ? 3 : 1.5"
-                class="transition-all"
-              />
-              <!-- Label Centrado en el Arco -->
-              <text
-                :x="sec.labelPosition ? sec.labelPosition[0] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[0]"
-                :y="(sec.labelPosition ? sec.labelPosition[1] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[1]) + 4"
-                text-anchor="middle"
-                fill="#f1f5f9"
-                font-family="Space Grotesk, sans-serif"
-                font-weight="600"
-                :font-size="compact ? '9' : '11'"
-                class="pointer-events-none select-none drop-shadow"
-              >
-                <template v-if="splitSectorLabel(sec.name).line2">
-                  <tspan
-                    :x="sec.labelPosition ? sec.labelPosition[0] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[0]"
-                    dy="-5"
-                  >
-                    {{ splitSectorLabel(sec.name).line1 }}
-                  </tspan>
-                  <tspan
-                    :x="sec.labelPosition ? sec.labelPosition[0] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[0]"
-                    dy="13"
-                  >
-                    {{ splitSectorLabel(sec.name).line2 }}
-                  </tspan>
-                </template>
-                <template v-else>
-                  {{ sec.name }}
-                </template>
-              </text>
-            </template>
+              <!-- 3. Sector PATH (SVG directo de trazado arquitectónico) -->
+              <template v-else-if="sec.shapeType === 'PATH'">
+                <path
+                  :d="sec.pathData"
+                  :fill="sec.color"
+                  :stroke="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? '#ffffff' : sec.strokeColor"
+                  :stroke-width="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? 3 : 1.8"
+                  class="transition-all"
+                />
+                <text
+                  :x="sec.labelPosition ? sec.labelPosition[0] : 0"
+                  :y="sec.labelPosition ? sec.labelPosition[1] : 0"
+                  text-anchor="middle"
+                  fill="#f1f5f9"
+                  font-family="Space Grotesk, sans-serif"
+                  font-weight="600"
+                  :font-size="compact ? '10' : '12'"
+                  class="pointer-events-none select-none drop-shadow"
+                >
+                  <template v-if="splitSectorLabel(sec.name).line2">
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="-5">{{ splitSectorLabel(sec.name).line1 }}</tspan>
+                    <tspan :x="sec.labelPosition ? sec.labelPosition[0] : 0" dy="14">{{ splitSectorLabel(sec.name).line2 }}</tspan>
+                  </template>
+                  <template v-else>
+                    {{ sec.name }}
+                  </template>
+                </text>
+              </template>
+
+              <!-- 4. Sector ARC (Plateas Curvadas / Gradas Concéntricas) -->
+              <template v-else-if="sec.shapeType === 'ARC'">
+                <path
+                  :d="getArcPath(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)"
+                  :fill="sec.color"
+                  :stroke="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? '#ffffff' : sec.strokeColor"
+                  :stroke-width="(hoveredSector?.id === sec.id || selectedSector?.id === sec.id) ? 3 : 1.5"
+                  class="transition-all"
+                />
+                <!-- Label Centrado en el Arco -->
+                <text
+                  :x="sec.labelPosition ? sec.labelPosition[0] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[0]"
+                  :y="(sec.labelPosition ? sec.labelPosition[1] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[1]) + 4"
+                  text-anchor="middle"
+                  fill="#f1f5f9"
+                  font-family="Space Grotesk, sans-serif"
+                  font-weight="600"
+                  :font-size="compact ? '9' : '11'"
+                  class="pointer-events-none select-none drop-shadow"
+                >
+                  <template v-if="splitSectorLabel(sec.name).line2">
+                    <tspan
+                      :x="sec.labelPosition ? sec.labelPosition[0] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[0]"
+                      dy="-5"
+                    >
+                      {{ splitSectorLabel(sec.name).line1 }}
+                    </tspan>
+                    <tspan
+                      :x="sec.labelPosition ? sec.labelPosition[0] : getArcLabelCenter(sec.centerX, sec.centerY, sec.innerRadius, sec.outerRadius, sec.startAngleDeg, sec.endAngleDeg)[0]"
+                      dy="13"
+                    >
+                      {{ splitSectorLabel(sec.name).line2 }}
+                    </tspan>
+                  </template>
+                  <template v-else>
+                    {{ sec.name }}
+                  </template>
+                </text>
+              </template>
+            </g>
           </g>
         </g>
       </svg>
 
-      <!-- Tooltip Flotante de Sector en Hover -->
+      <!-- Botonera Flotante Estilo Google Maps -->
+      <div
+        v-if="interactive && !compact"
+        class="absolute bottom-4 right-4 flex flex-col items-center bg-[#081524]/90 border border-[#1e3a5f] rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-20"
+      >
+        <button
+          @click.stop="zoomIn"
+          type="button"
+          class="map-control-btn w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+          aria-label="Acercar mapa (+)"
+          title="Acercar mapa"
+        >
+          <span class="material-symbols-outlined text-xl">add</span>
+        </button>
+        <div class="w-full h-px bg-[#1e3a5f]"></div>
+        <button
+          @click.stop="zoomOut"
+          type="button"
+          class="map-control-btn w-10 h-10 flex items-center justify-center text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+          aria-label="Alejar mapa (-)"
+          title="Alejar mapa"
+        >
+          <span class="material-symbols-outlined text-xl">remove</span>
+        </button>
+        <div class="w-full h-px bg-[#1e3a5f]"></div>
+        <button
+          @click.stop="resetView"
+          type="button"
+          class="map-control-btn w-10 h-10 flex items-center justify-center text-[#38bdf8] hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+          aria-label="Restablecer vista centrada"
+          title="Centrar y restablecer vista"
+        >
+          <span class="material-symbols-outlined text-xl">restart_alt</span>
+        </button>
+      </div>
+
+      <!-- Ayuda Flotante en la esquina inferior izquierda -->
+      <div
+        v-if="interactive && !compact"
+        class="absolute bottom-4 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#081524]/85 border border-[#1e3a5f]/70 text-[11px] font-mono text-muted-light backdrop-blur-md pointer-events-none z-10 shadow-lg"
+      >
+        <span class="material-symbols-outlined text-xs text-primary">pan_tool</span>
+        <span>Arrastra para mover</span>
+        <span>•</span>
+        <span class="material-symbols-outlined text-xs text-primary">zoom_in</span>
+        <span>Rueda o botones para zoom</span>
+      </div>
+
+      <!-- Ficha de Sector / Inspector POI Estilo Google Maps -->
       <transition name="fade">
         <div
-          v-if="hoveredSector && interactive"
-          class="absolute top-3 left-3 bg-surface-dim/95 border border-border-subtle rounded-xl p-3 shadow-2xl backdrop-blur-md pointer-events-none flex flex-col gap-1 z-20 max-w-xs animate-in fade-in-0 duration-150"
+          v-if="activeSector && interactive"
+          class="sector-inspector-card absolute top-4 left-4 max-w-xs sm:max-w-sm w-full bg-[#0c1c2e]/95 border border-[#0099ff]/50 rounded-2xl p-4 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2.5 animate-in fade-in-0 duration-150"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span
+                class="w-4 h-4 rounded-full border border-white/50 shrink-0 shadow-sm"
+                :style="{ backgroundColor: activeSector.color || activeSector.strokeColor }"
+              ></span>
+              <div class="flex flex-col min-w-0">
+                <span class="font-display font-black text-sm sm:text-base text-white tracking-tight leading-snug truncate">
+                  {{ activeSector.name }}
+                </span>
+                <span class="font-mono text-[10px] text-muted-light uppercase tracking-wider truncate">
+                  {{ activeSector.type.replace(/_/g, ' ') }}
+                </span>
+              </div>
+            </div>
+
+            <button
+              v-if="selectedSector"
+              @click.stop="selectedSector = null"
+              type="button"
+              class="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 text-muted-light hover:text-white flex items-center justify-center transition-colors cursor-pointer shrink-0"
+              title="Cerrar detalles"
+            >
+              <span class="material-symbols-outlined text-sm">close</span>
+            </button>
+          </div>
+
+          <!-- Bloque de Precio Oficial y Disponibilidad -->
+          <div class="p-3 rounded-xl bg-[#071322] border border-[#1e3a5f]/60 flex items-center justify-between gap-3">
+            <div class="flex flex-col">
+              <span class="font-mono text-[10px] text-muted-light uppercase">Precio por entrada</span>
+              <span v-if="getSectorPrice(activeSector)" class="font-display font-black text-lg sm:text-xl text-[#00d2ff]">
+                ${{ getSectorPrice(activeSector)?.toLocaleString('es-AR') }}
+                <span class="text-xs font-mono text-white/80">ARS</span>
+              </span>
+              <span v-else class="font-mono text-xs text-muted-light italic">
+                Consultar en boletería
+              </span>
+            </div>
+
             <span
-              class="w-3 h-3 rounded-full shrink-0"
-              :style="{ backgroundColor: hoveredSector.strokeColor }"
-            ></span>
-            <span class="font-display font-bold text-xs text-high-emphasis truncate">
-              {{ hoveredSector.name }}
+              :class="[
+                'px-2.5 py-1 rounded-full text-xs font-mono font-bold border shadow-xs whitespace-nowrap',
+                getSectorStatusClasses(activeSector)
+              ]"
+            >
+              {{ getSectorStatusLabel(activeSector) }}
             </span>
           </div>
 
-          <div class="flex items-center justify-between gap-4 font-mono text-[11px] text-muted-light mt-0.5">
-            <span>Tipo: {{ hoveredSector.type.replace('_', ' ') }}</span>
-            <span v-if="hoveredSector.vendible !== false && hoveredSector.selectable !== false" class="text-secondary font-semibold">
-              Capacidad: {{ hoveredSector.capacity.toLocaleString('es-AR') }}
-            </span>
-            <span v-else class="text-amber-400 font-semibold text-[10px]">
-              No vendible (Uso técnico)
-            </span>
-          </div>
-
-          <div v-if="getSectorPrice(hoveredSector)" class="mt-1 pt-1.5 border-t border-border-subtle/50 flex items-center justify-between text-xs">
-            <span class="font-mono text-[11px] text-medium-emphasis">Precio oficial:</span>
-            <span class="font-mono font-extrabold text-primary">
-              ${{ getSectorPrice(hoveredSector)?.toLocaleString('es-AR') }} ARS
-            </span>
+          <div class="flex items-center justify-between text-[11px] font-mono text-muted-light pt-1 border-t border-border-subtle/40">
+            <span>Capacidad oficial:</span>
+            <span class="text-white font-bold">{{ (activeSector.capacity || 1000).toLocaleString('es-AR') }} lugares</span>
           </div>
         </div>
       </transition>

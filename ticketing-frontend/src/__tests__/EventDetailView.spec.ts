@@ -71,11 +71,25 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
       expect(bannerBadge.text()).toContain(`$${minPrice}`)
       expect(bannerBadge.text()).toContain('ARS')
 
-      // Also verify complementary inline badge in title area
+      // Verify inline badge in title area has been eliminated as requested
       const inlineBadge = wrapper.find('[data-testid="inline-min-price-badge"]')
-      expect(inlineBadge.exists()).toBe(true)
-      expect(inlineBadge.text()).toContain('Entradas desde')
-      expect(inlineBadge.text()).toContain(`$${minPrice}`)
+      expect(inlineBadge.exists()).toBe(false)
+    })
+
+    it('renders exterior venue photo for Arena Buenos Aires instead of schematic map thumbnail', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      const exteriorImage = wrapper.find('[data-testid="venue-exterior-image"]')
+      expect(exteriorImage.exists()).toBe(true)
+      const img = exteriorImage.find('img')
+      expect(img.attributes('src')).toContain('arena_buenos_aires.jpg')
     })
   })
 
@@ -269,8 +283,8 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
     })
   })
 
-  describe('Section E: Sector Price Breakdown Table', () => {
-    it('renders sector price table mapping sectors, types, prices, and status', async () => {
+  describe('Section E: Interactive Venue Sector Map & Pricing Exploration', () => {
+    it('renders interactive venue map section guiding the user that prices are viewed on the stage map and removes legacy static table', async () => {
       const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
       await router.isReady()
 
@@ -280,28 +294,15 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
         }
       })
 
-      const catalog = useCatalogStore()
-      const event = catalog.getEventById('symphony-of-lights')!
+      // Strict check: legacy static table is completely deleted
+      expect(wrapper.find('[data-testid="sector-price-table"]').exists()).toBe(false)
 
-      const table = wrapper.find('[data-testid="sector-price-table"]')
-      expect(table.exists()).toBe(true)
-
-      // Column headers
-      expect(table.text()).toContain('Sector')
-      expect(table.text()).toContain('Tipo / Ubicación')
-      expect(table.text()).toContain('Precio Base')
-      expect(table.text()).toContain('Disponibilidad')
-
-      // Rows
-      const rows = table.findAll('[data-testid="sector-row"]')
-      expect(rows).toHaveLength(event.sectors.length)
-
-      event.sectors.forEach((sec, idx) => {
-        const row = rows[idx]!
-        expect(row.text()).toContain(sec.name)
-        expect(row.text()).toContain(`$${sec.price}`)
-        expect(row.text()).toContain(sec.currency)
-      })
+      // Interactive venue map section is present with clear price exploration guidance
+      const mapSection = wrapper.find('[data-testid="interactive-venue-map-section"]')
+      expect(mapSection.exists()).toBe(true)
+      expect(mapSection.text()).toContain('Plano Interactivo & Precios por Sector')
+      expect(mapSection.text()).toContain('Precios visibles al interactuar en el mapa')
+      expect(mapSection.text()).toContain('Exploración interactiva estilo Google Maps')
     })
   })
 
