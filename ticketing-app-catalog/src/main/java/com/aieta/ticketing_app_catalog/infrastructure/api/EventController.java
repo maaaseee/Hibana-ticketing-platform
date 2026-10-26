@@ -146,6 +146,7 @@ public class EventController {
                 event.venue() != null ? event.venue().city() : null,
                 event.venue() != null ? event.venue().address() : null,
                 event.venue() != null ? event.venue().seatMapUrl() : null,
+                event.venue() != null ? event.venue().imageUrl() : null,
                 minPrice,
                 currency,
                 bannerUrl,
@@ -179,7 +180,8 @@ public class EventController {
                 venue.address(),
                 venue.latitude(),
                 venue.longitude(),
-                venue.seatMapUrl()
+                venue.seatMapUrl(),
+                venue.imageUrl()
         );
     }
 

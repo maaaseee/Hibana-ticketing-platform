@@ -37,16 +37,23 @@ public class VenueJpaEntity {
     @Column(name = "seat_map_url", length = 500)
     private String seatMapUrl;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt = Instant.now();
 
     public VenueJpaEntity() {}
 
     public VenueJpaEntity(String id, String name, String city, String country, String address, BigDecimal latitude, BigDecimal longitude) {
-        this(id, name, city, country, address, latitude, longitude, null);
+        this(id, name, city, country, address, latitude, longitude, null, null);
     }
 
     public VenueJpaEntity(String id, String name, String city, String country, String address, BigDecimal latitude, BigDecimal longitude, String seatMapUrl) {
+        this(id, name, city, country, address, latitude, longitude, seatMapUrl, null);
+    }
+
+    public VenueJpaEntity(String id, String name, String city, String country, String address, BigDecimal latitude, BigDecimal longitude, String seatMapUrl, String imageUrl) {
         this.id = id;
         this.name = name;
         this.city = city;
@@ -55,6 +62,7 @@ public class VenueJpaEntity {
         this.latitude = latitude;
         this.longitude = longitude;
         this.seatMapUrl = seatMapUrl;
+        this.imageUrl = imageUrl;
         this.createdAt = Instant.now();
     }
 
@@ -74,6 +82,8 @@ public class VenueJpaEntity {
     public void setLongitude(BigDecimal longitude) { this.longitude = longitude; }
     public String getSeatMapUrl() { return seatMapUrl; }
     public void setSeatMapUrl(String seatMapUrl) { this.seatMapUrl = seatMapUrl; }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

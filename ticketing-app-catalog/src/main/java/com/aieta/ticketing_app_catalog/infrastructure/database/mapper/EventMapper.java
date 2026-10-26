@@ -68,7 +68,8 @@ public class EventMapper {
                 venue.getAddress(),
                 venue.getLatitude(),
                 venue.getLongitude(),
-                venue.getSeatMapUrl()
+                venue.getSeatMapUrl(),
+                venue.getImageUrl()
         );
     }
 

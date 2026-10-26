@@ -10,9 +10,14 @@ public record VenueSummary(
         String address,
         BigDecimal latitude,
         BigDecimal longitude,
-        String seatMapUrl
+        String seatMapUrl,
+        String imageUrl
 ) {
     public VenueSummary(String id, String name, String city, String country, String address, BigDecimal latitude, BigDecimal longitude) {
-        this(id, name, city, country, address, latitude, longitude, null);
+        this(id, name, city, country, address, latitude, longitude, null, null);
+    }
+
+    public VenueSummary(String id, String name, String city, String country, String address, BigDecimal latitude, BigDecimal longitude, String seatMapUrl) {
+        this(id, name, city, country, address, latitude, longitude, seatMapUrl, null);
     }
 }

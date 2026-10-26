@@ -48,6 +48,7 @@ public class FlociBlobStorageInitializer implements ApplicationRunner {
             ensureContainerExists();
             seedAllVenueSeatMaps();
             seedEstadioNacionalSeatMap();
+            seedVenueImages();
         } catch (Exception e) {
             log.warn("Floci-AZ Blob Storage initialization skipped or unavailable: {}", e.getMessage());
         }
@@ -87,6 +88,44 @@ public class FlociBlobStorageInitializer implements ApplicationRunner {
             }
         } catch (Exception e) {
             log.warn("Failed to seed classpath seat-maps to Floci-AZ: {}", e.getMessage());
+        }
+    }
+
+    private void seedVenueImages() {
+        try {
+            PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+            Resource[] resources = resolver.getResources("classpath:venue-images/*.*");
+            for (Resource resource : resources) {
+                String filename = resource.getFilename();
+                if (filename == null) continue;
+                String contentType = filename.toLowerCase().endsWith(".png") ? "image/png" : "image/jpeg";
+                try (InputStream is = resource.getInputStream()) {
+                    byte[] bytes = is.readAllBytes();
+                    uploadBinaryBlob(filename, bytes, contentType);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to seed classpath venue-images to Floci-AZ: {}", e.getMessage());
+        }
+    }
+
+    private void uploadBinaryBlob(String blobName, byte[] data, String contentType) {
+        try {
+            String blobUrl = blobEndpoint + "/" + venuesContainer + "/" + blobName;
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(blobUrl))
+                    .header("x-ms-blob-type", "BlockBlob")
+                    .header("Content-Type", contentType)
+                    .PUT(HttpRequest.BodyPublishers.ofByteArray(data))
+                    .timeout(Duration.ofSeconds(5))
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 201 || response.statusCode() == 200) {
+                log.info("Provisioned venue image [{}] on Floci-AZ: {}", blobName, blobUrl);
+            }
+        } catch (Exception e) {
+            log.debug("Floci-AZ uploadBinaryBlob [{}]: {}", blobName, e.getMessage());
         }
     }
 

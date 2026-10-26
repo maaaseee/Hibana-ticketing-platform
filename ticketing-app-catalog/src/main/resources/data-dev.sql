@@ -8,12 +8,12 @@ ON CONFLICT (id) DO UPDATE SET
     legal_name = EXCLUDED.legal_name,
     contact_email = EXCLUDED.contact_email;
 
-INSERT INTO venues (id, name, city, country, address, latitude, longitude, seat_map_url)
+INSERT INTO venues (id, name, city, country, address, latitude, longitude, seat_map_url, image_url)
 VALUES 
-    ('ven_estadio_nacional', 'Estadio Nacional Julio Martínez Prádanos', 'Santiago', 'Chile', 'Av. Grecia 2001, Ñuñoa', -33.464167, -70.610556, 'http://localhost:4577/devstoreaccount1/venues/estadio-nacional-seatmap.json'),
-    ('estadio-monumental', 'Estadio Monumental (Buenos Aires)', 'Buenos Aires', 'Argentina', 'Av. Figueroa Alcorta 7597, Núñez, CABA', -34.545278, -58.449722, 'http://localhost:4577/devstoreaccount1/venues/estadio-monumental.json'),
-    ('arena-buenos-aires', 'Arena Buenos Aires (Buenos Aires)', 'Buenos Aires', 'Argentina', 'Humboldt 450, Villa Crespo, CABA', -34.593611, -58.446111, 'http://localhost:4577/devstoreaccount1/venues/arena-buenos-aires.json'),
-    ('teatro-rex', 'Teatro Rex (Buenos Aires)', 'Buenos Aires', 'Argentina', 'Av. Corrientes 857, San Nicolás, CABA', -34.603333, -58.378889, 'http://localhost:4577/devstoreaccount1/venues/teatro-rex.json')
+    ('ven_estadio_nacional', 'Estadio Nacional Julio Martínez Prádanos', 'Santiago', 'Chile', 'Av. Grecia 2001, Ñuñoa', -33.464167, -70.610556, 'http://localhost:4577/devstoreaccount1/venues/estadio-nacional-seatmap.json', 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80'),
+    ('estadio-monumental', 'Estadio Monumental (Buenos Aires)', 'Buenos Aires', 'Argentina', 'Av. Figueroa Alcorta 7597, Núñez, CABA', -34.545278, -58.449722, 'http://localhost:4577/devstoreaccount1/venues/estadio-monumental.json', 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?auto=format&fit=crop&w=1200&q=80'),
+    ('arena-buenos-aires', 'Arena Buenos Aires (Buenos Aires)', 'Buenos Aires', 'Argentina', 'Humboldt 450, Villa Crespo, CABA', -34.593611, -58.446111, 'http://localhost:4577/devstoreaccount1/venues/arena-buenos-aires.json', '/images/venues/arena_buenos_aires.jpg'),
+    ('teatro-rex', 'Teatro Rex (Buenos Aires)', 'Buenos Aires', 'Argentina', 'Av. Corrientes 857, San Nicolás, CABA', -34.603333, -58.378889, 'http://localhost:4577/devstoreaccount1/venues/teatro-rex.json', 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1200&q=80')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     city = EXCLUDED.city,
@@ -21,7 +21,8 @@ ON CONFLICT (id) DO UPDATE SET
     address = EXCLUDED.address,
     latitude = EXCLUDED.latitude,
     longitude = EXCLUDED.longitude,
-    seat_map_url = EXCLUDED.seat_map_url;
+    seat_map_url = EXCLUDED.seat_map_url,
+    image_url = EXCLUDED.image_url;
 
 INSERT INTO events (
     id, organizer_id, venue_id, slug, title, status, category, genres,
@@ -190,6 +191,9 @@ VALUES
     ('symphony__sec-arena-platea-alta-lateral-oeste', 'symphony-of-lights', 'Platea Alta Lateral Oeste', 'NUMBERED_SEATS', 1300, 'ARS', 43478.26, 6521.74),
     ('symphony__sec-arena-platea-alta-lateral-este', 'symphony-of-lights', 'Platea Alta Lateral Este', 'NUMBERED_SEATS', 1300, 'ARS', 43478.26, 6521.74),
     ('symphony__sec-arena-platea-alta-cabecera', 'symphony-of-lights', 'Platea Alta Cabecera Sur', 'NUMBERED_SEATS', 1400, 'ARS', 39130.43, 5869.57),
+    ('symphony__sec-arena-platea-alta-cabecera-a2', 'symphony-of-lights', 'Platea Alta Cabecera Sur (Zona A2 Central)', 'NUMBERED_SEATS', 700, 'ARS', 42000.00, 6300.00),
+    ('symphony__sec-arena-platea-alta-cabecera-a1', 'symphony-of-lights', 'Platea Alta Cabecera Sur (Zona A1 Lateral Oeste)', 'NUMBERED_SEATS', 350, 'ARS', 35000.00, 5250.00),
+    ('symphony__sec-arena-platea-alta-cabecera-a3', 'symphony-of-lights', 'Platea Alta Cabecera Sur (Zona A3 Lateral Este)', 'NUMBERED_SEATS', 350, 'ARS', 35000.00, 5250.00),
 
     -- Neon Nights: Chronos Fest (Arena Buenos Aires)
     ('chronos__sec-arena-campo-vip', 'chronos-fest-2026', 'Campo VIP Frontal', 'VIP', 3000, 'ARS', 82608.70, 12391.30),
@@ -200,6 +204,9 @@ VALUES
     ('chronos__sec-arena-platea-alta-lateral-oeste', 'chronos-fest-2026', 'Platea Alta Lateral Oeste', 'NUMBERED_SEATS', 1300, 'ARS', 43478.26, 6521.74),
     ('chronos__sec-arena-platea-alta-lateral-este', 'chronos-fest-2026', 'Platea Alta Lateral Este', 'NUMBERED_SEATS', 1300, 'ARS', 43478.26, 6521.74),
     ('chronos__sec-arena-platea-alta-cabecera', 'chronos-fest-2026', 'Platea Alta Cabecera Sur', 'NUMBERED_SEATS', 1400, 'ARS', 39130.43, 5869.57),
+    ('chronos__sec-arena-platea-alta-cabecera-a2', 'chronos-fest-2026', 'Platea Alta Cabecera Sur (Zona A2 Central)', 'NUMBERED_SEATS', 700, 'ARS', 42000.00, 6300.00),
+    ('chronos__sec-arena-platea-alta-cabecera-a1', 'chronos-fest-2026', 'Platea Alta Cabecera Sur (Zona A1 Lateral Oeste)', 'NUMBERED_SEATS', 350, 'ARS', 35000.00, 5250.00),
+    ('chronos__sec-arena-platea-alta-cabecera-a3', 'chronos-fest-2026', 'Platea Alta Cabecera Sur (Zona A3 Lateral Este)', 'NUMBERED_SEATS', 350, 'ARS', 35000.00, 5250.00),
 
     -- Gala Lírica: Grandes Clásicos de la Ópera (Teatro Rex)
     ('opera__sec-rex-palcos-izq', 'opera-clasica-verano', 'Palcos Bajos Izquierda', 'VIP', 100, 'ARS', 78260.87, 11739.13),
@@ -224,7 +231,10 @@ VALUES
     ('ado__sec-arena-platea-baja-cabecera', 'ado-hibana-world-tour', 'Platea Baja Cabecera Sur', 'NUMBERED_SEATS', 1500, 'ARS', 69565.22, 10434.78),
     ('ado__sec-arena-platea-alta-lateral-oeste', 'ado-hibana-world-tour', 'Platea Alta Lateral Oeste', 'NUMBERED_SEATS', 1300, 'ARS', 43478.26, 6521.74),
     ('ado__sec-arena-platea-alta-lateral-este', 'ado-hibana-world-tour', 'Platea Alta Lateral Este', 'NUMBERED_SEATS', 1300, 'ARS', 43478.26, 6521.74),
-    ('ado__sec-arena-platea-alta-cabecera', 'ado-hibana-world-tour', 'Platea Alta Cabecera Sur', 'NUMBERED_SEATS', 1400, 'ARS', 39130.43, 5869.57)
+    ('ado__sec-arena-platea-alta-cabecera', 'ado-hibana-world-tour', 'Platea Alta Cabecera Sur', 'NUMBERED_SEATS', 1400, 'ARS', 39130.43, 5869.57),
+    ('ado__sec-arena-platea-alta-cabecera-a2', 'ado-hibana-world-tour', 'Platea Alta Cabecera Sur (Zona A2 Central)', 'NUMBERED_SEATS', 700, 'ARS', 42000.00, 6300.00),
+    ('ado__sec-arena-platea-alta-cabecera-a1', 'ado-hibana-world-tour', 'Platea Alta Cabecera Sur (Zona A1 Lateral Oeste)', 'NUMBERED_SEATS', 350, 'ARS', 35000.00, 5250.00),
+    ('ado__sec-arena-platea-alta-cabecera-a3', 'ado-hibana-world-tour', 'Platea Alta Cabecera Sur (Zona A3 Lateral Este)', 'NUMBERED_SEATS', 350, 'ARS', 35000.00, 5250.00)
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
     type = EXCLUDED.type,

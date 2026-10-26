@@ -10,5 +10,10 @@ public record VenueResponse(
         String address,
         BigDecimal latitude,
         BigDecimal longitude,
-        String seatMapUrl
-) {}
+        String seatMapUrl,
+        String imageUrl
+) {
+    public VenueResponse(String id, String name, String city, String country, String address, BigDecimal latitude, BigDecimal longitude, String seatMapUrl) {
+        this(id, name, city, country, address, latitude, longitude, seatMapUrl, null);
+    }
+}
