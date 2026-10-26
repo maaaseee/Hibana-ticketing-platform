@@ -1,0 +1,219 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: ticketing-app-gateway
+  threads:
+    virtual:
+      enabled: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 2000ms
+      repositories:
+        enabled: false
+
+  cloud:
+    gateway:
+      routes:
+        # 1. Inventory Seat Queries (Order 50 - High Precedence before Catalog)
+        - id: inventory-seats-public
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+          order: 50
+          predicates:
+            - Path=/api/v1/events/{eventId}/seats
+            - Method=GET
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 120
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: inventoryCircuitBreaker
+                fallbackUri: forward:/fallback/inventory
+
+        # 2. Inventory Reservations (Order 60 - Gated by Virtual Waiting Room CheckoutToken)
+        - id: inventory-reservations
+          uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
+          order: 60
+          predicates:
+            - Path=/api/v1/reservations/**, /api/tickets/reserve/**, /api/inventory/reserve/**
+          filters:
+            - name: CheckoutToken
+              args:
+                secretKey: ${WAITING_ROOM_JWT_SECRET:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}
+                issuer: ${WAITING_ROOM_JWT_ISSUER:amaryllis-waiting-room}
+                waitingRoomUrl: ${WAITING_ROOM_URL:https://www.amaryllis-tickets.com/waiting-room}
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 120
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: inventoryCircuitBreaker
+                fallbackUri: forward:/fallback/inventory
+
+        # 3. Support Live Chat WebSockets (Order 70)
+        - id: support-service-ws
+          uri: ${SUPPORT_SERVICE_WS_URL:ws://localhost:8084}
+          order: 70
+          predicates:
+            - Path=/ws/chat/**
+
+        # 4. Catalog Service (Order 100)
+        - id: catalog-service
+          uri: ${CATALOG_SERVICE_URL:http://localhost:8081}
+          order: 100
+          predicates:
+            - Path=/api/v1/events/**, /api/v1/venues/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 120
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: catalogCircuitBreaker
+                fallbackUri: forward:/fallback/catalog
+
+        # 5. Orders & Financial Engine (Order 110)
+        - id: orders-service
+          uri: ${ORDERS_SERVICE_URL:http://localhost:8083}
+          order: 110
+          predicates:
+            - Path=/api/v1/orders/**, /api/v1/payments/**, /api/v1/wallets/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 120
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: ordersCircuitBreaker
+                fallbackUri: forward:/fallback/orders
+
+        # 6. Customer Support REST (Order 120)
+        - id: support-service-rest
+          uri: ${SUPPORT_SERVICE_URL:http://localhost:8084}
+          order: 120
+          predicates:
+            - Path=/api/v1/support/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: supportCircuitBreaker
+                fallbackUri: forward:/fallback/support
+
+        # 7. Recommendations Engine AI (Order 130)
+        - id: recommendations-service
+          uri: ${RECOMMENDATIONS_SERVICE_URL:http://localhost:8085}
+          order: 130
+          predicates:
+            - Path=/api/v1/recommendations/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: recommendationsCircuitBreaker
+                fallbackUri: forward:/fallback/recommendations
+
+        # 8. IAM Service (Order 140)
+        - id: iam-service
+          uri: ${IAM_SERVICE_URL:http://localhost:8086}
+          order: 140
+          predicates:
+            - Path=/api/v1/auth/**, /api/v1/users/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 100
+                redis-rate-limiter.burstCapacity: 120
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: iamCircuitBreaker
+                fallbackUri: forward:/fallback/iam
+
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        sliding-window-size: 20
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 5
+        failure-rate-threshold: 50.0
+        wait-duration-in-open-state: 10s
+        slow-call-rate-threshold: 50.0
+        slow-call-duration-threshold: 2000ms
+        sliding-window-type: COUNT_BASED
+    instances:
+      catalogCircuitBreaker:
+        baseConfig: default
+      inventoryCircuitBreaker:
+        baseConfig: default
+      ordersCircuitBreaker:
+        baseConfig: default
+      supportCircuitBreaker:
+        baseConfig: default
+      recommendationsCircuitBreaker:
+        baseConfig: default
+      iamCircuitBreaker:
+        baseConfig: default
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: 3000ms
+    instances:
+      catalogCircuitBreaker:
+        timeout-duration: 3000ms
+      inventoryCircuitBreaker:
+        timeout-duration: 3000ms
+      ordersCircuitBreaker:
+        timeout-duration: 3000ms
+      supportCircuitBreaker:
+        timeout-duration: 3000ms
+      recommendationsCircuitBreaker:
+        timeout-duration: 3000ms
+      iamCircuitBreaker:
+        timeout-duration: 3000ms
+
+waiting-room:
+  jwt:
+    secret: ${WAITING_ROOM_JWT_SECRET:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}
+    issuer: ${WAITING_ROOM_JWT_ISSUER:amaryllis-waiting-room}
+  url: ${WAITING_ROOM_URL:https://www.amaryllis-tickets.com/waiting-room}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info,gateway
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    redis:
+      enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.gateway: INFO
+    org.springframework.web.reactive: INFO
+    com.aieta.ticketing_app_gateway: DEBUG
+    reactor.netty: INFO
