@@ -218,7 +218,7 @@ export function generateEstadioMonumental(): VenueSeatMapLayout {
       // Centenario Alta & Baja (South curve - facing stage directly)
       {
         id: 'sec-monumental-sivori-alta',
-        name: 'Tribuna Centenario / Cabecera Sur',
+        name: 'Tribuna Centenario Sur',
         type: 'GENERAL_ADMISSION',
         shapeType: 'ARC',
         color: 'rgba(239, 68, 68, 0.22)',
@@ -241,8 +241,7 @@ export function generateEstadioMonumental(): VenueSeatMapLayout {
 
 /**
  * 2. ARENA BUENOS AIRES (Movistar Arena - 15,000 capacity)
- * Coordinates in canvas space: 1000 x 900
- * Center: (500, 480)
+ * Coordinates in canvas space: 1000 x 830
  */
 export function generateArenaBuenosAires(): VenueSeatMapLayout {
   return {
@@ -250,18 +249,17 @@ export function generateArenaBuenosAires(): VenueSeatMapLayout {
     venueName: 'Arena Buenos Aires (Buenos Aires)',
     venueType: 'ARENA_CUBIERTO',
     canvasWidth: 1000,
-    canvasHeight: 900,
-    viewBox: { minX: 0, minY: 0, maxX: 1000, maxY: 900 },
+    canvasHeight: 830,
+    viewBox: { minX: 0, minY: 0, maxX: 1000, maxY: 830 },
     stage: {
-      x: 350,
-      y: 60,
-      width: 300,
+      x: 330,
+      y: 35,
+      width: 340,
       height: 60,
       label: 'ESCENARIO PRINCIPAL',
-      shape: 'THRUST'
+      shape: 'RECTANGLE'
     },
     sectors: [
-      // Campo VIP Frontal
       {
         id: 'sec-arena-campo-vip',
         name: 'Campo VIP Frontal',
@@ -272,90 +270,127 @@ export function generateArenaBuenosAires(): VenueSeatMapLayout {
         capacity: 3000,
         standingArea: true,
         points: [
-          [330, 140],
-          [670, 140],
-          [690, 300],
-          [310, 300]
+          [330, 115],
+          [670, 115],
+          [670, 290],
+          [330, 290]
         ],
-        labelPosition: [500, 220]
+        labelPosition: [500, 202]
       },
-      // Campo General
       {
         id: 'sec-arena-campo-general',
         name: 'Campo General',
         type: 'GENERAL_ADMISSION',
         shapeType: 'POLYGON',
-        color: 'rgba(56, 189, 248, 0.2)',
+        color: 'rgba(56, 189, 248, 0.20)',
         strokeColor: '#38bdf8',
         capacity: 3500,
         standingArea: true,
         points: [
-          [300, 315],
-          [700, 315],
-          [680, 520],
-          [320, 520]
+          [330, 305],
+          [670, 305],
+          [670, 480],
+          [330, 480]
         ],
-        labelPosition: [500, 415]
+        labelPosition: [500, 392]
       },
-      // Platea Baja Preferencial (U-shaped ring around field)
       {
-        id: 'sec-arena-platea-baja',
-        name: 'Platea Baja Preferencial',
+        id: 'sec-arena-platea-baja-lateral-oeste',
+        name: 'Platea Baja Oeste',
         type: 'NUMBERED_SEATS',
-        shapeType: 'ARC',
+        shapeType: 'POLYGON',
         color: 'rgba(16, 185, 129, 0.25)',
         strokeColor: '#10b981',
-        capacity: 4500,
-        centerX: 500,
-        centerY: 400,
-        innerRadius: 260,
-        outerRadius: 330,
-        startAngleDeg: 15,
-        endAngleDeg: 165,
-        rows: 15,
-        seatsPerRow: 45,
-        rowLabels: Array.from({ length: 15 }, (_, i) => `PB-${i + 1}`),
-        aislesAfterColumns: [15, 30]
+        capacity: 1500,
+        points: [
+          [205, 115],
+          [315, 115],
+          [315, 480],
+          [205, 480]
+        ],
+        labelPosition: [260, 297]
       },
-      // Platea Alta Central (Top curve facing front)
       {
-        id: 'sec-arena-platea-alta-central',
-        name: 'Platea Alta Central',
+        id: 'sec-arena-platea-baja-lateral-este',
+        name: 'Platea Baja Este',
         type: 'NUMBERED_SEATS',
-        shapeType: 'ARC',
-        color: 'rgba(139, 92, 246, 0.25)',
-        strokeColor: '#8b5cf6',
-        capacity: 2500,
-        centerX: 500,
-        centerY: 400,
-        innerRadius: 345,
-        outerRadius: 420,
-        startAngleDeg: 55,
-        endAngleDeg: 125,
-        rows: 14,
-        seatsPerRow: 40,
-        rowLabels: Array.from({ length: 14 }, (_, i) => `PAC-${i + 1}`),
-        aislesAfterColumns: [20]
+        shapeType: 'POLYGON',
+        color: 'rgba(16, 185, 129, 0.25)',
+        strokeColor: '#10b981',
+        capacity: 1500,
+        points: [
+          [685, 115],
+          [795, 115],
+          [795, 480],
+          [685, 480]
+        ],
+        labelPosition: [740, 297]
       },
-      // Platea Alta Lateral (Wings)
       {
-        id: 'sec-arena-platea-alta-lateral',
-        name: 'Platea Alta Lateral',
+        id: 'sec-arena-platea-alta-lateral-oeste',
+        name: 'Platea Alta Oeste',
         type: 'NUMBERED_SEATS',
-        shapeType: 'ARC',
+        shapeType: 'POLYGON',
         color: 'rgba(244, 63, 94, 0.22)',
         strokeColor: '#f43f5e',
+        capacity: 1300,
+        points: [
+          [80, 115],
+          [190, 115],
+          [190, 615],
+          [145, 615],
+          [80, 520]
+        ],
+        labelPosition: [135, 365]
+      },
+      {
+        id: 'sec-arena-platea-alta-lateral-este',
+        name: 'Platea Alta Este',
+        type: 'NUMBERED_SEATS',
+        shapeType: 'POLYGON',
+        color: 'rgba(244, 63, 94, 0.22)',
+        strokeColor: '#f43f5e',
+        capacity: 1300,
+        points: [
+          [810, 115],
+          [920, 115],
+          [920, 520],
+          [855, 615],
+          [810, 615]
+        ],
+        labelPosition: [865, 365]
+      },
+      {
+        id: 'sec-arena-platea-baja-cabecera',
+        name: 'Platea Baja Sur',
+        type: 'NUMBERED_SEATS',
+        shapeType: 'POLYGON',
+        color: 'rgba(14, 165, 233, 0.25)',
+        strokeColor: '#0ea5e9',
         capacity: 1500,
-        centerX: 500,
-        centerY: 400,
-        innerRadius: 345,
-        outerRadius: 420,
-        startAngleDeg: 130,
-        endAngleDeg: 165,
-        rows: 12,
-        seatsPerRow: 35,
-        rowLabels: Array.from({ length: 12 }, (_, i) => `PAL-${i + 1}`),
-        aislesAfterColumns: [18]
+        points: [
+          [205, 498],
+          [795, 498],
+          [795, 615],
+          [205, 615]
+        ],
+        labelPosition: [500, 556]
+      },
+      {
+        id: 'sec-arena-platea-alta-cabecera',
+        name: 'Platea Alta Sur',
+        type: 'NUMBERED_SEATS',
+        shapeType: 'POLYGON',
+        color: 'rgba(168, 85, 247, 0.25)',
+        strokeColor: '#a855f7',
+        capacity: 1400,
+        points: [
+          [205, 633],
+          [795, 633],
+          [795, 760],
+          [205, 760]
+        ],
+        labelPosition: [500, 696]
       }
     ]
   };
@@ -489,7 +524,9 @@ function main() {
 
   const targetDirs = [
     path.resolve(__dirname, '../infra/local-dev/seat-maps'),
-    path.resolve(__dirname, '../ticketing-frontend/public/seat-maps')
+    path.resolve(__dirname, '../ticketing-frontend/public/seat-maps'),
+    path.resolve(__dirname, '../ticketing-frontend/src/seat-maps'),
+    path.resolve(__dirname, '../ticketing-app-catalog/src/main/resources/seat-maps')
   ];
 
   targetDirs.forEach(dir => {

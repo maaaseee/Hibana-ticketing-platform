@@ -1,0 +1,343 @@
+{
+  "venueId": "estadio-monumental",
+  "venueName": "Estadio Monumental (Buenos Aires)",
+  "venueType": "ESTADIO_MASIVO",
+  "canvasWidth": 1200,
+  "canvasHeight": 1000,
+  "viewBox": {
+    "minX": 0,
+    "minY": 0,
+    "maxX": 1200,
+    "maxY": 1000
+  },
+  "stage": {
+    "x": 420,
+    "y": 70,
+    "width": 360,
+    "height": 70,
+    "label": "ESCENARIO PRINCIPAL (SÍVORI SUR)",
+    "shape": "RECTANGLE"
+  },
+  "sectors": [
+    {
+      "id": "sec-monumental-campo-vip",
+      "name": "Campo Delantero VIP",
+      "type": "VIP",
+      "shapeType": "POLYGON",
+      "color": "rgba(234, 179, 8, 0.25)",
+      "strokeColor": "#eab308",
+      "capacity": 12000,
+      "standingArea": true,
+      "points": [
+        [
+          400,
+          160
+        ],
+        [
+          800,
+          160
+        ],
+        [
+          840,
+          360
+        ],
+        [
+          360,
+          360
+        ]
+      ],
+      "labelPosition": [
+        600,
+        260
+      ]
+    },
+    {
+      "id": "sec-monumental-campo-general",
+      "name": "Campo General",
+      "type": "GENERAL_ADMISSION",
+      "shapeType": "POLYGON",
+      "color": "rgba(56, 189, 248, 0.2)",
+      "strokeColor": "#38bdf8",
+      "capacity": 16000,
+      "standingArea": true,
+      "points": [
+        [
+          350,
+          375
+        ],
+        [
+          850,
+          375
+        ],
+        [
+          820,
+          640
+        ],
+        [
+          380,
+          640
+        ]
+      ],
+      "labelPosition": [
+        600,
+        500
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-baja-sanmartin",
+      "name": "Platea San Martín Baja (Occidente)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "ARC",
+      "color": "rgba(99, 102, 241, 0.25)",
+      "strokeColor": "#6366f1",
+      "capacity": 9000,
+      "centerX": 600,
+      "centerY": 460,
+      "innerRadius": 280,
+      "outerRadius": 360,
+      "startAngleDeg": 125,
+      "endAngleDeg": 235,
+      "rows": 25,
+      "seatsPerRow": 60,
+      "rowLabels": [
+        "SM-B1",
+        "SM-B2",
+        "SM-B3",
+        "SM-B4",
+        "SM-B5",
+        "SM-B6",
+        "SM-B7",
+        "SM-B8",
+        "SM-B9",
+        "SM-B10",
+        "SM-B11",
+        "SM-B12",
+        "SM-B13",
+        "SM-B14",
+        "SM-B15",
+        "SM-B16",
+        "SM-B17",
+        "SM-B18",
+        "SM-B19",
+        "SM-B20",
+        "SM-B21",
+        "SM-B22",
+        "SM-B23",
+        "SM-B24",
+        "SM-B25"
+      ],
+      "aislesAfterColumns": [
+        20,
+        40
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-baja-belgrano",
+      "name": "Platea Belgrano Baja (Oriente)",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "ARC",
+      "color": "rgba(99, 102, 241, 0.25)",
+      "strokeColor": "#6366f1",
+      "capacity": 9000,
+      "centerX": 600,
+      "centerY": 460,
+      "innerRadius": 280,
+      "outerRadius": 360,
+      "startAngleDeg": 305,
+      "endAngleDeg": 415,
+      "rows": 25,
+      "seatsPerRow": 60,
+      "rowLabels": [
+        "BEL-B1",
+        "BEL-B2",
+        "BEL-B3",
+        "BEL-B4",
+        "BEL-B5",
+        "BEL-B6",
+        "BEL-B7",
+        "BEL-B8",
+        "BEL-B9",
+        "BEL-B10",
+        "BEL-B11",
+        "BEL-B12",
+        "BEL-B13",
+        "BEL-B14",
+        "BEL-B15",
+        "BEL-B16",
+        "BEL-B17",
+        "BEL-B18",
+        "BEL-B19",
+        "BEL-B20",
+        "BEL-B21",
+        "BEL-B22",
+        "BEL-B23",
+        "BEL-B24",
+        "BEL-B25"
+      ],
+      "aislesAfterColumns": [
+        20,
+        40
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-alta-sanmartin",
+      "name": "Platea San Martín Alta",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "ARC",
+      "color": "rgba(168, 85, 247, 0.25)",
+      "strokeColor": "#a855f7",
+      "capacity": 11000,
+      "centerX": 600,
+      "centerY": 460,
+      "innerRadius": 380,
+      "outerRadius": 460,
+      "startAngleDeg": 125,
+      "endAngleDeg": 235,
+      "rows": 28,
+      "seatsPerRow": 65,
+      "rowLabels": [
+        "SM-A1",
+        "SM-A2",
+        "SM-A3",
+        "SM-A4",
+        "SM-A5",
+        "SM-A6",
+        "SM-A7",
+        "SM-A8",
+        "SM-A9",
+        "SM-A10",
+        "SM-A11",
+        "SM-A12",
+        "SM-A13",
+        "SM-A14",
+        "SM-A15",
+        "SM-A16",
+        "SM-A17",
+        "SM-A18",
+        "SM-A19",
+        "SM-A20",
+        "SM-A21",
+        "SM-A22",
+        "SM-A23",
+        "SM-A24",
+        "SM-A25",
+        "SM-A26",
+        "SM-A27",
+        "SM-A28"
+      ],
+      "aislesAfterColumns": [
+        22,
+        44
+      ]
+    },
+    {
+      "id": "sec-monumental-platea-alta-belgrano",
+      "name": "Platea Belgrano Alta",
+      "type": "NUMBERED_SEATS",
+      "shapeType": "ARC",
+      "color": "rgba(168, 85, 247, 0.25)",
+      "strokeColor": "#a855f7",
+      "capacity": 11000,
+      "centerX": 600,
+      "centerY": 460,
+      "innerRadius": 380,
+      "outerRadius": 460,
+      "startAngleDeg": 305,
+      "endAngleDeg": 415,
+      "rows": 28,
+      "seatsPerRow": 65,
+      "rowLabels": [
+        "BEL-A1",
+        "BEL-A2",
+        "BEL-A3",
+        "BEL-A4",
+        "BEL-A5",
+        "BEL-A6",
+        "BEL-A7",
+        "BEL-A8",
+        "BEL-A9",
+        "BEL-A10",
+        "BEL-A11",
+        "BEL-A12",
+        "BEL-A13",
+        "BEL-A14",
+        "BEL-A15",
+        "BEL-A16",
+        "BEL-A17",
+        "BEL-A18",
+        "BEL-A19",
+        "BEL-A20",
+        "BEL-A21",
+        "BEL-A22",
+        "BEL-A23",
+        "BEL-A24",
+        "BEL-A25",
+        "BEL-A26",
+        "BEL-A27",
+        "BEL-A28"
+      ],
+      "aislesAfterColumns": [
+        22,
+        44
+      ]
+    },
+    {
+      "id": "sec-monumental-sivori-alta",
+      "name": "Tribuna Centenario Sur",
+      "type": "GENERAL_ADMISSION",
+      "shapeType": "ARC",
+      "color": "rgba(239, 68, 68, 0.22)",
+      "strokeColor": "#ef4444",
+      "capacity": 16567,
+      "centerX": 600,
+      "centerY": 460,
+      "innerRadius": 320,
+      "outerRadius": 465,
+      "startAngleDeg": 45,
+      "endAngleDeg": 135,
+      "rows": 35,
+      "seatsPerRow": 75,
+      "rowLabels": [
+        "CEN-1",
+        "CEN-2",
+        "CEN-3",
+        "CEN-4",
+        "CEN-5",
+        "CEN-6",
+        "CEN-7",
+        "CEN-8",
+        "CEN-9",
+        "CEN-10",
+        "CEN-11",
+        "CEN-12",
+        "CEN-13",
+        "CEN-14",
+        "CEN-15",
+        "CEN-16",
+        "CEN-17",
+        "CEN-18",
+        "CEN-19",
+        "CEN-20",
+        "CEN-21",
+        "CEN-22",
+        "CEN-23",
+        "CEN-24",
+        "CEN-25",
+        "CEN-26",
+        "CEN-27",
+        "CEN-28",
+        "CEN-29",
+        "CEN-30",
+        "CEN-31",
+        "CEN-32",
+        "CEN-33",
+        "CEN-34",
+        "CEN-35"
+      ],
+      "aislesAfterColumns": [
+        25,
+        50
+      ]
+    }
+  ]
+}
