@@ -197,7 +197,7 @@ async function main() {
       name: 'CATALOG',
       color: COLORS.cyan,
       cmd: [gradlewCatalog, '-p', 'ticketing-app-catalog', 'bootRun'],
-      port: 8080,
+      port: 8081,
     },
     {
       name: 'INVENTORY',
@@ -220,7 +220,7 @@ async function main() {
 
   log('ORCHESTRATOR', COLORS.yellow, 'Todos los procesos iniciados. Presiona Ctrl+C para detener todo.')
   console.log(`${COLORS.dim}Acceso Frontend: ${COLORS.bright}http://localhost:5173${COLORS.reset}`)
-  console.log(`${COLORS.dim}API Catálogo:    ${COLORS.bright}http://localhost:8080/api/v1/events${COLORS.reset}`)
+  console.log(`${COLORS.dim}API Catálogo:    ${COLORS.bright}http://localhost:8081/api/v1/events${COLORS.reset}`)
   console.log(`${COLORS.dim}API Inventario:  ${COLORS.bright}http://localhost:8082/api/v1/events/.../seats${COLORS.reset}\n`)
 }
 
