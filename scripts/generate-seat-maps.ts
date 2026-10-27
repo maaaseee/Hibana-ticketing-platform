@@ -525,8 +525,7 @@ function main() {
   const targetDirs = [
     path.resolve(__dirname, '../infra/local-dev/seat-maps'),
     path.resolve(__dirname, '../ticketing-frontend/public/seat-maps'),
-    path.resolve(__dirname, '../ticketing-frontend/src/seat-maps'),
-    path.resolve(__dirname, '../ticketing-app-catalog/src/main/resources/seat-maps')
+        path.resolve(__dirname, '../ticketing-app-catalog/src/main/resources/seat-maps')
   ];
 
   targetDirs.forEach(dir => {

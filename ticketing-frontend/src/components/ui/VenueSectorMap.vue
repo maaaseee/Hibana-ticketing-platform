@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import type { VenueSeatMapLayout, SectorGeometry, SectorPricing } from '../../types'
+import { venueLayoutService } from '../../services/venueLayoutService'
 
 const props = withDefaults(
   defineProps<{
@@ -124,53 +125,18 @@ function handleTouchEnd() {
   initialTouchDist = 0
 }
 
-// Mapear los nombres de archivos .json según el venueId o URL remota
-function resolveVenueJson(id?: string): string {
-  if (!id) return '/seat-maps/arena-buenos-aires.json'
-  if (id.includes('monumental')) return '/seat-maps/estadio-monumental.json'
-  if (id.includes('rex')) return '/seat-maps/teatro-rex.json'
-  if (id.includes('nacional')) return '/seat-maps/estadio-nacional.json'
-  if (id.includes('arena')) return '/seat-maps/arena-buenos-aires.json'
-  if (id.startsWith('http://') || id.startsWith('https://')) return id
-  if (id.startsWith('/')) return id
-  return `/seat-maps/${id}.json`
-}
-
 async function loadVenueMap() {
   loading.value = true
   error.value = null
-  const relPath = resolveVenueJson(props.venueId)
 
   try {
-    const origin = typeof window !== 'undefined' && window.location?.origin && window.location.origin !== 'null'
-      ? window.location.origin
-      : 'http://localhost'
-    const fullUrl = relPath.startsWith('http') ? relPath : `${origin}${relPath}`
-    let res = await fetch(fullUrl)
-    if (!res.ok && relPath.startsWith('http')) {
-      const filename = relPath.substring(relPath.lastIndexOf('/') + 1)
-      res = await fetch(`${origin}/seat-maps/${filename}`)
+    const data = await venueLayoutService.getVenueLayout(props.venueId)
+    if (data) {
+      layout.value = data
+    } else {
+      throw new Error(`No se pudo cargar el mapa para ${props.venueId}`)
     }
-    if (!res.ok) {
-      throw new Error(`No se pudo cargar el mapa (${res.status})`)
-    }
-    const data: VenueSeatMapLayout = await res.json()
-    layout.value = data
   } catch (err: any) {
-    if (relPath.startsWith('http')) {
-      try {
-        const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost'
-        const filename = relPath.substring(relPath.lastIndexOf('/') + 1)
-        const fallbackRes = await fetch(`${origin}/seat-maps/${filename}`)
-        if (fallbackRes.ok) {
-          const data: VenueSeatMapLayout = await fallbackRes.json()
-          layout.value = data
-          return
-        }
-      } catch {
-        // Ignorar y registrar error original
-      }
-    }
     if (import.meta.env?.MODE !== 'test') {
       console.warn('Error loading seat map json:', err)
     }
