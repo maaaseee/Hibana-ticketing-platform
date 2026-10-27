@@ -52,12 +52,20 @@ async function main() {
   const gradlewInventory = isWindows
     ? '.\\ticketing-app-inventory\\gradlew.bat'
     : './ticketing-app-inventory/gradlew'
+  const gradlewGateway = isWindows
+    ? '.\\ticketing-app-gateway\\gradlew.bat'
+    : './ticketing-app-gateway/gradlew'
 
   const suites: TestSuite[] = [
     {
       name: 'Frontend Vitest Suite (Unit + Services Integration)',
       cmd: ['bun', 'run', '--cwd', 'ticketing-frontend', 'test:unit', '--', '--run'],
       color: COLORS.green,
+    },
+    {
+      name: 'Backend Gateway Service (Spring Cloud Gateway WebFlux / Resilience4j / RateLimiter)',
+      cmd: [gradlewGateway, '-p', 'ticketing-app-gateway', 'test'],
+      color: COLORS.yellow,
     },
     {
       name: 'Backend Catalog Service (Spring Boot 4 / Java 25)',

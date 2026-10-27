@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "bun run scripts/dev.ts",
     "test:all": "bun run scripts/test-all.ts",
+    "test:backend:e2e": "bun run scripts/test-backend-e2e.ts",
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "infra:status": "docker compose ps",
