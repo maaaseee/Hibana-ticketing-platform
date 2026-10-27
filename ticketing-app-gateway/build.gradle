@@ -48,11 +48,13 @@ dependencies {
     implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
     runtimeOnly "io.jsonwebtoken:jjwt-jackson:${jjwtVersion}"
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // Testing Suite
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-webtestclient'
     testImplementation 'io.projectreactor:reactor-test'
     testImplementation "org.wiremock:wiremock-standalone:${wiremockVersion}"
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
