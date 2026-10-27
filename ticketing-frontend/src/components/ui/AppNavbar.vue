@@ -183,9 +183,9 @@ function navigateTo(routeName: string) {
                   <div class="p-2.5 rounded-xl bg-surface-container-deep border border-border-subtle flex flex-col gap-1">
                     <div class="flex items-center gap-1.5 text-xs text-secondary font-mono font-semibold">
                       <span class="material-symbols-outlined text-[14px]">lock_clock</span>
-                      <span>Garantía Redlock</span>
+                      <span>Reserva Garantizada</span>
                     </div>
-                    <p class="text-xs text-medium-emphasis">10 minutos de reserva atómica garantizados durante la compra.</p>
+                    <p class="text-xs text-medium-emphasis">Tus asientos están guardados durante el proceso de compra.</p>
                   </div>
                 </div>
               </PopoverContent>
