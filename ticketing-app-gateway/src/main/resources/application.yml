@@ -1,10 +1,13 @@
 server:
   port: 8080
   shutdown: graceful
+  max-http-request-header-size: 16KB
 
 spring:
   application:
     name: ticketing-app-gateway
+  codec:
+    max-in-memory-size: 64KB
   threads:
     virtual:
       enabled: true

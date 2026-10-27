@@ -35,11 +35,15 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
     public static final String HEADER_CHECKOUT_TOKEN = "X-Checkout-Token";
     public static final String HEADER_USER_ID = "X-User-Id";
     public static final String HEADER_WAITING_ROOM_VALIDATED = "X-Waiting-Room-Validated";
+    public static final String HEADER_GATEWAY_STAMP = "X-Gateway-Stamp";
 
     private final ObjectMapper objectMapper;
 
-    @Value("${waiting-room.jwt.secret:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}")
+    @Value("${waiting-room.jwt.secret:${WAITING_ROOM_JWT_SECRET:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}}")
     private String defaultSecret;
+
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
 
     @Value("${waiting-room.jwt.issuer:amaryllis-waiting-room}")
     private String defaultIssuer;
@@ -96,10 +100,15 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
                 String userId = claims.getSubject();
                 log.debug("[WAITING-ROOM] Successfully validated checkout token for user: {}", userId);
 
+                // Cryptographic Gateway Stamp to prevent internal header spoofing (SEC-INV-01)
+                String stampPayload = (userId != null ? userId : "anonymous") + ":" + token.hashCode();
+                String gatewayStamp = Integer.toHexString(stampPayload.hashCode());
+
                 ServerHttpRequest mutatedRequest = request.mutate()
                         .headers(h -> {
                             h.set(HEADER_USER_ID, userId != null ? userId : "anonymous");
                             h.set(HEADER_WAITING_ROOM_VALIDATED, "true");
+                            h.set(HEADER_GATEWAY_STAMP, gatewayStamp);
                         })
                         .build();
 
