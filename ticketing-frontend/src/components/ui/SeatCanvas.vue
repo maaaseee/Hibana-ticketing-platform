@@ -49,8 +49,19 @@ function render() {
   ctx.arc(360, 60, 160, 0, Math.PI, false)
   ctx.stroke()
 
-  // Render seats
+  // Render seats with Viewport Culling (PERF-03)
+  const viewMinX = -panX.value / zoomLevel.value - 30
+  const viewMaxX = (canvas.width - panX.value) / zoomLevel.value + 30
+  const viewMinY = -panY.value / zoomLevel.value - 30
+  const viewMaxY = (canvas.height - panY.value) / zoomLevel.value + 30
+
   props.seats.forEach(seat => {
+    const seatY = seat.y + 40
+    // Skip off-screen seats
+    if (seat.x < viewMinX || seat.x > viewMaxX || seatY < viewMinY || seatY > viewMaxY) {
+      return
+    }
+
     const isSelected = props.selectedSeats.some(s => s.id === seat.id)
     const isHovered = hoveredSeat.value?.id === seat.id
 
