@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { useCatalogStore, getMinEventPrice } from '../stores/catalog'
+import { useCatalogStore } from '../stores/catalog'
 import type { EventItem } from '../types'
 import EventCard from '../components/ui/EventCard.vue'
+import CatalogFilterBar from '../components/catalog/CatalogFilterBar.vue'
+import CatalogEmptyState from '../components/catalog/CatalogEmptyState.vue'
 
 const catalog = useCatalogStore()
 const router = useRouter()
@@ -217,90 +219,32 @@ function resetFilters() {
 
 <template>
   <div class="flex flex-col w-full min-h-[calc(100vh-64px)] bg-surface text-high-emphasis pb-24 relative overflow-hidden">
-    <!-- Ambient Topography Background: Top side of the shows list, slowly vanishing downwards (+300px extended, softened opacity) -->
+    <!-- Ambient Topography Background -->
     <div
       class="shows-topography-wrapper pointer-events-none absolute inset-x-0 top-0 h-235 overflow-hidden z-0"
       aria-hidden="true"
     >
-      <!-- Base Topographic Elevation Map with Progressive Downward Mask & Subdued Opacity -->
       <div class="w-full h-full bg-topography topography-hero-mask opacity-65"></div>
-
-      <!-- Radial Atmospheric Glow (Subtle Electric Cyan accent on title area) -->
       <div class="absolute inset-0 bg-[radial-gradient(ellipse_75%_50%_at_50%_15%,rgba(0,207,243,0.08),transparent_70%)] pointer-events-none"></div>
-
-      <!-- Seamless Downward Vanish Gradient Overlay into Deep Surface Canvas -->
       <div class="absolute inset-0 bg-linear-to-b from-transparent via-surface/50 to-surface pointer-events-none"></div>
     </div>
 
-    <!-- Header Hero con Skyvia Font y Controles de Filtrado (Sin barra/border separador) -->
+    <!-- Header Hero con Skyvia Font y Controles de Filtrado -->
     <header class="relative z-10 w-full overflow-hidden pt-14 pb-8 md:pt-16 md:pb-10 select-none">
       <div class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center gap-7">
-        <!-- Título con Skyvia Demo Bold -->
-        <h1 class="font-skyvia text-3xl sm:text-5xl md:text-6xl lg:text-7xl  font-bold text-high-emphasis tracking-wide drop-shadow-lg">
+        <h1 class="font-skyvia text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-high-emphasis tracking-wide drop-shadow-lg">
           Shows
         </h1>
 
-        <!-- Controles de Filtrado Centrados (Nombre, Fecha por Meses, y Estadios) -->
-        <div class="w-full max-w-4xl flex flex-col md:flex-row items-center justify-center gap-3">
-          <!-- 1. Buscador por Nombre -->
-          <div class="relative w-full md:flex-1">
-            <input
-              :value="searchName"
-              @input="handleSearchInput"
-              type="text"
-              placeholder="Buscar por show o artista..."
-              class="w-full bg-surface-card/90 backdrop-blur-md border border-border-subtle text-high-emphasis placeholder-muted rounded-xl py-2.5 pl-10 pr-9 font-mono text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all shadow-inner"
-            />
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-muted-light text-[18px] pointer-events-none">
-              search
-            </span>
-            <button
-              v-if="searchName"
-              @click="clearSearch"
-              class="absolute right-3 top-2.5 text-muted-light hover:text-white transition-colors cursor-pointer"
-              title="Limpiar búsqueda"
-            >
-              <span class="material-symbols-outlined text-[18px]">close</span>
-            </button>
-          </div>
-
-          <!-- 2. Filtro por Fecha (Solo por Meses del Año) -->
-          <div class="relative w-full md:w-64">
-            <select
-              v-model="selectedMonth"
-              class="w-full bg-surface-card/90 backdrop-blur-md border border-border-subtle text-high-emphasis rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer appearance-none shadow-inner"
-            >
-              <option value="all">Todos los meses</option>
-              <option v-for="month in availableMonths" :key="month.value" :value="month.value">
-                {{ month.label }}
-              </option>
-            </select>
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-muted-light text-[18px] pointer-events-none">
-              calendar_month
-            </span>
-            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-muted-light text-[18px] pointer-events-none">
-              arrow_drop_down
-            </span>
-          </div>
-
-          <!-- 3. Filtro por Estadios que maneja la ticketera -->
-          <div class="relative w-full md:w-64">
-            <select
-              v-model="selectedVenue"
-              class="w-full bg-surface-card/90 backdrop-blur-md border border-border-subtle text-high-emphasis rounded-xl py-2.5 pl-10 pr-8 font-mono text-xs focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all cursor-pointer appearance-none shadow-inner"
-            >
-              <option v-for="venue in venueOptions" :key="venue.value" :value="venue.value">
-                {{ venue.label }}
-              </option>
-            </select>
-            <span class="material-symbols-outlined absolute left-3 top-2.5 text-muted-light text-[18px] pointer-events-none">
-              stadium
-            </span>
-            <span class="material-symbols-outlined absolute right-2.5 top-2.5 text-muted-light text-[18px] pointer-events-none">
-              arrow_drop_down
-            </span>
-          </div>
-        </div>
+        <CatalogFilterBar
+          v-model:search-name="searchName"
+          v-model:selected-month="selectedMonth"
+          v-model:selected-venue="selectedVenue"
+          :available-months="availableMonths"
+          :venue-options="venueOptions"
+          @input="handleSearchInput"
+          @clear-search="clearSearch"
+        />
       </div>
     </header>
 
@@ -321,22 +265,10 @@ function resetFilters() {
       </div>
 
       <!-- Estado Vacío -->
-      <div
+      <CatalogEmptyState
         v-else
-        class="bg-surface-card/50 border border-border-subtle rounded-2xl p-10 flex flex-col items-center justify-center text-center gap-3 my-8"
-      >
-        <span class="material-symbols-outlined text-4xl text-muted-light">search_off</span>
-        <h4 class="font-display text-lg font-bold text-high-emphasis">No se encontraron espectáculos</h4>
-        <p class="font-body text-sm text-muted-light max-w-md">
-          No hay eventos que coincidan con los filtros seleccionados. Prueba con otros criterios o limpia la búsqueda.
-        </p>
-        <button
-          @click="resetFilters"
-          class="mt-2 bg-surface-interactive hover:bg-border-subtle text-primary font-mono text-xs px-4 py-2 rounded-lg border border-border-subtle transition-colors cursor-pointer"
-        >
-          Limpiar filtros
-        </button>
-      </div>
+        @reset="resetFilters"
+      />
     </main>
   </div>
 </template>

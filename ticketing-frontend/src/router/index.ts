@@ -55,7 +55,11 @@ const router = createRouter({
         {
           path: 'event/:id/checkout',
           name: 'checkout',
-          component: CheckoutView
+          component: CheckoutView,
+          meta: {
+            hideNavbar: true,
+            hideFooter: true
+          }
         },
         {
           path: 'tickets',

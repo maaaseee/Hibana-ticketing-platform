@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
+import HelpSearchBar from '../components/help/HelpSearchBar.vue'
+import HelpFaqAccordion, { type FaqItem } from '../components/help/HelpFaqAccordion.vue'
+import HelpEscalationBanner from '../components/help/HelpEscalationBanner.vue'
 
-interface FaqItem {
-  id: string
-  question: string
-  answer: string
-  tags: string[]
-}
+export type { FaqItem }
 
 const route = useRoute()
 
@@ -153,202 +151,23 @@ onMounted(() => {
     </div>
 
     <div class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 flex flex-col gap-10">
-      
-      <!-- ========================================== -->
-      <!-- 1. Hero Title & Search Bar                 -->
-      <!-- ========================================== -->
-      <section class="text-center flex flex-col items-center gap-6">
-        <div class="flex flex-col items-center gap-2">
-          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-mono font-semibold uppercase tracking-wider">
-            <span class="material-symbols-outlined text-[15px]">help_center</span>
-            Centro de Ayuda & Soporte
-          </span>
-          <h1 class="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight drop-shadow-sm">
-            ¿En qué podemos ayudarte hoy?
-          </h1>
-          <p class="font-body text-sm sm:text-base text-muted-light max-w-xl">
-            Respuestas inmediatas sobre tus entradas digitales, transferencias seguras, accesos y medios de pago.
-          </p>
-        </div>
+      <!-- 1. Hero Title & Search Bar -->
+      <HelpSearchBar
+        v-model="searchQuery"
+        @clear="clearSearch"
+      />
 
-        <!-- Search Bar -->
-        <div class="w-full max-w-2xl relative shadow-2xl">
-          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-light">
-            <span class="material-symbols-outlined text-[22px]">search</span>
-          </div>
-          <input
-            v-model="searchQuery"
-            class="w-full pl-12 pr-28 py-4 bg-surface-card/90 border border-border-subtle rounded-2xl text-high-emphasis placeholder:text-muted-light font-body text-sm sm:text-base focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 focus:bg-surface-elevated/90 transition-all shadow-inner"
-            placeholder="Buscar por término, ej: 'entradas', 'reembolso', 'QR', 'transferir'..."
-            type="text"
-            aria-label="Buscar en Centro de Ayuda"
-          />
-          <div class="absolute inset-y-0 right-2 flex items-center gap-1.5">
-            <button
-              v-if="searchQuery"
-              @click="clearSearch"
-              class="text-muted-light hover:text-white p-1.5 rounded-lg hover:bg-surface-interactive transition-colors cursor-pointer"
-              title="Borrar búsqueda"
-              aria-label="Borrar búsqueda"
-            >
-              <span class="material-symbols-outlined text-[18px]">close</span>
-            </button>
-            <button
-              type="button"
-              class="bg-primary hover:bg-btn-buy-hover text-on-primary-fixed font-body text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl transition-all flex items-center gap-1 shadow-sm select-none cursor-pointer"
-            >
-              <span>Buscar</span>
-              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </button>
-          </div>
-        </div>
-      </section>
+      <!-- 2. Accordion FAQ Section -->
+      <HelpFaqAccordion
+        :faqs="filteredFaqs"
+        :search-query="searchQuery"
+        :open-item="openItem"
+        @toggle="toggleFaq"
+        @clear-search="clearSearch"
+      />
 
-      <!-- ========================================== -->
-      <!-- 2. Accordion FAQ Section                   -->
-      <!-- ========================================== -->
-      <section class="bg-surface-card/70 backdrop-blur-xs rounded-2xl p-5 sm:p-8 border border-border-subtle flex flex-col gap-6 shadow-xl">
-        <!-- Accordion Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle/70 pb-4 gap-3">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-lg bg-secondary/10 border border-secondary/20 text-secondary flex items-center justify-center">
-              <span class="material-symbols-outlined text-[20px]">quiz</span>
-            </div>
-            <h2 class="font-display text-xl sm:text-2xl text-white font-bold tracking-tight">
-              Preguntas Frecuentes
-            </h2>
-            <span class="ml-1.5 px-2.5 py-0.5 rounded-full bg-surface-elevated text-primary font-mono text-xs border border-border-subtle">
-              {{ filteredFaqs.length }}
-            </span>
-          </div>
-
-          <div class="flex items-center gap-4 text-xs font-mono">
-            <button
-              v-if="searchQuery"
-              @click="clearSearch"
-              class="text-primary hover:text-accent-sky underline transition-colors cursor-pointer"
-            >
-              Ver todas las preguntas
-            </button>
-            <span class="text-muted-light flex items-center gap-1">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              Actualizado hoy
-            </span>
-          </div>
-        </div>
-
-        <!-- FAQ Accordion Items List -->
-        <div class="flex flex-col gap-3">
-          <div
-            v-for="faq in filteredFaqs"
-            :key="faq.id"
-            :id="faq.id"
-            :class="[
-              'rounded-xl p-4 sm:p-5 flex flex-col gap-2 border transition-all duration-300 ease-in-out',
-              openItem === faq.id
-                ? 'bg-surface-elevated/80 border-primary/50 shadow-lg ring-1 ring-primary/20'
-                : 'bg-surface-container-deep/80 border-border-subtle hover:border-border-structural hover:bg-surface-card'
-            ]"
-          >
-            <!-- Accordion Toggle Button -->
-            <button
-              @click="toggleFaq(faq.id)"
-              class="w-full flex items-center justify-between cursor-pointer text-left select-none focus:outline-none group gap-3 py-1"
-              :aria-expanded="openItem === faq.id"
-            >
-              <span
-                :class="[
-                  'font-display font-semibold transition-colors duration-200 text-sm sm:text-base leading-snug',
-                  openItem === faq.id ? 'text-primary' : 'text-high-emphasis group-hover:text-primary'
-                ]"
-              >
-                {{ faq.question }}
-              </span>
-              <span
-                :class="[
-                  'material-symbols-outlined text-[22px] transition-transform duration-300 ease-in-out shrink-0',
-                  openItem === faq.id ? 'text-primary rotate-180' : 'text-muted-light group-hover:text-white'
-                ]"
-              >
-                expand_more
-              </span>
-            </button>
-
-            <!-- Collapsible Content Animated with CSS Grid -->
-            <div
-              class="grid transition-all duration-300 ease-in-out"
-              :class="openItem === faq.id ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'"
-            >
-              <div class="overflow-hidden">
-                <div class="font-body text-medium-emphasis text-sm sm:text-base leading-relaxed pt-2 pb-1 border-t border-border-subtle/50 mt-2">
-                  <p v-html="faq.answer" class="text-medium-emphasis"></p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Empty Search State -->
-          <div
-            v-if="filteredFaqs.length === 0"
-            class="py-12 px-4 text-center flex flex-col items-center gap-3 bg-surface-container-deep/50 rounded-xl border border-dashed border-border-subtle"
-          >
-            <div class="w-12 h-12 rounded-full bg-surface-elevated flex items-center justify-center text-muted-light">
-              <span class="material-symbols-outlined text-[28px]">search_off</span>
-            </div>
-            <div class="flex flex-col gap-1 max-w-md">
-              <h3 class="font-display text-base font-semibold text-white">
-                No encontramos respuestas para "{{ searchQuery }}"
-              </h3>
-              <p class="font-body text-xs sm:text-sm text-muted-light">
-                Intenta buscar con palabras más simples como "entradas", "devolución", "pago" o consulta a nuestro equipo mediante el chat de soporte.
-              </p>
-            </div>
-            <button
-              @click="clearSearch"
-              class="mt-2 bg-surface-elevated hover:bg-surface-interactive text-primary px-4 py-2 rounded-lg font-mono text-xs border border-border-subtle transition-colors cursor-pointer"
-            >
-              Borrar búsqueda
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ========================================== -->
-      <!-- 3. Escalation / Support CTA Banner         -->
-      <!-- ========================================== -->
-      <section class="bg-surface-card border border-border-subtle rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-        <div class="flex items-start gap-4">
-          <div class="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-inner">
-            <span class="material-symbols-outlined text-[28px]">support_agent</span>
-          </div>
-          <div class="flex flex-col gap-1 text-left">
-            <h3 class="font-display text-lg sm:text-xl text-white font-bold tracking-tight">
-              ¿No encontraste lo que buscabas o necesitas más ayuda?
-            </h3>
-            <p class="font-body text-sm sm:text-base text-muted-light max-w-xl leading-relaxed">
-              Conéctate con nuestro asistente virtual inteligente para resolver incidentes con tus compras o transferir tu caso a un especialista en minutos.
-            </p>
-          </div>
-        </div>
-
-        <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
-          <RouterLink
-            :to="{ name: 'support-chat' }"
-            class="w-full sm:w-auto bg-primary hover:bg-btn-buy-hover text-on-primary-fixed font-body text-sm font-bold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-          >
-            <span class="material-symbols-outlined text-[20px]">chat</span>
-            <span>Iniciar chat de soporte</span>
-          </RouterLink>
-          <RouterLink
-            :to="{ name: 'tickets' }"
-            class="w-full sm:w-auto bg-surface-elevated hover:bg-surface-interactive text-white px-5 py-3 rounded-xl font-body text-sm border border-border-subtle transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span class="material-symbols-outlined text-[18px]">receipt_long</span>
-            <span>Ver mis tickets (3)</span>
-          </RouterLink>
-        </div>
-      </section>
-
+      <!-- 3. Escalation / Support CTA Banner -->
+      <HelpEscalationBanner />
     </div>
   </div>
 </template>
