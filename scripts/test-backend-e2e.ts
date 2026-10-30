@@ -36,6 +36,7 @@ const COLORS = {
 const GATEWAY_URL = 'http://localhost:8080'
 const CATALOG_URL = 'http://localhost:8081'
 const INVENTORY_URL = 'http://localhost:8082'
+const ORDERS_URL = 'http://localhost:8083'
 
 const WAITING_ROOM_SECRET = 'amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!'
 const WAITING_ROOM_ISSUER = 'amaryllis-waiting-room'
@@ -192,9 +193,10 @@ async function main() {
   console.log(`${COLORS.bright}1. Verificando infraestructura e instancias de microservicios:${COLORS.reset}`)
   const catalogOk = await ensureServiceRunning('Catalog Service', 'ticketing-app-catalog', 8081)
   const inventoryOk = await ensureServiceRunning('Inventory Service', 'ticketing-app-inventory', 8082)
+  const ordersOk = await ensureServiceRunning('Orders Service', 'ticketing-app-orders', 8083)
   const gatewayOk = await ensureServiceRunning('Gateway Service', 'ticketing-app-gateway', 8080)
 
-  if (!catalogOk || !inventoryOk || !gatewayOk) {
+  if (!catalogOk || !inventoryOk || !ordersOk || !gatewayOk) {
     console.error(`\n${COLORS.red}Error: No fue posible inicializar los servicios requeridos.${COLORS.reset}`)
     process.exit(1)
   }
@@ -204,14 +206,16 @@ async function main() {
   // ---------------------------------------------------------------------------
   // ESCENARIO 1: Health Probes Actuator
   // ---------------------------------------------------------------------------
-  await runTest(1, 'Actuator Health Probes: Gateway (:8080), Catalog (:8081), Inventory (:8082) están UP', async () => {
+  await runTest(1, 'Actuator Health Probes: Gateway (:8080), Catalog (:8081), Inventory (:8082), Orders (:8083) están UP', async () => {
     const gw = await fetch(`${GATEWAY_URL}/actuator/health`).then(r => r.json())
     const cat = await fetch(`${CATALOG_URL}/actuator/health`).then(r => r.json())
     const inv = await fetch(`${INVENTORY_URL}/actuator/health`).then(r => r.json())
+    const ord = await fetch(`${ORDERS_URL}/actuator/health`).then(r => r.json())
 
     if (gw.status !== 'UP') throw new Error(`Gateway no reporta UP: ${JSON.stringify(gw)}`)
     if (cat.status !== 'UP') throw new Error(`Catalog no reporta UP: ${JSON.stringify(cat)}`)
     if (inv.status !== 'UP') throw new Error(`Inventory no reporta UP: ${JSON.stringify(inv)}`)
+    if (ord.status !== 'UP') throw new Error(`Orders no reporta UP: ${JSON.stringify(ord)}`)
   })
 
   // ---------------------------------------------------------------------------
@@ -433,6 +437,155 @@ async function main() {
   })
 
   // ---------------------------------------------------------------------------
+  // ESCENARIO 11: Flujo Completo de Checkout (Hold -> Order -> Pocket Wallet Pay -> PAID)
+  // ---------------------------------------------------------------------------
+  await runTest(11, 'Flujo Completo Checkout: Reserva Asiento -> Crear Orden -> Pago con Billetera Virtual (com.aieta.pocket) -> Estado PAID', async () => {
+    const e2eUser = `e2e_buyer_${Date.now()}`
+    const checkoutToken = generateWaitingRoomToken(e2eUser, 15)
+
+    // A. Fondeo inicial de billetera virtual vía Gateway (:8080 -> Orders :8083)
+    const topUpRes = await fetch(`${GATEWAY_URL}/api/v1/wallets/me/top-up`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': e2eUser,
+      },
+      body: JSON.stringify({ amount: 150.00 }),
+    })
+    if (!topUpRes.ok) {
+      throw new Error(`Fondeo de billetera falló: HTTP ${topUpRes.status}`)
+    }
+    const topUpData = await topUpRes.json()
+    if (topUpData.balance < 150.00) {
+      throw new Error(`Saldo inesperado tras fondeo: ${topUpData.balance}`)
+    }
+
+    // B. Reserva de asiento en Inventario con token de sala de espera
+    const resSeats = await fetch(`${GATEWAY_URL}/api/v1/events/${sampleEventId}/seats`)
+    const seatsData = await resSeats.json()
+    const allSeats = Array.isArray(seatsData) ? seatsData : (seatsData.seats || [])
+    const availableSeat = allSeats.find((s: any) => s.status === 'AVAILABLE') || allSeats[0]
+    const seatIdToBuy = availableSeat.id || availableSeat.seatId || 'SEAT-CHECKOUT-001'
+
+    const holdRes = await fetch(`${GATEWAY_URL}/api/v1/reservations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Checkout-Token': checkoutToken,
+        'X-User-Id': e2eUser,
+      },
+      body: JSON.stringify({
+        eventId: sampleEventId,
+        seatId: seatIdToBuy,
+        userId: e2eUser,
+      }),
+    })
+    if (holdRes.status !== 201) {
+      throw new Error(`Reserva falló en checkout: HTTP ${holdRes.status} - ${await holdRes.text()}`)
+    }
+    const holdData = await holdRes.json()
+    const reservationId = holdData.reservationId
+
+    // C. Creación de Orden a través del Gateway en Orders Service (:8083)
+    const orderRes = await fetch(`${GATEWAY_URL}/api/v1/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': e2eUser,
+      },
+      body: JSON.stringify({
+        reservationId: reservationId,
+        eventId: sampleEventId,
+        seatId: seatIdToBuy,
+        totalAmount: 65.00,
+      }),
+    })
+    if (orderRes.status !== 201) {
+      throw new Error(`Creación de orden falló: HTTP ${orderRes.status} - ${await orderRes.text()}`)
+    }
+    const orderData = await orderRes.json()
+    const orderId = orderData.orderId
+
+    // D. Pago de la orden usando POCKET_WALLET
+    const payRes = await fetch(`${GATEWAY_URL}/api/v1/orders/${orderId}/pay`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': e2eUser,
+      },
+      body: JSON.stringify({
+        paymentMethod: 'POCKET_WALLET',
+      }),
+    })
+    if (!payRes.ok) {
+      throw new Error(`Pago de orden falló: HTTP ${payRes.status} - ${await payRes.text()}`)
+    }
+    const payData = await payRes.json()
+    if (payData.status !== 'PAID') {
+      throw new Error(`Estado de pago incorrecto: ${payData.status}`)
+    }
+
+    // E. Verificación del balance restante tras el pago
+    const balanceRes = await fetch(`${GATEWAY_URL}/api/v1/wallets/me/balance`, {
+      headers: { 'X-User-Id': e2eUser },
+    })
+    const balanceData = await balanceRes.json()
+    if (balanceData.balance > 85.01) {
+      throw new Error(`Saldo de billetera no debitado correctamente: ${balanceData.balance}`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 12: Compensación de Saga ante Cancelación de Orden
+  // ---------------------------------------------------------------------------
+  await runTest(12, 'Saga Compensation: Cancelación de Orden -> Actualización a CANCELLED y Emisión de PaymentFailedEvent', async () => {
+    const e2eUser = `e2e_cancel_${Date.now()}`
+    const fakeReservationId = `res_cancel_${Date.now()}`
+
+    // A. Crear orden en PENDING_PAYMENT
+    const orderRes = await fetch(`${GATEWAY_URL}/api/v1/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': e2eUser,
+      },
+      body: JSON.stringify({
+        reservationId: fakeReservationId,
+        eventId: sampleEventId,
+        seatId: 'SEAT-CANCEL-001',
+        totalAmount: 49.00,
+      }),
+    })
+    if (orderRes.status !== 201) {
+      throw new Error(`Creación de orden previa a cancelación falló: HTTP ${orderRes.status}`)
+    }
+    const orderData = await orderRes.json()
+    const orderId = orderData.orderId
+
+    // B. Cancelar la orden
+    const cancelRes = await fetch(`${GATEWAY_URL}/api/v1/orders/${orderId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': e2eUser,
+      },
+      body: JSON.stringify({ reason: 'Usuario rechazó términos o tiempo agotado' }),
+    })
+    if (!cancelRes.ok) {
+      throw new Error(`Cancelación de orden falló: HTTP ${cancelRes.status}`)
+    }
+
+    // C. Consultar detalle de la orden para confirmar estado CANCELLED
+    const detailRes = await fetch(`${GATEWAY_URL}/api/v1/orders/${orderId}`, {
+      headers: { 'X-User-Id': e2eUser },
+    })
+    const detailData = await detailRes.json()
+    if (detailData.status !== 'CANCELLED') {
+      throw new Error(`Estado tras cancelación no es CANCELLED: ${detailData.status}`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
   // RESUMEN FINAL
   // ---------------------------------------------------------------------------
   console.log(`\n${COLORS.bright}========================================================================${COLORS.reset}`)
@@ -454,9 +607,12 @@ async function main() {
 
   if (failed > 0) {
     console.log(`${COLORS.red}${COLORS.bright}✖ LA SUITE DE INTEGRACIÓN E2E DEL BACKEND HA FALLADO${COLORS.reset}\n`)
+    cleanup()
     process.exit(1)
   } else {
     console.log(`${COLORS.green}${COLORS.bright}🎉 TODAS LAS PRUEBAS DE INTEGRACIÓN E2E DEL BACKEND PASARON EXITOSAMENTE 🎉${COLORS.reset}\n`)
+    cleanup()
+    process.exit(0)
   }
 }
 

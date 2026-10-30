@@ -191,8 +191,20 @@ async function main() {
   const gradlewInventory = isWindows
     ? '.\\ticketing-app-inventory\\gradlew.bat'
     : './ticketing-app-inventory/gradlew'
+  const gradlewGateway = isWindows
+    ? '.\\ticketing-app-gateway\\gradlew.bat'
+    : './ticketing-app-gateway/gradlew'
+  const gradlewOrders = isWindows
+    ? '.\\ticketing-app-orders\\gradlew.bat'
+    : './ticketing-app-orders/gradlew'
 
   const services: ServiceSpec[] = [
+    {
+      name: 'GATEWAY',
+      color: COLORS.yellow,
+      cmd: [gradlewGateway, '-p', 'ticketing-app-gateway', 'bootRun'],
+      port: 8080,
+    },
     {
       name: 'CATALOG',
       color: COLORS.cyan,
@@ -204,6 +216,12 @@ async function main() {
       color: COLORS.magenta,
       cmd: [gradlewInventory, '-p', 'ticketing-app-inventory', 'bootRun'],
       port: 8082,
+    },
+    {
+      name: 'ORDERS',
+      color: COLORS.blue,
+      cmd: [gradlewOrders, '-p', 'ticketing-app-orders', 'bootRun'],
+      port: 8083,
     },
     {
       name: 'FRONTEND',
@@ -219,9 +237,11 @@ async function main() {
   }
 
   log('ORCHESTRATOR', COLORS.yellow, 'Todos los procesos iniciados. Presiona Ctrl+C para detener todo.')
-  console.log(`${COLORS.dim}Acceso Frontend: ${COLORS.bright}http://localhost:5173${COLORS.reset}`)
+  console.log(`${COLORS.dim}API Gateway:     ${COLORS.bright}http://localhost:8080${COLORS.reset}`)
+  console.log(`${COLORS.dim}Frontend:        ${COLORS.bright}http://localhost:5173${COLORS.reset}`)
   console.log(`${COLORS.dim}API Catálogo:    ${COLORS.bright}http://localhost:8081/api/v1/events${COLORS.reset}`)
-  console.log(`${COLORS.dim}API Inventario:  ${COLORS.bright}http://localhost:8082/api/v1/events/.../seats${COLORS.reset}\n`)
+  console.log(`${COLORS.dim}API Inventario:  ${COLORS.bright}http://localhost:8082/api/v1/events/.../seats${COLORS.reset}`)
+  console.log(`${COLORS.dim}API Órdenes:     ${COLORS.bright}http://localhost:8083/api/v1/orders${COLORS.reset}\n`)
 }
 
 main()

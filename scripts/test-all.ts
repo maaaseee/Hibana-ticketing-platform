@@ -10,6 +10,7 @@ const COLORS = {
   green: '\x1b[32m',
   red: '\x1b[31m',
   yellow: '\x1b[33m',
+  blue: '\x1b[34m',
 }
 
 interface TestSuite {
@@ -55,6 +56,9 @@ async function main() {
   const gradlewGateway = isWindows
     ? '.\\ticketing-app-gateway\\gradlew.bat'
     : './ticketing-app-gateway/gradlew'
+  const gradlewOrders = isWindows
+    ? '.\\ticketing-app-orders\\gradlew.bat'
+    : './ticketing-app-orders/gradlew'
 
   const suites: TestSuite[] = [
     {
@@ -76,6 +80,11 @@ async function main() {
       name: 'Backend Inventory Service (Redlock / Virtual Threads IT)',
       cmd: [gradlewInventory, '-p', 'ticketing-app-inventory', 'test'],
       color: COLORS.magenta,
+    },
+    {
+      name: 'Backend Orders Service (Order & Financial Engine / Flyway / Double-Entry Ledger)',
+      cmd: [gradlewOrders, '-p', 'ticketing-app-orders', 'test'],
+      color: COLORS.blue,
     },
   ]
 
