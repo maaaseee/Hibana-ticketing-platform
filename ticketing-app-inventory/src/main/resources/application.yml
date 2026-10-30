@@ -13,10 +13,15 @@ spring:
       minimum-idle: 10
       connection-timeout: 10000
       pool-name: TicketingHikariPool
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    table: flyway_inventory_history
+    locations: classpath:db/migration
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         format_sql: false

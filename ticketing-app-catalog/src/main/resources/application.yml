@@ -16,6 +16,11 @@ spring:
       minimum-idle: 5
       connection-timeout: 10000
       pool-name: CatalogHikariPool
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    table: flyway_catalog_history
+    locations: classpath:db/migration
   jpa:
     open-in-view: false
     hibernate:

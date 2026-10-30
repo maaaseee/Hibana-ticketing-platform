@@ -29,8 +29,10 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
-	// Persistence: PostgreSQL + pgvector
+	// Persistence: PostgreSQL + pgvector + Flyway
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'org.flywaydb:flyway-database-postgresql'
 	implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
 	runtimeOnly 'org.postgresql:postgresql'
 
