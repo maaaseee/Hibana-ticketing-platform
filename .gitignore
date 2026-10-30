@@ -2,6 +2,8 @@
 .gradle/
 **/build/
 **/.gradle/
+bin/
+**/bin/
 
 graphify-out
 node_modules
