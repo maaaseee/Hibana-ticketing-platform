@@ -1,0 +1,153 @@
+package com.aieta.ticketing_app_orders.application.commands.process_payment;
+
+import com.aieta.ticketing_app_orders.application.common.mediator.RequestHandler;
+import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
+import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
+import com.aieta.ticketing_app_orders.domain.events.OrderPaidEvent;
+import com.aieta.ticketing_app_orders.domain.exceptions.DomainException;
+import com.aieta.ticketing_app_orders.domain.exceptions.InsufficientFundsException;
+import com.aieta.ticketing_app_orders.domain.exceptions.OrderNotFoundException;
+import com.aieta.ticketing_app_orders.domain.model.Order;
+import com.aieta.ticketing_app_orders.domain.model.OrderId;
+import com.aieta.ticketing_app_orders.domain.model.VirtualWallet;
+import com.aieta.ticketing_app_orders.domain.model.pocket.DoubleEntryTransaction;
+import com.aieta.ticketing_app_orders.domain.model.pocket.LedgerAccount;
+import com.aieta.ticketing_app_orders.domain.model.pocket.LedgerEntry;
+import com.aieta.ticketing_app_orders.domain.ports.LedgerRepositoryPort;
+import com.aieta.ticketing_app_orders.domain.ports.OrderRepositoryPort;
+import com.aieta.ticketing_app_orders.domain.ports.WalletRepositoryPort;
+import com.aieta.ticketing_app_orders.infrastructure.persistence.entity.OutboxEventJpaEntity;
+import com.aieta.ticketing_app_orders.infrastructure.persistence.repository.SpringDataOutboxRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.util.Currency;
+import java.util.List;
+import java.util.UUID;
+
+@Component
+public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPaymentCommand, PaymentResult> {
+    private static final Logger log = LoggerFactory.getLogger(ProcessPaymentCommandHandler.class);
+
+    private final OrderRepositoryPort orderRepository;
+    private final WalletRepositoryPort walletRepository;
+    private final LedgerRepositoryPort ledgerRepository;
+    private final SpringDataOutboxRepository outboxRepository;
+    private final ObjectMapper objectMapper;
+
+    public ProcessPaymentCommandHandler(OrderRepositoryPort orderRepository,
+                                       WalletRepositoryPort walletRepository,
+                                       LedgerRepositoryPort ledgerRepository,
+                                       SpringDataOutboxRepository outboxRepository,
+                                       ObjectMapper objectMapper) {
+        this.orderRepository = orderRepository;
+        this.walletRepository = walletRepository;
+        this.ledgerRepository = ledgerRepository;
+        this.outboxRepository = outboxRepository;
+        this.objectMapper = objectMapper;
+    }
+
+    @Override
+    @Transactional
+    public PaymentResult handle(ProcessPaymentCommand request) {
+        Order order = orderRepository.findById(OrderId.of(request.orderId()))
+                .orElseThrow(() -> new OrderNotFoundException(request.orderId()));
+
+        if (!order.getUserId().equals(request.userId())) {
+            throw new DomainException("Unauthorized access to order " + request.orderId());
+        }
+
+        // Idempotency: if already paid, return existing result
+        if (order.getStatus() == OrderStatus.PAID) {
+            log.info("Order {} is already PAID", order.getId());
+            return new PaymentResult(
+                    order.getId().toString(),
+                    order.getStatus().name(),
+                    order.getPaymentMethod() != null ? order.getPaymentMethod().name() : PaymentMethod.POCKET_WALLET.name(),
+                    order.getTotal().amount(),
+                    order.getUpdatedAt()
+            );
+        }
+
+        PaymentMethod method = request.paymentMethod() != null ? request.paymentMethod() : PaymentMethod.POCKET_WALLET;
+
+        // Process payment based on method
+        if (method == PaymentMethod.POCKET_WALLET) {
+            VirtualWallet wallet = walletRepository.findByUserIdForUpdate(request.userId())
+                    .orElseThrow(() -> new InsufficientFundsException(order.getTotal().amount(), order.getTotal().amount()));
+
+            // Debit user wallet
+            wallet.debit(order.getTotal().amount());
+            walletRepository.save(wallet);
+
+            // Double-entry bookkeeping ledger (com.aieta.pocket)
+            UUID txRef = UUID.randomUUID();
+            LedgerAccount revenueAccount = ledgerRepository.findAccountByOwnerIdAndType("PLATFORM", LedgerAccount.AccountType.REVENUE)
+                    .orElseGet(() -> ledgerRepository.saveAccount(new LedgerAccount(
+                            UUID.randomUUID(), "PLATFORM", LedgerAccount.AccountType.REVENUE, order.getTotal().amount(), Currency.getInstance("EUR"))));
+
+            LedgerAccount assetAccount = ledgerRepository.findAccountByOwnerIdAndType("PLATFORM", LedgerAccount.AccountType.ASSET)
+                    .orElseGet(() -> ledgerRepository.saveAccount(new LedgerAccount(
+                            UUID.randomUUID(), "PLATFORM", LedgerAccount.AccountType.ASSET, order.getTotal().amount(), Currency.getInstance("EUR"))));
+
+            DoubleEntryTransaction doubleEntryTx = new DoubleEntryTransaction(txRef)
+                    .addDebit(assetAccount.id(), order.getTotal().amount(), "Settlement deposit for order " + order.getId())
+                    .addCredit(revenueAccount.id(), order.getTotal().amount(), "Ticket revenue for order " + order.getId());
+
+            List<LedgerEntry> entries = doubleEntryTx.buildAndValidate();
+            ledgerRepository.recordEntries(entries);
+        }
+
+        // Transition order status
+        order.markProcessing(method);
+        order.markPaid();
+        Order savedOrder = orderRepository.save(order);
+
+        // Transactional Outbox event write
+        OrderPaidEvent event = new OrderPaidEvent(
+                savedOrder.getId().toString(),
+                savedOrder.getUserId(),
+                savedOrder.getReservationId().value(),
+                savedOrder.getEventId(),
+                savedOrder.getSeatId(),
+                savedOrder.getTotal().amount(),
+                method.name(),
+                Instant.now()
+        );
+
+        try {
+            String payload = objectMapper.writeValueAsString(event);
+            OutboxEventJpaEntity outbox = new OutboxEventJpaEntity(
+                    UUID.randomUUID(),
+                    "Order",
+                    savedOrder.getId().toString(),
+                    "OrderPaidEvent",
+                    payload
+            );
+            outboxRepository.save(outbox);
+        } catch (JsonProcessingException e) {
+            log.error("Failed to serialize OrderPaidEvent for order {}", savedOrder.getId(), e);
+            throw new DomainException("Failed to serialize payment outbox event", e);
+        }
+
+        log.info("Order {} successfully PAID via {}", savedOrder.getId(), method);
+
+        return new PaymentResult(
+                savedOrder.getId().toString(),
+                savedOrder.getStatus().name(),
+                method.name(),
+                savedOrder.getTotal().amount(),
+                savedOrder.getUpdatedAt()
+        );
+    }
+
+    @Override
+    public Class<ProcessPaymentCommand> getRequestType() {
+        return ProcessPaymentCommand.class;
+    }
+}
