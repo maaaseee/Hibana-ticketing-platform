@@ -49,7 +49,7 @@ describe('Frontend <-> Backend Microservices Integration Test Suite', () => {
       )
 
       try {
-        await apiClient.post('/api/inventory/reservations', { seatId: 'A-1' })
+        await apiClient.post('/api/v1/reservations', { seatId: 'A-1' })
         expect.fail('Should have thrown an ApiError')
       } catch (err: any) {
         expect(err).toBeInstanceOf(ApiError)

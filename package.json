@@ -9,6 +9,7 @@
     "infra:down": "docker compose down",
     "infra:status": "docker compose ps",
     "build:frontend": "bun run --cwd ticketing-frontend build",
+    "dev:frontend": "bun run --cwd ticketing-frontend dev",
     "test:frontend": "bun run --cwd ticketing-frontend test:unit -- --run"
   },
   "devDependencies": {

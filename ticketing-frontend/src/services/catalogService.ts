@@ -3,7 +3,7 @@ import type { CatalogEventResponse, EventItem, SectorPricing, EventFunction } fr
 import { mockEvents } from '../data/mockEvents'
 import { getVenueByName, mockVenues } from '../data/mockVenues'
 
-const BASE_URL = import.meta.env.VITE_CATALOG_API_URL || '/api/catalog'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_CATALOG_API_URL || '/api/v1'
 
 function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
   const defaultVenue = mockVenues[0]!

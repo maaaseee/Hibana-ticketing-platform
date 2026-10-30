@@ -8,7 +8,7 @@ import type {
   Seat,
 } from '../types'
 
-const BASE_URL = import.meta.env.VITE_INVENTORY_API_URL || '/api/inventory'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_INVENTORY_API_URL || '/api/v1'
 
 export function mapDtoToSeat(dto: any, index: number): Seat {
   // Generate deterministic grid position if coordinates are not stored in DB
