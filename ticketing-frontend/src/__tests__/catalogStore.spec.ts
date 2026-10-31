@@ -193,7 +193,7 @@ describe('catalogStore.spec.ts - Store & Data Invariants', () => {
       expect(store.homeHighlights.recentlyAdded.length).toBeGreaterThan(0)
       expect(store.homeHighlights.upcoming.length).toBeGreaterThan(0)
 
-      const cachedRaw = sessionStorage.getItem('amaryllis_highlights_cache')
+      const cachedRaw = sessionStorage.getItem('hibana_highlights_cache')
       expect(cachedRaw).not.toBeNull()
       const cached = JSON.parse(cachedRaw!)
       expect(cached.timestamp).toBeGreaterThan(0)

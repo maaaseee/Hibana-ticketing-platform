@@ -56,7 +56,7 @@ class EventWriteRepositoryIT {
 
         Event event = Event.createNew(
                 eventId,
-                "org_amaryllis_live",
+                "org_hibana_live",
                 "ven_estadio_nacional",
                 slug,
                 "Integration Test Concert",
@@ -73,7 +73,7 @@ class EventWriteRepositoryIT {
 
         EventCreatedEvent createdEvent = new EventCreatedEvent(
                 eventId,
-                "org_amaryllis_live",
+                "org_hibana_live",
                 "ven_estadio_nacional",
                 slug,
                 "Integration Test Concert",

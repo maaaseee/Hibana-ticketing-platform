@@ -339,7 +339,7 @@ export const mockVenues: VenueInfo[] = [
     parking: {
       available: true,
       title: 'Convenio Garajes Comerciales Corrientes y Sarmiento',
-      description: 'Convenio preferencial con garajes comerciales a menos de 100 metros del teatro (Av. Corrientes 880 y Sarmiento 940). 20% de descuento validando tu entrada digital Amaryllis.',
+      description: 'Convenio preferencial con garajes comerciales a menos de 100 metros del teatro (Av. Corrientes 880 y Sarmiento 940). 20% de descuento validando tu entrada digital Hibana.tk.',
       price: 10000,
       accessRoutes: [
         'Ingreso por Av. Corrientes 880 (Garage Central Corrientes)',

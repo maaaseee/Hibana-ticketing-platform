@@ -4,7 +4,7 @@
 flowchart TB
     subgraph PERIMETER["Perimeter & Edge Tier (Public Internet)"]
         INTERNET(("Public Internet Clients<br/>(B2C Users & B2B Admins)"))
-        AFD["Azure Front Door (Global Anycast CDN & WAF Policy)<br/>Custom Domains: www.amaryllis-tickets.com & admin.amaryllis-tickets.com"]
+        AFD["Azure Front Door (Global Anycast CDN & WAF Policy)<br/>Custom Domains: www.hibana.tk & admin.hibana.tk"]
         BLOB_STATIC[("Azure Blob Storage<br/>(Static Web Assets: Vue 3 B2C/B2B Apps)")]
     end
 

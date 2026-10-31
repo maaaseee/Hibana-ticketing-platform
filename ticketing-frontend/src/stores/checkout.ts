@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 export const useCheckoutStore = defineStore('checkout', () => {
   const buyerName = ref<string>('Carlos Mendoza')
-  const buyerEmail = ref<string>('carlos.mendoza@amaryllis.live')
+  const buyerEmail = ref<string>('carlos.mendoza@hibana.tk')
   const buyerDni = ref<string>('38.291.849')
   const buyerPhone = ref<string>('+54 9 11 4829-1920')
   const paymentMethod = ref<'pocket_wallet' | 'credit_card' | 'bank_transfer'>('pocket_wallet')

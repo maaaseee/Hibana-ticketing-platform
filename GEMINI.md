@@ -19,8 +19,8 @@ Rules:
 - **Local Emulation**: Use **Floci-AZ** for zero-cost local emulation of Azure components (PostgreSQL, Cosmos DB, Service Bus, Redis, Key Vault) and Ollama/LocalAI for embeddings.
 
 ### Frontend Application Separation
-- **Front-Office (B2C)**: High-concurrency public client (`www.amaryllis-tickets.com`). Optimized for speed, CDN caching, route lazy loading, and Virtual Waiting Room integration.
-- **Back-Office (B2B)**: Operations/Admin portal (`admin.amaryllis-tickets.com`). Must be physically and logically isolated from B2C traffic. Must use **HTML5 Canvas** for high-performance interactive seat map rendering (avoid bloated DOM/SVG trees).
+- **Front-Office (B2C)**: High-concurrency public client (`www.hibana.tk`). Optimized for speed, CDN caching, route lazy loading, and Virtual Waiting Room integration.
+- **Back-Office (B2B)**: Operations/Admin portal (`admin.hibana.tk`). Must be physically and logically isolated from B2C traffic. Must use **HTML5 Canvas** for high-performance interactive seat map rendering (avoid bloated DOM/SVG trees).
 
 ### Persistence & Data Access
 - **Azure Database for PostgreSQL (Flexible Server)**: Primary relational store for transactional domains (Ticketing, Financials, Orders). Uses `pgvector` with HNSW indexing for AI embeddings.

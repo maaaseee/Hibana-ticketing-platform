@@ -1,5 +1,5 @@
 /**
- * Amaryllis Ticketing Platform - Cross-Backend End-to-End (E2E) Integration Test Suite
+ * Hibana.tk Ticketing Platform - Cross-Backend End-to-End (E2E) Integration Test Suite
  * 
  * Verifies real ingress routing and end-to-end interactions across the entire backend:
  * Gateway (port 8080) -> Catalog (port 8081) -> Inventory (port 8082) -> PostgreSQL 17 & Redis 7
@@ -187,7 +187,7 @@ async function runTest(step: number, description: string, fn: () => Promise<void
 
 async function main() {
   console.log(`\n${COLORS.magenta}${COLORS.bright}========================================================================${COLORS.reset}`)
-  console.log(`${COLORS.magenta}${COLORS.bright}    AMARYLLIS PLATFORM - CROSS-BACKEND E2E INTEGRATION TEST SUITE      ${COLORS.reset}`)
+  console.log(`${COLORS.magenta}${COLORS.bright}    HIBANA.TK PLATFORM - CROSS-BACKEND E2E INTEGRATION TEST SUITE      ${COLORS.reset}`)
   console.log(`${COLORS.magenta}${COLORS.bright}========================================================================${COLORS.reset}\n`)
 
   console.log(`${COLORS.bright}1. Verificando infraestructura e instancias de microservicios:${COLORS.reset}`)

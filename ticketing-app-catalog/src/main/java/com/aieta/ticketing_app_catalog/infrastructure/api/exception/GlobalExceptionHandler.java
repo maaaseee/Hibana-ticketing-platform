@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
         log.warn("Event not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Event Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "EVENT_NOT_FOUND");
         return problem;
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid event schedule invariant: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
         problem.setTitle("Invalid Event Schedule");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-schedule"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-schedule"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_EVENT_SCHEDULE");
         return problem;
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid event title: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid Event Title");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-title"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-title"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_EVENT_TITLE");
         return problem;
@@ -56,7 +56,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid sector pricing invariant: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid Sector Pricing");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-pricing"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-pricing"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_SECTOR_PRICING");
         return problem;
@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid sector capacity invariant: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid Sector Capacity");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-capacity"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-capacity"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_SECTOR_CAPACITY");
         return problem;
@@ -78,7 +78,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid event identifier supplied: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid Event Identifier");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-identifier"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-identifier"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_EVENT_IDENTIFIER");
         return problem;
@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
         log.error("Mediator dispatch failure: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
         problem.setTitle("CQRS Handler Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/handler-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/handler-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "MEDIATOR_HANDLER_NOT_FOUND");
         return problem;
@@ -100,7 +100,7 @@ public class GlobalExceptionHandler {
         log.warn("Venue not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Venue Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/venue-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/venue-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "VENUE_NOT_FOUND");
         return problem;
@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
         log.warn("Duplicate event slug collision: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problem.setTitle("Duplicate Event Slug");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/duplicate-slug"));
+        problem.setType(URI.create("https://hibana.tk/errors/duplicate-slug"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "DUPLICATE_EVENT_SLUG");
         return problem;
@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
         log.warn("Event already cancelled: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problem.setTitle("Event Already Cancelled");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/already-cancelled"));
+        problem.setType(URI.create("https://hibana.tk/errors/already-cancelled"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "EVENT_ALREADY_CANCELLED");
         return problem;
@@ -133,7 +133,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid event state transition: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
         problem.setTitle("Invalid Event State");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-state"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-state"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_EVENT_STATE");
         return problem;
@@ -144,7 +144,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid sector domain error: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Invalid Sector");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-sector"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-sector"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "INVALID_SECTOR");
         return problem;
@@ -155,7 +155,7 @@ public class GlobalExceptionHandler {
         log.warn("Request payload validation error: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed for request content");
         problem.setTitle("Constraint Violation");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/validation"));
+        problem.setType(URI.create("https://hibana.tk/errors/validation"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("errorCode", "VALIDATION_FAILED");
         problem.setProperty("errors", ex.getBindingResult().getFieldErrors().stream()

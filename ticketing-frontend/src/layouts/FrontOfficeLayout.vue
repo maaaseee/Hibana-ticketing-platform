@@ -39,11 +39,11 @@ const route = useRoute()
             <RouterLink to="/" class="flex items-center gap-2.5 group shrink-0">
               <img
                 src="/logo.png"
-                alt="Amaryllis Logo"
+                alt="Hibana.tk Logo"
                 class="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(134,207,251,0.4)]"
               />
               <span class="font-display font-black text-2xl text-primary tracking-tight group-hover:text-on-primary-container transition-colors">
-                Amaryllis
+                Hibana.tk
               </span>
             </RouterLink>
             <p class="text-muted-light text-xs leading-relaxed max-w-xs">
@@ -175,7 +175,7 @@ const route = useRoute()
                 </RouterLink>
               </li>
               <li>
-                <a href="mailto:contacto@amaryllis-tickets.com" class="hover:text-primary transition-colors">
+                <a href="mailto:contacto@hibana.tk" class="hover:text-primary transition-colors">
                   Contacto Comercial & Productores
                 </a>
               </li>
@@ -213,7 +213,7 @@ const route = useRoute()
 
         <!-- Bottom Copyright Line -->
         <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-outline font-body">
-          <p>© 2026 Amaryllis Tickets S.A. Todos los derechos reservados.</p>
+          <p>© 2026 Hibana.tk S.A. Todos los derechos reservados.</p>
           <p class="font-mono text-[11px]">Av. Figueroa Alcorta 7597, Núñez, Ciudad Autónoma de Buenos Aires, Argentina</p>
         </div>
       </div>

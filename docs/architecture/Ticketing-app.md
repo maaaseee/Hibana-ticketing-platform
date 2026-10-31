@@ -7,7 +7,7 @@
 
 ## 1. Visión General del Sistema y Objetivos de Negocio
 
-El presente documento expande de manera exhaustiva las directrices de diseño para la plataforma de venta de entradas. El sistema está concebido como una solución nativa de la nube (*Cloud-Native*) en Microsoft Azure capaz de soportar alta concurrencia, garantizando la consistencia transaccional y ofreciendo una experiencia de usuario fluida bajo la identidad institucional de Amaryllis Software. 
+El presente documento expande de manera exhaustiva las directrices de diseño para la plataforma de venta de entradas. El sistema está concebido como una solución nativa de la nube (*Cloud-Native*) en Microsoft Azure capaz de soportar alta concurrencia, garantizando la consistencia transaccional y ofreciendo una experiencia de usuario fluida bajo la identidad institucional de Hibana Software. 
 
 La arquitectura elegida aborda los desafíos de escalabilidad asimétrica (picos masivos de lectura vs. escrituras críticas de reserva y pago) y aísla de manera estricta las operaciones de administración (*Back-Office*) del tráfico de usuarios públicos (*Front-Office*).
 
@@ -54,12 +54,12 @@ Una decisión arquitectónica fundamental es la separación física y lógica de
 
 ### 4.1 Front-Office: Aplicación B2C (Public Client)
 * **Propósito:** Portal de consumo masivo para el usuario final. Navegación de catálogo, interacción con la sala de espera virtual, selección interactiva de asientos y checkout.
-* **Dominio:** `www.amaryllis-tickets.com`
+* **Dominio:** `www.hibana.tk`
 * **Características:** Optimizada para rendimiento y SEO (Vite/SSR opcional), carga diferida (*lazy loading*) de rutas, consumo de CDN para assets estáticos y alta tolerancia a degradaciones temporales. En picos de 100.000 usuarios concurrentes, este cliente absorbe el impacto directo.
 
 ### 4.2 Back-Office: Portal de Administración B2B (Admin Client)
 * **Propósito:** Centro de control para productores, administradores y operadores de soporte técnico.
-* **Dominio:** `admin.amaryllis-tickets.com`
+* **Dominio:** `admin.hibana.tk`
 * **Justificación de Separación:** Si el Front-Office experimenta una caída, saturación o un ataque de denegación de servicio (DDoS) debido a la venta de un evento de alta demanda, el equipo de operaciones y soporte no debe verse afectado. Al separar los clientes, el Back-Office se conecta a un Gateway o red interna diferente (VNet privada), garantizando que el personal operativo siempre mantenga acceso para pausar ventas, auditar servidores o resolver disputas por chat en vivo.
 
 ---

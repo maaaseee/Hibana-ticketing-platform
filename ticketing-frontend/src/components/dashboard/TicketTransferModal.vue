@@ -42,7 +42,7 @@ const emit = defineEmits<{
           <input
             v-model="recipientEmail"
             type="email"
-            placeholder="contacto@amaryllis.live"
+            placeholder="contacto@hibana.tk"
             class="w-full px-3.5 py-2.5 rounded-xl bg-canvas-base border border-border-subtle text-high-emphasis text-sm focus:outline-none focus:border-primary"
           />
         </div>

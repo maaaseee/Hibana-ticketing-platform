@@ -140,7 +140,7 @@ public class EventCreationStepDefinitions {
         String uniqueSlug = eventSlug + "-" + UUID.randomUUID().toString().substring(0, 8);
 
         CreateEventCommand command = new CreateEventCommand(
-                "org_amaryllis_live",
+                "org_hibana_live",
                 "ven_estadio_nacional",
                 uniqueSlug,
                 "Indie Live Night",

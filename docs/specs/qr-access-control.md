@@ -1,7 +1,7 @@
 # Architectural Proposal: Secure Single-Use QR Access Control
 
 ## 1. Executive Summary
-This document specifies the technical design, security model, database schema, and verification protocols for single-use, event-scoped QR code access control across venues managed by Amaryllis Software.
+This document specifies the technical design, security model, database schema, and verification protocols for single-use, event-scoped QR code access control across venues managed by Hibana Software.
 
 The goal is to guarantee that every issued ticket can only be admitted once, is strictly bound to its assigned event and venue, and cannot be duplicated, forged, or scalped via screenshots.
 

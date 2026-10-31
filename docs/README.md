@@ -1,6 +1,6 @@
-# Amaryllis Tickets — Documentation Index
+# Hibana.tk — Documentation Index
 
-Welcome to the technical and architectural documentation repository for the **Amaryllis Tickets** platform.
+Welcome to the technical and architectural documentation repository for the **Hibana.tk** platform.
 
 ---
 

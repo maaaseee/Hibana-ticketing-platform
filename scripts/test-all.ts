@@ -43,7 +43,7 @@ async function runSuite(suite: TestSuite): Promise<boolean> {
 
 async function main() {
   console.log(`${COLORS.cyan}${COLORS.bright}================================================================${COLORS.reset}`)
-  console.log(`${COLORS.cyan}${COLORS.bright}      AMARYLLIS TICKETING PLATFORM - TEST ALL SUITES            ${COLORS.reset}`)
+  console.log(`${COLORS.cyan}${COLORS.bright}      HIBANA.TK TICKETING PLATFORM - TEST ALL SUITES            ${COLORS.reset}`)
   console.log(`${COLORS.cyan}${COLORS.bright}================================================================${COLORS.reset}`)
 
   const isWindows = process.platform === 'win32'

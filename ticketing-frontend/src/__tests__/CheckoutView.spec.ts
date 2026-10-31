@@ -35,7 +35,7 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
     vi.useRealTimers()
   })
 
-  it('renders the checkout wireframe header with Back button, Amaryllis logo, and Redlock timer', async () => {
+  it('renders the checkout wireframe header with Back button, Hibana.tk logo, and Redlock timer', async () => {
     const { pinia, router } = setupTestEnvironment()
     await router.isReady()
 
@@ -48,7 +48,7 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
 
     // Header items
     expect(wrapper.text()).toContain('Volver')
-    expect(wrapper.text()).toContain('Amaryllis')
+    expect(wrapper.text()).toContain('Hibana.tk')
     expect(wrapper.find('#countdown').exists()).toBe(true)
     expect(wrapper.find('#countdown').text()).toMatch(/\d{2}:\d{2}/)
   })

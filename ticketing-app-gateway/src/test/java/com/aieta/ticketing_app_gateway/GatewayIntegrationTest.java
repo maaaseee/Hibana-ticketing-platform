@@ -183,7 +183,7 @@ class GatewayIntegrationTest {
                 .expectHeader().exists(TraceIdGlobalFilter.TRACE_ID_HEADER)
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(403)
-                .jsonPath("$.type").isEqualTo("https://amaryllis-tickets.com/errors/waiting-room-required")
+                .jsonPath("$.type").isEqualTo("https://hibana.tk/errors/waiting-room-required")
                 .jsonPath("$.detail").isEqualTo("Missing waiting room checkout token");
 
         wireMockServer.verify(0, postRequestedFor(urlEqualTo("/api/v1/reservations")));
@@ -274,7 +274,7 @@ class GatewayIntegrationTest {
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(503)
-                .jsonPath("$.type").isEqualTo("https://amaryllis-tickets.com/errors/service-unavailable")
+                .jsonPath("$.type").isEqualTo("https://hibana.tk/errors/service-unavailable")
                 .jsonPath("$.title").isEqualTo("Service Degraded");
     }
 

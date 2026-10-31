@@ -25,10 +25,10 @@ const emit = defineEmits<{
         <span class="text-[#94a3b8]">Alias CBU:</span>
         <button
           type="button"
-          @click="emit('copy', 'AMARYLLIS.PAGOS.OFICIAL', 'Alias')"
+          @click="emit('copy', 'HIBANA.PAGOS.OFICIAL', 'Alias')"
           class="text-[#86cffb] font-bold hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-0"
         >
-          <span>AMARYLLIS.PAGOS.OFICIAL</span>
+          <span>HIBANA.PAGOS.OFICIAL</span>
           <span class="material-symbols-outlined text-[14px]">content_copy</span>
         </button>
       </div>
@@ -47,7 +47,7 @@ const emit = defineEmits<{
 
       <div class="flex justify-between items-center">
         <span class="text-[#94a3b8]">Razón Social:</span>
-        <span class="text-[#cbd5e1]">Amaryllis Entertainment S.A. (30-71829104-9)</span>
+        <span class="text-[#cbd5e1]">Hibana.tk Entertainment S.A. (30-71829104-9)</span>
       </div>
     </div>
 

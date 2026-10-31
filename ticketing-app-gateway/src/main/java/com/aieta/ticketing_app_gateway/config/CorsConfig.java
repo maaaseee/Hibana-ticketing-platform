@@ -22,9 +22,9 @@ public class CorsConfig {
         // Allowed Origins: B2C (5173 / www) and B2B (5174 / admin)
         config.setAllowedOriginPatterns(List.of(
                 "http://localhost:5173",
-                "https://www.amaryllis-tickets.com",
+                "https://www.hibana.tk",
                 "http://localhost:5174",
-                "https://admin.amaryllis-tickets.com",
+                "https://admin.hibana.tk",
                 "http://127.0.0.1:5173",
                 "http://127.0.0.1:5174"
         ));

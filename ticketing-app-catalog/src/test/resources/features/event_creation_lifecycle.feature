@@ -15,7 +15,7 @@ Feature: Event Creation and Lifecycle Management
   # Rule: Valid event creation returns HTTP 202 Accepted with creation metadata
   # ----------------------------------------------------------------------------
   Scenario: Organizer creates a new stadium event with multiple sectors
-    Given an organizer with ID "org_amaryllis_live" and an existing venue "ven_estadio_nacional"
+    Given an organizer with ID "org_hibana_live" and an existing venue "ven_estadio_nacional"
     When the organizer submits a request to create event "rock-stadium-fest" titled "Rock Stadium Festival"
     And the event has a sector "VIP Section" with capacity 500 and price 15000.00 "ARS"
     And the event has a sector "General Admission" with capacity 2500 and price 5000.00 "ARS"
@@ -26,7 +26,7 @@ Feature: Event Creation and Lifecycle Management
   # Rule: Events cannot have inverted schedules (end date before start date)
   # ----------------------------------------------------------------------------
   Scenario: System rejects event creation when schedule is inverted
-    Given an organizer with ID "org_amaryllis_live" and an existing venue "ven_estadio_nacional"
+    Given an organizer with ID "org_hibana_live" and an existing venue "ven_estadio_nacional"
     When the organizer submits an event where end time is before start time
     Then the system rejects the creation due to an invalid schedule invariant
 

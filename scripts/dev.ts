@@ -178,7 +178,7 @@ process.on('SIGTERM', shutdown)
 async function main() {
   console.clear()
   console.log(`${COLORS.cyan}${COLORS.bright}================================================================${COLORS.reset}`)
-  console.log(`${COLORS.cyan}${COLORS.bright}      AMARYLLIS TICKETING PLATFORM - UNIFIED DEV RUNNER         ${COLORS.reset}`)
+  console.log(`${COLORS.cyan}${COLORS.bright}      HIBANA.TK TICKETING PLATFORM - UNIFIED DEV RUNNER         ${COLORS.reset}`)
   console.log(`${COLORS.dim}      Java 25 • Spring Boot 4 • Vue 3 / Vite • Bun • Floci-AZ   ${COLORS.reset}`)
   console.log(`${COLORS.cyan}${COLORS.bright}================================================================${COLORS.reset}\n`)
 

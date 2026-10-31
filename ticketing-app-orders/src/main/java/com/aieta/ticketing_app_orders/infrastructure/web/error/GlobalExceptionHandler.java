@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         log.warn("Order not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Order Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/order-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/order-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "ORDER_NOT_FOUND");
         problem.setProperty("errorCode", "ORDER_NOT_FOUND");
@@ -40,7 +40,7 @@ public class GlobalExceptionHandler {
         log.warn("Insufficient wallet funds: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.PAYMENT_REQUIRED, ex.getMessage());
         problem.setTitle("Insufficient Funds");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/insufficient-funds"));
+        problem.setType(URI.create("https://hibana.tk/errors/insufficient-funds"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "INSUFFICIENT_FUNDS");
         problem.setProperty("errorCode", "INSUFFICIENT_FUNDS");
@@ -54,7 +54,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid order state transition: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
         problem.setTitle("Invalid Order State Transition");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-order-state"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-order-state"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "INVALID_ORDER_STATE_TRANSITION");
         problem.setProperty("errorCode", "INVALID_ORDER_STATE_TRANSITION");
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
         log.warn("Order expired: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.GONE, ex.getMessage());
         problem.setTitle("Order Expired");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/order-expired"));
+        problem.setType(URI.create("https://hibana.tk/errors/order-expired"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "ORDER_EXPIRED");
         problem.setProperty("errorCode", "ORDER_EXPIRED");
@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
         log.error("CRITICAL: Ledger double-entry imbalance: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
         problem.setTitle("Ledger Imbalance Invariant Violation");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/ledger-imbalance"));
+        problem.setType(URI.create("https://hibana.tk/errors/ledger-imbalance"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "LEDGER_IMBALANCE");
         problem.setProperty("errorCode", "LEDGER_IMBALANCE");
@@ -95,7 +95,7 @@ public class GlobalExceptionHandler {
         log.error("Mediator dispatch failure: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
         problem.setTitle("CQRS Handler Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/handler-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/handler-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "MEDIATOR_HANDLER_NOT_FOUND");
         problem.setProperty("errorCode", "MEDIATOR_HANDLER_NOT_FOUND");
@@ -107,7 +107,7 @@ public class GlobalExceptionHandler {
         log.warn("Validation failure: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed for request content");
         problem.setTitle("Constraint Violation");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/validation"));
+        problem.setType(URI.create("https://hibana.tk/errors/validation"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "VALIDATION_FAILED");
         problem.setProperty("errorCode", "VALIDATION_FAILED");
@@ -122,7 +122,7 @@ public class GlobalExceptionHandler {
         log.warn("Domain business rule violation: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setTitle("Domain Business Rule Violation");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/domain-violation"));
+        problem.setType(URI.create("https://hibana.tk/errors/domain-violation"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "DOMAIN_RULE_VIOLATION");
         problem.setProperty("errorCode", "DOMAIN_RULE_VIOLATION");
@@ -134,7 +134,7 @@ public class GlobalExceptionHandler {
         log.error("Unhandled internal server error: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An internal error occurred");
         problem.setTitle("Internal Server Error");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/internal-error"));
+        problem.setType(URI.create("https://hibana.tk/errors/internal-error"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "INTERNAL_SERVER_ERROR");
         problem.setProperty("errorCode", "INTERNAL_SERVER_ERROR");

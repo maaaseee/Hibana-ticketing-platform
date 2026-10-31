@@ -45,7 +45,7 @@ function clearChat() {
     {
       id: `m_${Date.now()}`,
       sender: 'ai',
-      senderName: 'Amaryllis Concierge AI',
+      senderName: 'Hibana Concierge AI',
       text: 'Sesión reiniciada. ¿En qué puedo orientarte hoy?',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }

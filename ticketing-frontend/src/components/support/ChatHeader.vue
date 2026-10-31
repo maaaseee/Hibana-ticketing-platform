@@ -15,7 +15,7 @@ defineEmits<{
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-base sm:text-lg font-bold font-display text-high-emphasis">
-            Amaryllis Intelligent Support
+            Hibana.tk Intelligent Support
           </h1>
           <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-secondary/15 text-secondary border border-secondary/30">
             <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>

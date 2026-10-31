@@ -27,7 +27,7 @@ const emit = defineEmits<{
 
       <!-- Brand Name -->
       <RouterLink to="/" class="font-display text-2xl font-bold text-[#86cffb] tracking-tight hover:opacity-90 transition-opacity">
-        Amaryllis
+        Hibana.tk
       </RouterLink>
 
       <!-- Atomic Redlock Timer Chip -->

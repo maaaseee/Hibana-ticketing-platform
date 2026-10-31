@@ -87,11 +87,11 @@ function navigateTo(routeName: string) {
       <RouterLink to="/" class="flex items-center gap-2.5 sm:gap-3 group shrink-0">
         <img
           src="/logo.png"
-          alt="Amaryllis Tickets"
+          alt="Hibana.tk Tickets"
           class="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-[0_0_12px_rgba(134,207,251,0.45)] group-hover:scale-105 transition-transform duration-300"
         />
         <span class="font-display text-2xl lg:text-3xl font-black text-primary tracking-tight group-hover:text-on-primary-container transition-colors">
-          Amaryllis
+          Hibana.tk
         </span>
       </RouterLink>
 
@@ -217,7 +217,7 @@ function navigateTo(routeName: string) {
               >
                 <div class="px-3 py-2.5 border-b border-border-subtle mb-1">
                   <p class="font-display font-bold text-sm text-high-emphasis">Carlos Mendoza</p>
-                  <p class="font-mono text-[11px] text-muted-light">carlos.m@amaryllis.com</p>
+                  <p class="font-mono text-[11px] text-muted-light">carlos.m@hibana.tk</p>
                 </div>
 
                 <!-- My Tickets / Mis Entradas como opción principal destacada -->
@@ -283,10 +283,10 @@ function navigateTo(routeName: string) {
             <div class="flex items-center gap-2.5">
               <img
                 src="/logo.png"
-                alt="Amaryllis Logo"
+                alt="Hibana.tk Logo"
                 class="w-7 h-7 object-contain drop-shadow-[0_0_8px_rgba(134,207,251,0.4)]"
               />
-              <span class="font-display text-2xl font-black text-primary tracking-tight">Amaryllis</span>
+              <span class="font-display text-2xl font-black text-primary tracking-tight">Hibana.tk</span>
             </div>
             <DialogClose
               class="w-9 h-9 rounded-full bg-surface-interactive/80 hover:bg-surface-interactive border border-border-subtle text-high-emphasis flex items-center justify-center transition-all cursor-pointer focus:outline-none hover:scale-105 active:scale-95"
@@ -297,7 +297,7 @@ function navigateTo(routeName: string) {
           </div>
 
           <DialogTitle class="sr-only">Menú de Navegación Móvil</DialogTitle>
-          <DialogDescription class="sr-only">Navega a través de las diferentes secciones del portal Amaryllis</DialogDescription>
+          <DialogDescription class="sr-only">Navega a través de las diferentes secciones del portal Hibana.tk</DialogDescription>
 
           <!-- Perfil rápido de usuario en la Sidebar -->
           <div class="p-3.5 rounded-2xl bg-surface-card border border-border-subtle flex items-center gap-3 shadow-sm">
@@ -308,7 +308,7 @@ function navigateTo(routeName: string) {
             />
             <div class="flex flex-col min-w-0">
               <span class="font-display font-bold text-sm text-high-emphasis truncate">Carlos Mendoza</span>
-              <span class="font-mono text-[11px] text-muted-light truncate">carlos.m@amaryllis.com</span>
+              <span class="font-mono text-[11px] text-muted-light truncate">carlos.m@hibana.tk</span>
             </div>
           </div>
 

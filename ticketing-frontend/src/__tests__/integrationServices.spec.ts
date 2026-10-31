@@ -76,8 +76,8 @@ describe('Frontend <-> Backend Microservices Integration Test Suite', () => {
         venueName: 'Estadio Monumental (Buenos Aires)',
         minPrice: 38000,
         currency: 'ARS',
-        bannerUrl: 'https://cdn.amaryllis.test/banner.jpg',
-        posterUrl: 'https://cdn.amaryllis.test/poster.jpg',
+        bannerUrl: 'https://cdn.hibana.test/banner.jpg',
+        posterUrl: 'https://cdn.hibana.test/poster.jpg',
         sectors: [
           {
             sectorId: 'sec_vip',

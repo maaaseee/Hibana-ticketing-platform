@@ -23,7 +23,7 @@ Se ha completado la arquitectura frontend para clientes finales en `ticketing-fr
 
 Para completar la solución de escala empresarial descrita en la arquitectura, se proponen las siguientes vistas y módulos de software adicionales:
 
-### A. Back-Office B2B: Portal de Operaciones y Administración (`admin.amaryllis-tickets.com`)
+### A. Back-Office B2B: Portal de Operaciones y Administración (`admin.hibana.tk`)
 *Debe estar lógica y físicamente aislado del tráfico B2C de clientes.*
 
 #### 1. Constructor de Recintos y Distribución de Butacas (Venue & Seating Layout Builder)

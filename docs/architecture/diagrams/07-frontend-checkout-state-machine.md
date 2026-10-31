@@ -2,7 +2,7 @@
 
 ```mermaid
 stateDiagram-v2
-    [*] --> BrowsingCatalog: User lands on www.amaryllis-tickets.com
+    [*] --> BrowsingCatalog: User lands on www.hibana.tk
     
     state "Browsing Catalog (Discovery)" as BrowsingCatalog
     state "Virtual Waiting Room (Queueing)" as InWaitingRoom

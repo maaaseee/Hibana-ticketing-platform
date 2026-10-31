@@ -42,6 +42,7 @@ describe('HelpCenterView.spec.ts - Refined User-Centric FAQ & Clean UI', () => {
     expect(wrapper.find('input[placeholder*="Buscar por término"]').exists()).toBe(true)
 
     // Elements explicitly removed per user request:
+    expect(wrapper.text()).not.toContain('Portal de Auto-Servicio Hibana.tk')
     expect(wrapper.text()).not.toContain('Portal de Auto-Servicio Amaryllis')
     expect(wrapper.text()).not.toContain('Encuentra respuestas inmediatas sobre tus entradas')
     expect(wrapper.text()).not.toContain('Consultas habituales:')

@@ -1,5 +1,5 @@
 /**
- * Amaryllis Ticketing - Central Domain Types
+ * Hibana.tk Ticketing - Central Domain Types
  * 
  * Re-exports modular type definitions grouped by DDD Bounded Contexts.
  * Direct imports from specific submodules are also supported (e.g. `@/types/event`).

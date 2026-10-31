@@ -17,12 +17,12 @@ defineEmits<{
     >
       <img
         :src="logoUrl"
-        alt="Amaryllis"
+        alt="Hibana.tk"
         class="w-7 h-7 sm:w-8 sm:h-8 object-contain drop-shadow-[0_0_10px_rgba(134,207,251,0.4)] group-hover:scale-105 transition-transform"
       />
       <div class="flex items-center gap-2">
         <span class="font-display text-xl sm:text-2xl font-black text-primary tracking-tight group-hover:text-white transition-colors">
-          Amaryllis
+          Hibana.tk
         </span>
         <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
         <span class="font-mono text-[11px] sm:text-xs text-muted-light uppercase tracking-wider font-semibold">

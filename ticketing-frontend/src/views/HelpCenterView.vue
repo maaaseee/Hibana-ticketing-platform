@@ -32,7 +32,7 @@ const faqs: FaqItem[] = [
     id: 'faq-transfers',
     question: '¿Cómo puedo transferir una entrada a un amigo o familiar?',
     answer:
-      'Ingresa a <strong class="text-on-surface font-semibold">Mis Entradas</strong>, abre los detalles del boleto que quieres traspasar y presiona <strong class="text-on-surface font-semibold">Transferir Entrada</strong>. Solo debes escribir el correo electrónico de la persona que lo recibirá (debe tener una cuenta creada en Amaryllis). Por seguridad, las transferencias pueden realizarse hasta 2 horas antes de la apertura de puertas del evento.',
+      'Ingresa a <strong class="text-on-surface font-semibold">Mis Entradas</strong>, abre los detalles del boleto que quieres traspasar y presiona <strong class="text-on-surface font-semibold">Transferir Entrada</strong>. Solo debes escribir el correo electrónico de la persona que lo recibirá (debe tener una cuenta creada en Hibana.tk). Por seguridad, las transferencias pueden realizarse hasta 2 horas antes de la apertura de puertas del evento.',
     tags: ['transferir', 'regalar', 'amigo', 'familiar', 'cambiar nombre', 'titular', 'ceder']
   },
   {
@@ -60,14 +60,14 @@ const faqs: FaqItem[] = [
     id: 'faq-cancellations-refunds',
     question: '¿Qué ocurre si un evento se cancela o cambia de fecha?',
     answer:
-      'Te notificaremos inmediatamente por correo electrónico. Si el espectáculo se reprograma para una nueva fecha, tu entrada seguirá siendo válida automáticamente. Si no puedes asistir a la nueva fecha o el evento se cancela de forma definitiva, dispondrás de 15 días continuos para solicitar la devolución total de tu dinero a tu medio de pago original o a tu saldo Amaryllis Pocket.',
+      'Te notificaremos inmediatamente por correo electrónico. Si el espectáculo se reprograma para una nueva fecha, tu entrada seguirá siendo válida automáticamente. Si no puedes asistir a la nueva fecha o el evento se cancela de forma definitiva, dispondrás de 15 días continuos para solicitar la devolución total de tu dinero a tu medio de pago original o a tu saldo Hibana Pocket.',
     tags: ['cancelacion', 'reprogramado', 'devolucion', 'reembolso', 'dinero', 'fecha']
   },
   {
     id: 'faq-payment-methods',
     question: '¿Cuáles son los métodos de pago aceptados?',
     answer:
-      'Aceptamos tarjetas de débito y crédito nacionales e internacionales (Visa, Mastercard, American Express), transferencias bancarias y saldo disponible en tu billetera digital Amaryllis Pocket. Todos los pagos se procesan con certificación de máxima seguridad financiera.',
+      'Aceptamos tarjetas de débito y crédito nacionales e internacionales (Visa, Mastercard, American Express), transferencias bancarias y saldo disponible en tu billetera digital Hibana Pocket. Todos los pagos se procesan con certificación de máxima seguridad financiera.',
     tags: ['pago', 'tarjetas', 'credito', 'debito', 'transferencia', 'pocket', 'cuotas']
   },
   {

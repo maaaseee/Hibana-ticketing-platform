@@ -8,8 +8,8 @@ export const useSupportStore = defineStore('support', () => {
     {
       id: 'm1',
       sender: 'ai',
-      senderName: 'Amaryllis Concierge AI',
-      text: '¡Hola Carlos! He identificado tu cuenta asociada a carlos.mendoza@amaryllis.live y veo tu compra reciente para Neon Nights 2025 • General VIP (x2). ¿En qué puedo orientarte hoy?',
+      senderName: 'Hibana Concierge AI',
+      text: '¡Hola Carlos! He identificado tu cuenta asociada a carlos.mendoza@hibana.tk y veo tu compra reciente para Neon Nights 2025 • General VIP (x2). ¿En qué puedo orientarte hoy?',
       timestamp: '15:40',
       quickActions: [
         { label: 'Reenviar entradas a mi correo', action: 'resend_email', icon: 'mail' },
@@ -40,9 +40,9 @@ export const useSupportStore = defineStore('support', () => {
       const lower = text.toLowerCase()
 
       if (lower.includes('qr') || lower.includes('código') || lower.includes('no veo')) {
-        reply = 'Comprobado en el servidor de emisión. La orden #AMY-9821 está autorizada. He reenviado el enlace con tus 2 códigos QR cifrados a tu correo y puedes verlos actualizados en tu Dashboard.'
+        reply = 'Comprobado en el servidor de emisión. La orden #HBN-9821 está autorizada. He reenviado el enlace con tus 2 códigos QR cifrados a tu correo y puedes verlos actualizados en tu Dashboard.'
       } else if (lower.includes('correo') || lower.includes('email') || lower.includes('mail')) {
-        reply = 'He disparado una re-emisión instantánea de tus credenciales a carlos.mendoza@amaryllis.live. Verifica tu bandeja de entrada o spam.'
+        reply = 'He disparado una re-emisión instantánea de tus credenciales a carlos.mendoza@hibana.tk. Verifica tu bandeja de entrada o spam.'
       } else if (lower.includes('humano') || lower.includes('agente') || lower.includes('operador')) {
         isEscalatedToHuman.value = true
         reply = 'Te he transferido a la cola prioritaria de operadores en vivo mediante canal Redis Pub/Sub. Un operador de guardia tomará el control en segundos.'
@@ -51,7 +51,7 @@ export const useSupportStore = defineStore('support', () => {
       userMessages.value.push({
         id: `m_${Date.now() + 1}`,
         sender: isEscalatedToHuman.value ? 'operator' : 'ai',
-        senderName: isEscalatedToHuman.value ? 'Operador de Guardia' : 'Amaryllis Concierge AI',
+        senderName: isEscalatedToHuman.value ? 'Operador de Guardia' : 'Hibana Concierge AI',
         text: reply,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       })

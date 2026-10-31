@@ -117,7 +117,7 @@ defineProps<{
               <span>Pasa el cursor sobre cada sector para ver detalles, capacidad y precio base</span>
             </div>
             <span class="text-secondary font-semibold">
-              Garantía oficial Amaryllis • Cero sobreventa
+              Garantía oficial Hibana.tk • Cero sobreventa
             </span>
           </div>
         </DialogContent>

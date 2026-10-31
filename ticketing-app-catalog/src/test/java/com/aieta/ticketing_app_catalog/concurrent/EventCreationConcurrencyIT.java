@@ -58,7 +58,7 @@ class EventCreationConcurrencyIT {
                     try {
                         startLatch.await();
                         CreateEventCommand command = new CreateEventCommand(
-                                "org_amaryllis_live",
+                                "org_hibana_live",
                                 "ven_estadio_nacional",
                                 sharedSlug,
                                 "Concurrent Rock Fest " + index,

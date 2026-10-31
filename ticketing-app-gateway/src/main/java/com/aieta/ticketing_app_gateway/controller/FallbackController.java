@@ -32,7 +32,7 @@ public class FallbackController {
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "Downstream service '" + service + "' is currently degraded or unreachable. Please retry shortly."
         );
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/service-unavailable"));
+        problem.setType(URI.create("https://hibana.tk/errors/service-unavailable"));
         problem.setTitle("Service Degraded");
         problem.setInstance(URI.create(path));
         problem.setProperty("service", service);

@@ -1,7 +1,7 @@
 -- Seed data for Venue and Event Catalog development
 INSERT INTO organizers (id, name, legal_name, contact_email)
 VALUES 
-    ('org_amaryllis_live', 'Amaryllis Live Productions', 'Amaryllis Entertainment SpA', 'contact@amaryllis.live'),
+    ('org_hibana_live', 'Hibana Live Productions', 'Hibana Entertainment SpA', 'contact@hibana.tk'),
     ('org_df_entertainment', 'DF Entertainment', 'DF Entertainment S.A.', 'produccion@dfentertainment.com')
 ON CONFLICT (id) DO UPDATE SET
     name = EXCLUDED.name,
@@ -29,7 +29,7 @@ INSERT INTO events (
     doors_open_at, starts_at, ends_at, timezone, media, sales_policy, created_at
 ) VALUES (
     'evt_coldplay_2026',
-    'org_amaryllis_live',
+    'org_hibana_live',
     'ven_estadio_nacional',
     'coldplay-music-of-the-spheres-2026',
     'Coldplay - Music of the Spheres Tour 2026',
@@ -63,7 +63,7 @@ INSERT INTO events (
 ),
 (
     'symphony-of-lights',
-    'org_amaryllis_live',
+    'org_hibana_live',
     'arena-buenos-aires',
     'symphony-of-lights-2026',
     'Symphony of Lights 2026',
@@ -80,7 +80,7 @@ INSERT INTO events (
 ),
 (
     'chronos-fest-2026',
-    'org_amaryllis_live',
+    'org_hibana_live',
     'arena-buenos-aires',
     'neon-nights-electronic-festival-2026',
     'Neon Nights: Electronic Festival',
@@ -97,7 +97,7 @@ INSERT INTO events (
 ),
 (
     'opera-clasica-verano',
-    'org_amaryllis_live',
+    'org_hibana_live',
     'teatro-rex',
     'gala-lirica-opera-clasica-verano',
     'Gala Lírica: Grandes Clásicos de la Ópera',
@@ -114,7 +114,7 @@ INSERT INTO events (
 ),
 (
     'cloud-native-devcon',
-    'org_amaryllis_live',
+    'org_hibana_live',
     'teatro-rex',
     'cloud-native-ai-devcon-2027',
     'Cloud Native & AI DevCon 2027',
@@ -131,7 +131,7 @@ INSERT INTO events (
 ),
 (
     'ado-hibana-world-tour',
-    'org_amaryllis_live',
+    'org_hibana_live',
     'arena-buenos-aires',
     'ado-world-tour-2026-hibana',
     'Ado World Tour 2026: Hibana',

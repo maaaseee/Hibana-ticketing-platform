@@ -48,7 +48,7 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
     @Value("${waiting-room.jwt.issuer:${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}}")
     private String defaultIssuer;
 
-    @Value("${waiting-room.url:https://www.amaryllis-tickets.com/waiting-room}")
+    @Value("${waiting-room.url:https://www.hibana.tk/waiting-room}")
     private String defaultWaitingRoomUrl;
 
     public CheckoutTokenFilterFactory(ObjectMapper objectMapper) {
@@ -130,7 +130,7 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
         response.getHeaders().setContentType(MediaType.APPLICATION_PROBLEM_JSON);
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, detail);
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/waiting-room-required"));
+        problem.setType(URI.create("https://hibana.tk/errors/waiting-room-required"));
         problem.setTitle("Virtual Waiting Room Gating");
         problem.setInstance(URI.create(exchange.getRequest().getURI().getPath()));
         problem.setProperty("waitingRoomUrl", waitingRoomUrl);
@@ -140,7 +140,7 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
         try {
             bytes = objectMapper.writeValueAsBytes(problem);
         } catch (JsonProcessingException e) {
-            bytes = ("{\"type\":\"https://amaryllis-tickets.com/errors/waiting-room-required\","
+            bytes = ("{\"type\":\"https://hibana.tk/errors/waiting-room-required\","
                     + "\"status\":403,\"title\":\"Virtual Waiting Room Gating\",\"detail\":\"" + detail + "\"}").getBytes(StandardCharsets.UTF_8);
         }
 
@@ -150,7 +150,7 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
 
     public static class Config {
         private String secretKey;
-        private String issuer = "amaryllis-waiting-room";
+        private String issuer = "waiting-room-engine";
         private String waitingRoomUrl;
 
         public String getSecretKey() {

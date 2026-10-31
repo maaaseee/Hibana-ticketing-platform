@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
         log.warn("Seat already held collision: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
         problem.setTitle("Seat Already Held");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/seat-already-held"));
+        problem.setType(URI.create("https://hibana.tk/errors/seat-already-held"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "SEAT_ALREADY_HELD");
         problem.setProperty("errorCode", "SEAT_ALREADY_HELD");
@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
         log.warn("Seat not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Seat Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/seat-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/seat-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "SEAT_NOT_FOUND");
         problem.setProperty("errorCode", "SEAT_NOT_FOUND");
@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
         log.warn("Reservation not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setTitle("Reservation Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/reservation-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/reservation-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "RESERVATION_NOT_FOUND");
         problem.setProperty("errorCode", "RESERVATION_NOT_FOUND");
@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
         log.warn("Reservation expired: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.GONE, ex.getMessage());
         problem.setTitle("Reservation Expired");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/reservation-expired"));
+        problem.setType(URI.create("https://hibana.tk/errors/reservation-expired"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "RESERVATION_EXPIRED");
         problem.setProperty("errorCode", "RESERVATION_EXPIRED");
@@ -76,7 +76,7 @@ public class GlobalExceptionHandler {
         log.warn("Invalid seat state transition: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, ex.getMessage());
         problem.setTitle("Invalid Seat State Transition");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/invalid-state-transition"));
+        problem.setType(URI.create("https://hibana.tk/errors/invalid-state-transition"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "INVALID_SEAT_STATE_TRANSITION");
         problem.setProperty("errorCode", "INVALID_SEAT_STATE_TRANSITION");
@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
         log.error("Mediator dispatch failure: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
         problem.setTitle("CQRS Handler Not Found");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/handler-not-found"));
+        problem.setType(URI.create("https://hibana.tk/errors/handler-not-found"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "MEDIATOR_HANDLER_NOT_FOUND");
         problem.setProperty("errorCode", "MEDIATOR_HANDLER_NOT_FOUND");
@@ -106,7 +106,7 @@ public class GlobalExceptionHandler {
         log.warn("Request validation failure: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Validation failed for request content");
         problem.setTitle("Constraint Violation");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/validation"));
+        problem.setType(URI.create("https://hibana.tk/errors/validation"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "VALIDATION_FAILED");
         problem.setProperty("errorCode", "VALIDATION_FAILED");
@@ -121,7 +121,7 @@ public class GlobalExceptionHandler {
         log.error("Unhandled internal server error: {}", ex.getMessage(), ex);
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "An internal error occurred");
         problem.setTitle("Internal Server Error");
-        problem.setType(URI.create("https://amaryllis-tickets.com/errors/internal-error"));
+        problem.setType(URI.create("https://hibana.tk/errors/internal-error"));
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("code", "INTERNAL_SERVER_ERROR");
         problem.setProperty("errorCode", "INTERNAL_SERVER_ERROR");

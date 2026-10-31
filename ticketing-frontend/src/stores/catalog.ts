@@ -32,7 +32,7 @@ export const useCatalogStore = defineStore('catalog', () => {
   const error = ref<string | null>(null)
 
   // Home Highlights Cache in SessionStorage
-  const HIGHLIGHTS_STORAGE_KEY = 'amaryllis_highlights_cache'
+  const HIGHLIGHTS_STORAGE_KEY = 'hibana_highlights_cache'
   const HIGHLIGHTS_TTL_MS = import.meta.env.DEV ? 5000 : 10 * 60 * 1000 // 5s in dev, 10 min in prod
 
   const homeHighlights = ref<{ recentlyAdded: EventItem[]; upcoming: EventItem[] }>({

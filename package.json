@@ -1,5 +1,5 @@
 {
-  "name": "amaryllis-ticketing-platform",
+  "name": "hibana-ticketing-platform",
   "private": true,
   "scripts": {
     "dev": "bun run scripts/dev.ts",

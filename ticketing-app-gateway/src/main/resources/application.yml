@@ -55,7 +55,7 @@ spring:
                   args:
                     secretKey: ${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}
                     issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
-                    waitingRoomUrl: ${WAITING_ROOM_URL:https://www.amaryllis-tickets.com/waiting-room}
+                    waitingRoomUrl: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
                 - name: RequestRateLimiter
                   args:
                     redis-rate-limiter.replenishRate: 100
@@ -197,9 +197,9 @@ resilience4j:
 
 waiting-room:
   jwt:
-    secret: ${WAITING_ROOM_JWT_SECRET:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}
-    issuer: ${WAITING_ROOM_JWT_ISSUER:amaryllis-waiting-room}
-  url: ${WAITING_ROOM_URL:https://www.amaryllis-tickets.com/waiting-room}
+    secret: ${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}
+    issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
+  url: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
 
 management:
   endpoints:
