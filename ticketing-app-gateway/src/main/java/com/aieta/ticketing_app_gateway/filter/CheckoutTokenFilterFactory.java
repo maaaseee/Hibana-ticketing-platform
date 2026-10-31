@@ -39,13 +39,13 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
 
     private final ObjectMapper objectMapper;
 
-    @Value("${waiting-room.jwt.secret:${WAITING_ROOM_JWT_SECRET:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}}")
+    @Value("${waiting-room.jwt.secret:${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}}")
     private String defaultSecret;
 
     @Value("${spring.profiles.active:default}")
     private String activeProfile;
 
-    @Value("${waiting-room.jwt.issuer:amaryllis-waiting-room}")
+    @Value("${waiting-room.jwt.issuer:${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}}")
     private String defaultIssuer;
 
     @Value("${waiting-room.url:https://www.amaryllis-tickets.com/waiting-room}")

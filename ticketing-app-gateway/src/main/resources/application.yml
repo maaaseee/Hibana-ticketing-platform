@@ -53,8 +53,8 @@ spring:
               filters:
                 - name: CheckoutToken
                   args:
-                    secretKey: ${WAITING_ROOM_JWT_SECRET:amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!}
-                    issuer: ${WAITING_ROOM_JWT_ISSUER:amaryllis-waiting-room}
+                    secretKey: ${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}
+                    issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
                     waitingRoomUrl: ${WAITING_ROOM_URL:https://www.amaryllis-tickets.com/waiting-room}
                 - name: RequestRateLimiter
                   args:

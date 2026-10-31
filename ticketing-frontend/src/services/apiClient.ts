@@ -28,11 +28,17 @@ export async function request<T>(
 
   const traceId = generateTraceId()
 
+  const storedToken =
+    typeof sessionStorage !== 'undefined'
+      ? sessionStorage.getItem('waiting_room_checkout_token')
+      : null
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Trace-ID': traceId,
     'X-Trace-Id': traceId,
+    ...(storedToken ? { 'X-Checkout-Token': storedToken } : {}),
     ...((options.headers as Record<string, string>) || {}),
   }
 

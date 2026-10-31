@@ -44,8 +44,8 @@ import static org.mockito.Mockito.when;
 class GatewayIntegrationTest {
 
     private static WireMockServer wireMockServer;
-    private static final String TEST_SECRET = "amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!";
-    private static final String TEST_ISSUER = "amaryllis-waiting-room";
+    private static final String TEST_SECRET = "virtual-waiting-room-hmac-key-2026-minimum-256-bits!";
+    private static final String TEST_ISSUER = "waiting-room-engine";
 
     @Autowired
     private WebTestClient webTestClient;

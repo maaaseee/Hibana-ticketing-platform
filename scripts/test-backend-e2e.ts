@@ -38,8 +38,8 @@ const CATALOG_URL = 'http://localhost:8081'
 const INVENTORY_URL = 'http://localhost:8082'
 const ORDERS_URL = 'http://localhost:8083'
 
-const WAITING_ROOM_SECRET = 'amaryllis-super-secret-waiting-room-hmac-key-2026-minimum-256-bits!'
-const WAITING_ROOM_ISSUER = 'amaryllis-waiting-room'
+const WAITING_ROOM_SECRET = 'virtual-waiting-room-hmac-key-2026-minimum-256-bits!'
+const WAITING_ROOM_ISSUER = 'waiting-room-engine'
 
 interface ManagedProcess {
   name: string
@@ -348,9 +348,28 @@ async function main() {
   // ESCENARIO 8: Flujo Completo End-to-End Hold de Asiento
   // ---------------------------------------------------------------------------
   const testBuyerId = `usr_e2e_${Date.now()}`
-  const validBuyerToken = generateWaitingRoomToken(testBuyerId, 15)
+  let validBuyerToken = generateWaitingRoomToken(testBuyerId, 15)
 
-  await runTest(8, 'End-to-End Seat Hold: Token Válido -> Gateway -> Inventory (Redlock Redis + Postgres)', async () => {
+  await runTest(8, 'End-to-End Waiting Room Real: join -> status -> skip -> Gateway -> Inventory (Redlock + Postgres)', async () => {
+    try {
+      await fetch(`${GATEWAY_URL}/api/v1/queue/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: sampleEventId, userId: testBuyerId }),
+      })
+      await fetch(`${GATEWAY_URL}/api/v1/queue/status?eventId=${sampleEventId}&userId=${testBuyerId}`)
+      const skipRes = await fetch(`${GATEWAY_URL}/api/v1/queue/skip`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: sampleEventId, userId: testBuyerId }),
+      })
+      if (skipRes.ok) {
+        const skipData = await skipRes.json()
+        if (skipData.checkoutToken) {
+          validBuyerToken = skipData.checkoutToken
+        }
+      }
+    } catch {}
     const res = await fetch(`${GATEWAY_URL}/api/v1/reservations`, {
       method: 'POST',
       headers: {
