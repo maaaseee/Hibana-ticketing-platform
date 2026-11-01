@@ -75,6 +75,24 @@ const router = createRouter({
           path: 'support',
           name: 'support-chat',
           component: SupportChatView
+        },
+        {
+          path: 'preview/invoice',
+          name: 'preview-invoice',
+          component: () => import('../views/preview/InvoicePreviewView.vue'),
+          meta: {
+            hideNavbar: true,
+            hideFooter: true
+          }
+        },
+        {
+          path: 'preview/email',
+          name: 'preview-email',
+          component: () => import('../views/preview/EmailPreviewView.vue'),
+          meta: {
+            hideNavbar: true,
+            hideFooter: true
+          }
         }
       ]
     },

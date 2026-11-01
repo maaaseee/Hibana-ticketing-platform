@@ -316,6 +316,7 @@ function copyToClipboard(text: string, label: string) {
       v-model:show-time-expired-modal="showTimeExpiredModal"
       :order-id="orderId"
       :grand-total="grandTotal"
+      :buyer-email="checkoutStore.buyerEmail"
       @navigate-to-tickets="navigateToTickets"
       @return-to-seats="handleReturnToSeats"
     />
