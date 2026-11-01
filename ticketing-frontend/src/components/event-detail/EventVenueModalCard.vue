@@ -114,7 +114,7 @@ defineProps<{
           <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t border-border-subtle/60 text-xs font-mono text-muted-light">
             <div class="flex items-center gap-2 text-primary">
               <span class="material-symbols-outlined text-[16px]">touch_app</span>
-              <span>Pasa el cursor sobre cada sector para ver detalles, capacidad y precio base</span>
+              <span>Pasa el cursor sobre cada sector para ver detalles, capacidad y precio (+ cargo por servicio)</span>
             </div>
             <span class="text-secondary font-semibold">
               Garantía oficial Hibana.tk • Cero sobreventa

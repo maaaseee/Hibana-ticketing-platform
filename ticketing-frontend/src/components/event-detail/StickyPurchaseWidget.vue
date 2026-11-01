@@ -52,15 +52,18 @@ const emit = defineEmits<{
 
 <template>
   <div class="rounded-2xl overflow-hidden border border-[#18395b] bg-[#0f263e] shadow-2xl flex flex-col">
-    <!-- Top Vibrant Blue Header: Entradas desde $ 75.000 -->
+    <!-- Top Vibrant Blue Header: Entradas desde $ 75.000 + cargo por servicio -->
     <div
-      class="bg-[#0084d1] px-6 py-5 flex items-center justify-between text-white"
+      class="bg-[#0084d1] px-6 py-4 sm:py-5 flex items-center justify-between text-white"
       data-testid="banner-min-price-badge"
     >
       <span class="font-display font-extrabold text-xl sm:text-2xl tracking-tight">Entradas desde</span>
-      <div class="flex items-baseline gap-1.5">
-        <span class="font-display font-black text-3xl sm:text-4xl tracking-tight">$ {{ formattedMinPrice }}</span>
-        <span class="sr-only">${{ minPrice }} {{ primaryCurrency }}</span>
+      <div class="flex flex-col items-end">
+        <div class="flex items-baseline gap-1.5">
+          <span class="font-display font-black text-3xl sm:text-4xl tracking-tight">$ {{ formattedMinPrice }}</span>
+          <span class="sr-only">${{ minPrice }} {{ primaryCurrency }}</span>
+        </div>
+        <span class="font-mono text-xs text-white/90 font-medium tracking-wide">+ cargo por servicio</span>
       </div>
     </div>
 

@@ -14,26 +14,28 @@ defineProps<{
 <template>
   <!-- Section F: Ubicación del Recinto, Mapa Interactivo & Transporte Público -->
   <div class="bg-surface-card rounded-xl p-6 border border-border-subtle shadow-xl flex flex-col gap-5">
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border-subtle">
+    <div class="flex items-center justify-between gap-3 pb-3 border-b border-border-subtle">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-lg bg-surface-interactive border border-border-subtle flex items-center justify-center text-primary shrink-0">
           <span class="material-symbols-outlined text-[20px]">map</span>
         </div>
-        <div>
+        <div class="flex flex-col">
           <h2 class="font-display text-xl font-bold text-high-emphasis">Ubicación y Cómo Llegar</h2>
-          <p class="font-mono text-xs text-muted-light">{{ event.venue }} • {{ venueAddress }}</p>
+          <a
+            :href="transitInfo?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue + ' ' + venueAddress)}`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-1.5 font-mono text-xs text-muted-light hover:text-primary transition-colors group cursor-pointer mt-0.5"
+            title="Abrir ubicación oficial en Google Maps"
+            data-testid="venue-address-maps-link"
+          >
+            <span class="underline underline-offset-4 decoration-border-subtle group-hover:decoration-primary transition-colors">
+              {{ event.venue }} • {{ venueAddress }}
+            </span>
+            <span class="material-symbols-outlined text-[15px] text-muted-light group-hover:text-primary group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all">open_in_new</span>
+          </a>
         </div>
       </div>
-
-      <a
-        :href="transitInfo?.googleMapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.venue + ' ' + venueAddress)}`"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container-deep hover:bg-surface-interactive border border-border-subtle text-secondary hover:text-white font-mono text-xs font-semibold transition-all group shadow-sm"
-      >
-        <span>Abrir en Google Maps</span>
-        <span class="material-symbols-outlined text-[15px] group-hover:translate-x-0.5 transition-transform">open_in_new</span>
-      </a>
     </div>
 
     <!-- Mapa de Ubicación del Recinto (Google Maps) -->

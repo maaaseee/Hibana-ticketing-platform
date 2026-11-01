@@ -588,16 +588,23 @@ function handleSectorClick(sec: SectorGeometry) {
             </button>
           </div>
 
-          <!-- Precio Mínimo de Entrada -->
-          <div class="flex items-baseline justify-between pt-2 border-t border-[#1e3a5f]/60 text-xs">
-            <span class="font-mono text-muted-light">Precio mínimo:</span>
-            <span v-if="getSectorPrice(activeSector)" class="font-display font-extrabold text-sm sm:text-base text-[#00d2ff]">
-              ${{ getSectorPrice(activeSector)?.toLocaleString('es-AR') }}
-              <span class="text-[10px] font-mono text-white/80">ARS</span>
-            </span>
-            <span v-else class="font-mono text-xs text-muted-light italic">
-              Consultar en boletería
-            </span>
+          <!-- Precio del Sector -->
+          <div class="flex flex-col gap-0.5 pt-2 border-t border-[#1e3a5f]/60">
+            <div class="flex items-baseline justify-between text-xs">
+              <span class="font-mono text-muted-light">Precio:</span>
+              <span v-if="getSectorPrice(activeSector)" class="font-display font-extrabold text-sm sm:text-base text-[#00d2ff]">
+                ${{ getSectorPrice(activeSector)?.toLocaleString('es-AR') }}
+                <span class="text-[10px] font-mono text-white/80">ARS</span>
+              </span>
+              <span v-else class="font-mono text-xs text-muted-light italic">
+                Consultar en boletería
+              </span>
+            </div>
+            <div v-if="getSectorPrice(activeSector)" class="text-right">
+              <span class="font-mono text-[11px] text-[#7dd3fc] font-semibold tracking-tight">
+                + cargo por servicio
+              </span>
+            </div>
           </div>
 
           <!-- Capacidad -->

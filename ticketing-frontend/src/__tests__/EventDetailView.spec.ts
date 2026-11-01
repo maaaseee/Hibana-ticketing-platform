@@ -284,7 +284,7 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
   })
 
   describe('Section E: Interactive Venue Sector Map & Pricing Exploration', () => {
-    it('renders interactive venue map section guiding the user that prices are viewed on the stage map and removes legacy static table', async () => {
+    it('renders interactive venue map section with uncluttered map and removes text banner on top of the map', async () => {
       const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
       await router.isReady()
 
@@ -297,12 +297,33 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
       // Strict check: legacy static table is completely deleted
       expect(wrapper.find('[data-testid="sector-price-table"]').exists()).toBe(false)
 
-      // Interactive venue map section is present with clear price exploration guidance
+      // Interactive venue map section is present without clutter banner on top
       const mapSection = wrapper.find('[data-testid="interactive-venue-map-section"]')
       expect(mapSection.exists()).toBe(true)
       expect(mapSection.text()).toContain('Plano Interactivo & Precios por Sector')
       expect(mapSection.text()).toContain('Precios visibles al interactuar en el mapa')
-      expect(mapSection.text()).toContain('Exploración interactiva estilo Google Maps')
+      expect(mapSection.text()).not.toContain('Exploración interactiva estilo Google Maps')
+    })
+  })
+
+  describe('Section F: Venue Address Google Maps Direct Link', () => {
+    it('renders the venue address as a direct redirect link to Google Maps with open_in_new icon and no separate button', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      const addressLink = wrapper.find('[data-testid="venue-address-maps-link"]')
+      expect(addressLink.exists()).toBe(true)
+      expect(addressLink.element.tagName.toLowerCase()).toBe('a')
+      expect(addressLink.attributes('target')).toBe('_blank')
+      expect(addressLink.text()).toContain('open_in_new')
+      expect(addressLink.text()).toContain('Arena Buenos Aires')
+      expect(wrapper.text()).not.toContain('Abrir en Google Maps')
     })
   })
 

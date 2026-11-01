@@ -33,15 +33,6 @@ defineProps<{
       </div>
     </div>
 
-    <!-- Banner Explicativo de Navegación Interactiva -->
-    <div class="p-3.5 rounded-xl bg-surface-container-deep/80 border border-border-subtle flex items-start gap-3">
-      <span class="material-symbols-outlined text-primary text-[20px] mt-0.5 shrink-0">explore</span>
-      <p class="font-body text-xs text-medium-emphasis leading-relaxed">
-        <strong class="text-white font-semibold">Exploración interactiva estilo Google Maps:</strong>
-        Haz clic o pasa el cursor sobre cada sector del plano para consultar su <span class="text-primary font-bold">precio oficial</span>, tipo de ubicación y disponibilidad. Puedes <strong class="text-white">arrastrar para moverte</strong> por el recinto y usar los controles o la <strong class="text-white">rueda del mouse (+ / -)</strong> para hacer zoom sobre el escenario.
-      </p>
-    </div>
-
     <!-- Contenedor del Mapa Interactivo -->
     <div class="relative w-full h-115 sm:h-140 rounded-2xl overflow-hidden bg-[#071322] border border-border-structural/80 shadow-2xl">
       <VenueSectorMap
