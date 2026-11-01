@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { orderService } from '../../services/orderService'
 
 const previewUrl = ref<string>(orderService.getPreviewEmailHtmlUrl())
@@ -7,11 +7,32 @@ const timestamp = ref<number>(Date.now())
 const viewportMode = ref<'desktop' | 'mobile' | 'full'>('desktop')
 const isSendingTest = ref(false)
 const testSentStatus = ref<string | null>(null)
+const emailHtml = ref<string>('')
+const isLoading = ref<boolean>(true)
 
-function refreshPreview() {
+async function fetchEmailHtml() {
+  isLoading.value = true
   timestamp.value = Date.now()
   previewUrl.value = `${orderService.getPreviewEmailHtmlUrl()}?t=${timestamp.value}`
+  try {
+    const res = await fetch(previewUrl.value)
+    if (res.ok) {
+      emailHtml.value = await res.text()
+    }
+  } catch (err) {
+    console.error('Error fetching email template:', err)
+  } finally {
+    isLoading.value = false
+  }
 }
+
+function refreshPreview() {
+  fetchEmailHtml()
+}
+
+onMounted(() => {
+  fetchEmailHtml()
+})
 
 function openMailpit() {
   window.open('http://localhost:8025', '_blank')
@@ -147,6 +168,7 @@ async function triggerTestEmail() {
         ]"
       >
         <iframe
+          :srcdoc="emailHtml"
           :src="previewUrl"
           class="w-full h-full border-0 bg-[#0c141f]"
           title="Hibana Email HTML Preview"
