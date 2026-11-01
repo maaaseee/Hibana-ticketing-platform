@@ -12,7 +12,7 @@ import { catalogService } from '../services/catalogService'
 export function getMinEventPrice(event: EventItem): number {
   if (event.sectors && event.sectors.length > 0) {
     const validPrices = event.sectors
-      .map(s => s.price)
+      .map(s => (s.basePrice !== undefined && s.basePrice !== null ? s.basePrice : s.price))
       .filter(p => typeof p === 'number' && !isNaN(p) && p > 0)
     if (validPrices.length > 0) {
       return Math.min(...validPrices)

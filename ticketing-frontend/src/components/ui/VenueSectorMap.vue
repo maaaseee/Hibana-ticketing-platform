@@ -228,23 +228,37 @@ function splitSectorLabel(name: string): { line1: string; line2?: string } {
   return { line1: name }
 }
 
-// Obtener precio correspondiente al sector según la lista de precios de la función
+// Obtener precio base correspondiente al sector según la lista de precios de la función
 function getSectorPrice(sec: SectorGeometry): number | undefined {
   if (!props.sectorsPricing || props.sectorsPricing.length === 0) return undefined
-  // 1. Coincidencia por ID (exacta o por sufijo/prefijo)
-  const byId = props.sectorsPricing.find(p => p.id === sec.id || p.id.endsWith(sec.id) || sec.id.endsWith(p.id))
-  if (byId) return byId.price
+  // 1. Coincidencia por ID (exacta, sufijo/prefijo, o equivalencia sivori/centenario)
+  const byId = props.sectorsPricing.find(p =>
+    p.id === sec.id ||
+    p.id.endsWith(sec.id) ||
+    sec.id.endsWith(p.id) ||
+    (sec.id.includes('sivori') && p.id.includes('centenario')) ||
+    (sec.id.includes('centenario') && p.id.includes('sivori'))
+  )
+  if (byId) return byId.basePrice !== undefined && byId.basePrice !== null ? byId.basePrice : byId.price
 
   // 2. Coincidencia por Nombre
   const normSec = sec.name.trim().toLowerCase()
   const byName = props.sectorsPricing.find(p => p.name.trim().toLowerCase() === normSec)
-  if (byName) return byName.price
+  if (byName) return byName.basePrice !== undefined && byName.basePrice !== null ? byName.basePrice : byName.price
 
   // 3. Coincidencia por Tipo
   const byType = props.sectorsPricing.find(p => p.type === sec.type)
-  if (byType) return byType.price
+  if (byType) return byType.basePrice !== undefined && byType.basePrice !== null ? byType.basePrice : byType.price
 
   return undefined
+}
+
+function formatDisplayPrice(price?: number): string {
+  if (price === undefined || price === null) return ''
+  return price.toLocaleString('es-AR', {
+    minimumFractionDigits: Number.isInteger(price) ? 0 : 2,
+    maximumFractionDigits: 2
+  })
 }
 
 function handleSectorClick(sec: SectorGeometry) {
@@ -593,7 +607,7 @@ function handleSectorClick(sec: SectorGeometry) {
             <div class="flex items-baseline justify-between text-xs">
               <span class="font-mono text-muted-light">Precio:</span>
               <span v-if="getSectorPrice(activeSector)" class="font-display font-extrabold text-sm sm:text-base text-[#00d2ff]">
-                ${{ getSectorPrice(activeSector)?.toLocaleString('es-AR') }}
+                ${{ formatDisplayPrice(getSectorPrice(activeSector)) }}
                 <span class="text-[10px] font-mono text-white/80">ARS</span>
               </span>
               <span v-else class="font-mono text-xs text-muted-light italic">

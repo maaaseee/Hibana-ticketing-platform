@@ -45,24 +45,34 @@ const functions = computed<EventFunction[]>(() => {
 
 const sectors = computed<SectorPricing[]>(() => {
   if (event.value?.sectors && event.value.sectors.length > 0) {
-    return event.value.sectors
+    return event.value.sectors.map(s => {
+      const base = s.basePrice !== undefined && s.basePrice !== null ? s.basePrice : s.price
+      return {
+        ...s,
+        price: base,
+        basePrice: base
+      }
+    })
   }
   if (event.value?.ticketTypes && event.value.ticketTypes.length > 0) {
     return event.value.ticketTypes.map((t, idx) => ({
       id: `sec-${idx}`,
       name: t.name,
       price: t.price,
+      basePrice: t.price,
       currency: 'ARS',
       type: 'GENERAL_ADMISSION',
       status: 'AVAILABLE'
     }))
   }
   if (event.value) {
+    const base = event.value.minPrice || event.value.price || 35000
     return [
       {
         id: `sec-${event.value.id}-gen`,
         name: 'General',
-        price: event.value.price || 45000,
+        price: base,
+        basePrice: base,
         currency: 'ARS',
         type: 'GENERAL_ADMISSION',
         status: 'AVAILABLE'

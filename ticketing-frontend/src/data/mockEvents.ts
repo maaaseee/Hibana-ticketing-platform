@@ -6,10 +6,13 @@ const arenaVenue = mockVenues.find(v => v.id === 'arena-buenos-aires')!
 const rexVenue = mockVenues.find(v => v.id === 'teatro-rex')!
 
 function buildTicketTypes(sectors: SectorPricing[]): { name: string; price: number }[] {
-  return sectors.map(sec => ({
-    name: `${sec.name} ($${sec.price.toLocaleString('es-AR')})`,
-    price: sec.price
-  }))
+  return sectors.map(sec => {
+    const effectiveBasePrice = sec.basePrice !== undefined && sec.basePrice !== null ? sec.basePrice : sec.price
+    return {
+      name: `${sec.name} ($${Math.round(effectiveBasePrice).toLocaleString('es-AR')})`,
+      price: effectiveBasePrice
+    }
+  })
 }
 
 export const mockEvents: EventItem[] = [

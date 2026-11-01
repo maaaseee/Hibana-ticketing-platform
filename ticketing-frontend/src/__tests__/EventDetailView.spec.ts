@@ -304,6 +304,27 @@ describe('EventDetailView.spec.ts - Event Detail View Overhaul', () => {
       expect(mapSection.text()).toContain('Precios visibles al interactuar en el mapa')
       expect(mapSection.text()).not.toContain('Exploración interactiva estilo Google Maps')
     })
+
+    it('uses basePrice for sectors displayed in the interactive venue preview instead of basePrice + serviceFee', async () => {
+      const { pinia, router } = setupTestEnvironment('/event/symphony-of-lights')
+      await router.isReady()
+
+      const wrapper = mount(EventDetailView, {
+        global: {
+          plugins: [pinia, router]
+        }
+      })
+
+      const mapComponent = wrapper.findComponent({ name: 'VenueSectorMap' })
+      expect(mapComponent.exists()).toBe(true)
+      const sectorsPricing = mapComponent.props('sectorsPricing') as Array<{ id: string; basePrice?: number; price: number; totalPrice?: number }>
+      expect(sectorsPricing.length).toBeGreaterThan(0)
+      const vipSector = sectorsPricing.find(s => s.id === 'sec-arena-campo-vip')
+      expect(vipSector).toBeDefined()
+      // Base price is 82608.70, while total price with service fee from backend is 95000
+      expect(vipSector?.price).toBe(82608.70)
+      expect(vipSector?.basePrice).toBe(82608.70)
+    })
   })
 
   describe('Section F: Venue Address Google Maps Direct Link', () => {
