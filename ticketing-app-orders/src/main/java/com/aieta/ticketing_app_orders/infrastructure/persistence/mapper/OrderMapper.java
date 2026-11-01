@@ -24,10 +24,13 @@ public final class OrderMapper {
         }
 
         List<OrderItem> items = entity.getItems() != null ? entity.getItems().stream()
-                .map(OrderMapper::toDomainItem)
+                .map(item -> toDomainItem(item))
                 .toList() : List.of();
 
-        Money total = new Money(entity.getTotalAmount(), Currency.getInstance(entity.getCurrency()));
+        Currency currency = Currency.getInstance(entity.getCurrency());
+        Money total = new Money(entity.getTotalAmount(), currency);
+        Money subtotal = entity.getSubtotalAmount() != null ? new Money(entity.getSubtotalAmount(), currency) : null;
+        Money serviceFee = entity.getServiceFeeAmount() != null ? new Money(entity.getServiceFeeAmount(), currency) : null;
         OrderStatus status = OrderStatus.valueOf(entity.getStatus());
         PaymentMethod paymentMethod = entity.getPaymentMethod() != null ? PaymentMethod.valueOf(entity.getPaymentMethod()) : null;
 
@@ -37,6 +40,8 @@ public final class OrderMapper {
                 new ReservationId(entity.getReservationId()),
                 entity.getEventId(),
                 entity.getSeatId(),
+                subtotal,
+                serviceFee,
                 total,
                 status,
                 paymentMethod,
@@ -71,6 +76,8 @@ public final class OrderMapper {
                 domain.getReservationId().value(),
                 domain.getEventId(),
                 domain.getSeatId(),
+                domain.getSubtotal() != null ? domain.getSubtotal().amount() : null,
+                domain.getServiceFee() != null ? domain.getServiceFee().amount() : null,
                 domain.getTotal().amount(),
                 domain.getTotal().currency().getCurrencyCode(),
                 domain.getStatus().name(),

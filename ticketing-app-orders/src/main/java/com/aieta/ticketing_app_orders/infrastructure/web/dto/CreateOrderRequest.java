@@ -18,6 +18,12 @@ public record CreateOrderRequest(
 
         @NotNull(message = "totalAmount is required")
         @DecimalMin(value = "0.00", message = "totalAmount cannot be negative")
-        BigDecimal totalAmount
+        BigDecimal totalAmount,
+
+        BigDecimal subtotalAmount,
+        BigDecimal serviceFeeAmount
 ) {
+    public CreateOrderRequest(String reservationId, String eventId, String seatId, BigDecimal totalAmount) {
+        this(reservationId, eventId, seatId, totalAmount, null, null);
+    }
 }

@@ -62,7 +62,9 @@ public class OrderController {
                 request.reservationId(),
                 request.eventId(),
                 request.seatId(),
-                request.totalAmount()
+                request.totalAmount(),
+                request.subtotalAmount(),
+                request.serviceFeeAmount()
         ));
 
         return new CreateOrderResponse(

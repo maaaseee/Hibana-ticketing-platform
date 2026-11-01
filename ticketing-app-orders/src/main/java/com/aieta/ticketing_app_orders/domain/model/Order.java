@@ -6,6 +6,7 @@ import com.aieta.ticketing_app_orders.domain.exceptions.DomainException;
 import com.aieta.ticketing_app_orders.domain.exceptions.InvalidOrderStateTransitionException;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -19,6 +20,8 @@ public class Order {
     private final ReservationId reservationId;
     private final String eventId;
     private final String seatId;
+    private final Money subtotal;
+    private final Money serviceFee;
     private Money total;
     private OrderStatus status;
     private PaymentMethod paymentMethod;
@@ -27,14 +30,16 @@ public class Order {
     private final List<OrderItem> items;
 
     public Order(OrderId id, String userId, ReservationId reservationId, String eventId, String seatId,
-                 Money total, OrderStatus status, PaymentMethod paymentMethod, Instant createdAt,
-                 Instant updatedAt, List<OrderItem> items) {
+                 Money subtotal, Money serviceFee, Money total, OrderStatus status, PaymentMethod paymentMethod,
+                 Instant createdAt, Instant updatedAt, List<OrderItem> items) {
         this.id = Objects.requireNonNull(id, "OrderId cannot be null");
         this.userId = Objects.requireNonNull(userId, "userId cannot be null");
         this.reservationId = Objects.requireNonNull(reservationId, "reservationId cannot be null");
         this.eventId = Objects.requireNonNull(eventId, "eventId cannot be null");
         this.seatId = Objects.requireNonNull(seatId, "seatId cannot be null");
         this.total = Objects.requireNonNull(total, "total cannot be null");
+        this.subtotal = subtotal != null ? subtotal : Money.of(total.amount().multiply(new BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP));
+        this.serviceFee = serviceFee != null ? serviceFee : this.total.subtract(this.subtotal);
         this.status = Objects.requireNonNull(status, "status cannot be null");
         this.paymentMethod = paymentMethod;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
@@ -42,16 +47,31 @@ public class Order {
         this.items = items != null ? new ArrayList<>(items) : new ArrayList<>();
     }
 
-    public static Order create(String userId, ReservationId reservationId, String eventId, String seatId, Money total) {
+    public Order(OrderId id, String userId, ReservationId reservationId, String eventId, String seatId,
+                 Money total, OrderStatus status, PaymentMethod paymentMethod, Instant createdAt,
+                 Instant updatedAt, List<OrderItem> items) {
+        this(id, userId, reservationId, eventId, seatId, null, null, total, status, paymentMethod, createdAt, updatedAt, items);
+    }
+
+    public static Order create(String userId, ReservationId reservationId, String eventId, String seatId,
+                               Money subtotal, Money serviceFee, Money total) {
         if (total.amount().compareTo(BigDecimal.ZERO) < 0) {
             throw new DomainException("Order total cannot be negative");
         }
         OrderId orderId = OrderId.generate();
         Instant now = Instant.now();
         List<OrderItem> defaultItems = new ArrayList<>();
-        defaultItems.add(new OrderItem(UUID.randomUUID(), eventId, seatId, null, total.amount(), 1, "Ticket for event " + eventId));
-        return new Order(orderId, userId, reservationId, eventId, seatId, total,
+        BigDecimal itemPrice = subtotal != null ? subtotal.amount() : total.amount();
+        defaultItems.add(new OrderItem(UUID.randomUUID(), eventId, seatId, null, itemPrice, 1, "Ticket for event " + eventId));
+        return new Order(orderId, userId, reservationId, eventId, seatId, subtotal, serviceFee, total,
                 OrderStatus.PENDING_PAYMENT, null, now, now, defaultItems);
+    }
+
+    public static Order create(String userId, ReservationId reservationId, String eventId, String seatId, Money total) {
+        BigDecimal subVal = total.amount().multiply(new BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP);
+        Money sub = Money.of(subVal);
+        Money fee = total.subtract(sub);
+        return create(userId, reservationId, eventId, seatId, sub, fee, total);
     }
 
     public void markProcessing(PaymentMethod paymentMethod) {
@@ -110,6 +130,14 @@ public class Order {
 
     public String getSeatId() {
         return seatId;
+    }
+
+    public Money getSubtotal() {
+        return subtotal;
+    }
+
+    public Money getServiceFee() {
+        return serviceFee;
     }
 
     public Money getTotal() {

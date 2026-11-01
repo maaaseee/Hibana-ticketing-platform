@@ -31,8 +31,8 @@ public final class InvoiceDataMapper {
         String caeNum = "74123890" + String.format("%06d", hash % 1_000_000);
 
         BigDecimal grandTotal = order.getTotal().amount();
-        BigDecimal subtotal = grandTotal.multiply(new BigDecimal("0.75")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal serviceFee = grandTotal.multiply(new BigDecimal("0.10")).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal subtotal = order.getSubtotal() != null ? order.getSubtotal().amount() : grandTotal.multiply(new BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal serviceFee = order.getServiceFee() != null ? order.getServiceFee().amount() : grandTotal.subtract(subtotal);
         BigDecimal vatTax = grandTotal.subtract(subtotal).subtract(serviceFee);
 
         List<InvoiceData.InvoiceItem> items = new ArrayList<>();

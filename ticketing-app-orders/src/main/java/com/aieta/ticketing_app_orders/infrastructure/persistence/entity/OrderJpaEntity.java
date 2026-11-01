@@ -34,6 +34,12 @@ public class OrderJpaEntity {
     @Column(name = "seat_id", length = 60, nullable = false)
     private String seatId;
 
+    @Column(name = "subtotal_amount", precision = 10, scale = 2)
+    private BigDecimal subtotalAmount;
+
+    @Column(name = "service_fee_amount", precision = 10, scale = 2)
+    private BigDecimal serviceFeeAmount;
+
     @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount;
 
@@ -59,19 +65,28 @@ public class OrderJpaEntity {
     }
 
     public OrderJpaEntity(UUID id, String userId, String reservationId, String eventId, String seatId,
-                          BigDecimal totalAmount, String currency, String status, String paymentMethod,
+                          BigDecimal subtotalAmount, BigDecimal serviceFeeAmount, BigDecimal totalAmount,
+                          String currency, String status, String paymentMethod,
                           Instant createdAt, Instant updatedAt) {
         this.id = id;
         this.userId = userId;
         this.reservationId = reservationId;
         this.eventId = eventId;
         this.seatId = seatId;
+        this.subtotalAmount = subtotalAmount;
+        this.serviceFeeAmount = serviceFeeAmount;
         this.totalAmount = totalAmount;
         this.currency = currency;
         this.status = status;
         this.paymentMethod = paymentMethod;
         this.createdAt = createdAt != null ? createdAt : Instant.now();
         this.updatedAt = updatedAt != null ? updatedAt : this.createdAt;
+    }
+
+    public OrderJpaEntity(UUID id, String userId, String reservationId, String eventId, String seatId,
+                          BigDecimal totalAmount, String currency, String status, String paymentMethod,
+                          Instant createdAt, Instant updatedAt) {
+        this(id, userId, reservationId, eventId, seatId, null, null, totalAmount, currency, status, paymentMethod, createdAt, updatedAt);
     }
 
     public void addItem(OrderItemJpaEntity item) {
@@ -117,6 +132,22 @@ public class OrderJpaEntity {
 
     public void setSeatId(String seatId) {
         this.seatId = seatId;
+    }
+
+    public BigDecimal getSubtotalAmount() {
+        return subtotalAmount;
+    }
+
+    public void setSubtotalAmount(BigDecimal subtotalAmount) {
+        this.subtotalAmount = subtotalAmount;
+    }
+
+    public BigDecimal getServiceFeeAmount() {
+        return serviceFeeAmount;
+    }
+
+    public void setServiceFeeAmount(BigDecimal serviceFeeAmount) {
+        this.serviceFeeAmount = serviceFeeAmount;
     }
 
     public BigDecimal getTotalAmount() {

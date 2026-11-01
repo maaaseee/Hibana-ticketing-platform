@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,11 +59,20 @@ public class CreateOrderCommandHandler implements RequestHandler<CreateOrderComm
         }
 
         Money total = Money.of(request.totalAmount());
+        Money subtotal = request.subtotalAmount() != null
+                ? Money.of(request.subtotalAmount())
+                : Money.of(request.totalAmount().multiply(new BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP));
+        Money serviceFee = request.serviceFeeAmount() != null
+                ? Money.of(request.serviceFeeAmount())
+                : total.subtract(subtotal);
+
         Order order = Order.create(
                 request.userId(),
                 new ReservationId(request.reservationId()),
                 request.eventId(),
                 request.seatId(),
+                subtotal,
+                serviceFee,
                 total
         );
 

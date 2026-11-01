@@ -76,4 +76,20 @@ class CreateOrderCommandHandlerTest {
         verify(orderRepository, never()).save(any());
         verify(outboxRepository, never()).save(any());
     }
+
+    @Test
+    @DisplayName("Should successfully create order with custom subtotal and service fee")
+    void shouldCreateOrderWithCustomSubtotalAndFee() {
+        CreateOrderCommand cmd = new CreateOrderCommand("user-1", "res-2", "evt-1", "seat-1", new BigDecimal("110.00"), new BigDecimal("100.00"), new BigDecimal("10.00"));
+        when(orderRepository.findByReservationId("res-2")).thenReturn(Optional.empty());
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        CreateOrderResult result = handler.handle(cmd);
+
+        assertNotNull(result.orderId());
+        assertEquals("user-1", result.userId());
+        assertEquals("res-2", result.reservationId());
+        assertEquals(new BigDecimal("110.00"), result.totalAmount());
+        verify(orderRepository).save(any(Order.class));
+    }
 }

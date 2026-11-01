@@ -9,6 +9,11 @@ public record CreateOrderCommand(
         String reservationId,
         String eventId,
         String seatId,
-        BigDecimal totalAmount
+        BigDecimal totalAmount,
+        BigDecimal subtotalAmount,
+        BigDecimal serviceFeeAmount
 ) implements Request<CreateOrderResult> {
+    public CreateOrderCommand(String userId, String reservationId, String eventId, String seatId, BigDecimal totalAmount) {
+        this(userId, reservationId, eventId, seatId, totalAmount, null, null);
+    }
 }
