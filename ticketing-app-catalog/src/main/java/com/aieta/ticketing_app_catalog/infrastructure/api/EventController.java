@@ -54,7 +54,7 @@ public class EventController {
         } else {
             events = mediator.dispatch(new GetUpcomingEventsQuery(category));
         }
-        List<EventResponse> response = events.stream().map(this::mapToResponse).toList();
+        List<EventResponse> response = events.stream().map(e -> mapToResponse(e)).toList();
         return ResponseEntity.ok(response);
     }
 
@@ -71,8 +71,8 @@ public class EventController {
                 HomeHighlightsResponse.class,
                 () -> {
                     HomeHighlights highlights = mediator.dispatch(new GetHomeHighlightsQuery(referenceDate));
-                    List<EventResponse> recentResponses = highlights.recentlyAdded().stream().map(this::mapToResponse).toList();
-                    List<EventResponse> upcomingResponses = highlights.upcoming().stream().map(this::mapToResponse).toList();
+                    List<EventResponse> recentResponses = highlights.recentlyAdded().stream().map(e -> mapToResponse(e)).toList();
+                    List<EventResponse> upcomingResponses = highlights.upcoming().stream().map(e -> mapToResponse(e)).toList();
                     return new HomeHighlightsResponse(recentResponses, upcomingResponses);
                 }
         );
@@ -90,7 +90,7 @@ public class EventController {
                 CatalogMetadataResponse.class,
                 () -> {
                     CatalogMetadata meta = mediator.dispatch(new GetCatalogMetadataQuery());
-                    List<VenueResponse> venueResponses = meta.venues().stream().map(this::mapVenueResponse).toList();
+                    List<VenueResponse> venueResponses = meta.venues().stream().map(v -> mapVenueResponse(v)).toList();
                     return new CatalogMetadataResponse(meta.furthestEventDate(), venueResponses);
                 }
         );
@@ -105,7 +105,7 @@ public class EventController {
             @RequestParam(name = "q", required = false) String query,
             @RequestParam(name = "venue", required = false) String venue) {
         List<EventSummary> events = mediator.dispatch(new SearchEventsQuery(query, venue));
-        List<EventResponse> response = events.stream().map(this::mapToResponse).toList();
+        List<EventResponse> response = events.stream().map(e -> mapToResponse(e)).toList();
         return ResponseEntity.ok(response);
     }
 
@@ -117,11 +117,11 @@ public class EventController {
 
     private EventResponse mapToResponse(EventSummary event) {
         List<SectorResponse> sectorResponses = event.sectors() != null
-                ? event.sectors().stream().map(this::mapSectorResponse).toList()
+                ? event.sectors().stream().map(s -> mapSectorResponse(s)).toList()
                 : Collections.emptyList();
 
         BigDecimal minPrice = sectorResponses.stream()
-            .map(sector -> sector.totalPrice())
+                .map(sector -> sector.basePrice())
                 .min((left, right) -> left.compareTo(right))
                 .orElse(BigDecimal.ZERO);
 
@@ -130,6 +130,7 @@ public class EventController {
         String bannerUrl = extractJsonField(event.mediaJson(), "bannerUrl");
         String posterUrl = extractJsonField(event.mediaJson(), "posterUrl");
         String description = extractJsonField(event.mediaJson(), "description");
+        BigDecimal serviceFeePercentage = extractServiceFeePercentage(event.salesPolicyJson());
 
         return new EventResponse(
                 event.id(),
@@ -153,8 +154,24 @@ public class EventController {
                 posterUrl,
                 description,
                 event.salesPolicyJson(),
-                sectorResponses
+                sectorResponses,
+                serviceFeePercentage
         );
+    }
+
+    private BigDecimal extractServiceFeePercentage(String salesPolicyJson) {
+        if (salesPolicyJson == null || salesPolicyJson.isBlank()) {
+            return BigDecimal.valueOf(10.0);
+        }
+        try {
+            JsonNode node = objectMapper.readTree(salesPolicyJson);
+            JsonNode field = node.get("serviceFeePercentage");
+            if (field != null && field.isNumber()) {
+                return BigDecimal.valueOf(field.asDouble());
+            }
+        } catch (Exception ignored) {
+        }
+        return BigDecimal.valueOf(10.0);
     }
 
     private SectorResponse mapSectorResponse(EventSectorSummary sector) {
