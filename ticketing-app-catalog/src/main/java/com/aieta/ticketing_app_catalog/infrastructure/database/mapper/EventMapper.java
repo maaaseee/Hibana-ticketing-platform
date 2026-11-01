@@ -24,7 +24,7 @@ public class EventMapper {
 
         VenueSummary venueSummary = toVenueSummary(entity.getVenue());
         List<EventSectorSummary> sectorSummaries = entity.getSectors() != null
-                ? entity.getSectors().stream().map(this::toSectorSummary).toList()
+                ? entity.getSectors().stream().map(s -> toSectorSummary(s)).toList()
                 : Collections.emptyList();
 
         List<String> genresList = entity.getGenres() != null
@@ -94,7 +94,7 @@ public class EventMapper {
         }
 
         List<com.aieta.ticketing_app_catalog.domain.entity.EventSector> domainSectors = entity.getSectors() != null
-                ? entity.getSectors().stream().map(this::toSectorDomain).toList()
+                ? entity.getSectors().stream().map(s -> toSectorDomain(s)).toList()
                 : Collections.emptyList();
 
         List<String> genresList = entity.getGenres() != null

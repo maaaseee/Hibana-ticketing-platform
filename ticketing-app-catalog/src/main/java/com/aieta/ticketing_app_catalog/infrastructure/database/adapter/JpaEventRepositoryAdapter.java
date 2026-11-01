@@ -25,7 +25,7 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
     public List<EventSummary> findUpcomingPublished() {
         return eventRepository.findUpcomingPublished()
                 .stream()
-                .map(eventMapper::toDomain)
+                .map(e -> eventMapper.toDomain(e))
                 .toList();
     }
 
@@ -33,7 +33,7 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
     public List<EventSummary> findByCategoryAndPublished(String category) {
         return eventRepository.findByCategoryAndPublished(category)
                 .stream()
-                .map(eventMapper::toDomain)
+                .map(e -> eventMapper.toDomain(e))
                 .toList();
     }
 
@@ -41,7 +41,7 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
     public List<EventSummary> findRecentlyAddedPublished() {
         return eventRepository.findRecentlyAddedPublished()
                 .stream()
-                .map(eventMapper::toDomain)
+                .map(e -> eventMapper.toDomain(e))
                 .toList();
     }
 
@@ -50,7 +50,7 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
         Instant ref = referenceDate != null ? referenceDate : Instant.now();
         return eventRepository.findUpcomingPublishedTop3(ref)
                 .stream()
-                .map(eventMapper::toDomain)
+                .map(e -> eventMapper.toDomain(e))
                 .toList();
     }
 
@@ -63,17 +63,17 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
     public List<EventSummary> searchEventsFuzzy(String query, String venue) {
         return eventRepository.searchEventsFuzzy(query, venue)
                 .stream()
-                .map(eventMapper::toDomain)
+                .map(e -> eventMapper.toDomain(e))
                 .toList();
     }
 
     @Override
     public Optional<EventSummary> findById(String id) {
-        return eventRepository.findById(id).map(eventMapper::toDomain);
+        return eventRepository.findById(id).map(e -> eventMapper.toDomain(e));
     }
 
     @Override
     public Optional<EventSummary> findBySlug(String slug) {
-        return eventRepository.findBySlug(slug).map(eventMapper::toDomain);
+        return eventRepository.findBySlug(slug).map(e -> eventMapper.toDomain(e));
     }
 }

@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_catalog.domain.exceptions;
 import java.time.Instant;
 
 public class InvalidEventScheduleException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public InvalidEventScheduleException(String reason) {
         super(reason);
     }

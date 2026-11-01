@@ -27,21 +27,21 @@ public class JpaSeatRepositoryAdapter implements SeatRepositoryPort {
     @Transactional(readOnly = true)
     public Optional<Seat> findById(SeatId seatId) {
         return seatRepository.findById(seatId.value())
-                .map(seatMapper::toDomain);
+                .map(s -> seatMapper.toDomain(s));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<Seat> findByEventIdAndSeatId(String eventId, String seatId) {
         return seatRepository.findByEventIdAndId(eventId, seatId)
-                .map(seatMapper::toDomain);
+                .map(s -> seatMapper.toDomain(s));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Seat> findByEventId(String eventId) {
         return seatRepository.findByEventId(eventId).stream()
-                .map(seatMapper::toDomain)
+                .map(s -> seatMapper.toDomain(s))
                 .toList();
     }
 
@@ -49,7 +49,7 @@ public class JpaSeatRepositoryAdapter implements SeatRepositoryPort {
     @Transactional(readOnly = true)
     public List<Seat> findByEventIdAndSectorId(String eventId, String sectorId) {
         return seatRepository.findByEventIdAndSectorId(eventId, sectorId).stream()
-                .map(seatMapper::toDomain)
+                .map(s -> seatMapper.toDomain(s))
                 .toList();
     }
 
@@ -65,7 +65,7 @@ public class JpaSeatRepositoryAdapter implements SeatRepositoryPort {
     @Transactional
     public void saveAll(List<Seat> seats) {
         List<SeatJpaEntity> entities = seats.stream()
-                .map(seatMapper::toEntity)
+                .map(s -> seatMapper.toEntity(s))
                 .toList();
         seatRepository.saveAll(entities);
     }

@@ -36,19 +36,19 @@ public class JpaLedgerRepositoryAdapter implements LedgerRepositoryPort {
     @Override
     public Optional<LedgerAccount> findAccountById(UUID id) {
         return accountRepository.findById(id)
-                .map(LedgerMapper::toDomainAccount);
+                .map(a -> LedgerMapper.toDomainAccount(a));
     }
 
     @Override
     public Optional<LedgerAccount> findAccountByOwnerIdAndType(String ownerId, LedgerAccount.AccountType type) {
         return accountRepository.findByOwnerIdAndAccountType(ownerId, type.name())
-                .map(LedgerMapper::toDomainAccount);
+                .map(a -> LedgerMapper.toDomainAccount(a));
     }
 
     @Override
     public void recordEntries(List<LedgerEntry> entries) {
         List<LedgerEntryJpaEntity> entities = entries.stream()
-                .map(LedgerMapper::toEntityEntry)
+                .map(e -> LedgerMapper.toEntityEntry(e))
                 .toList();
         entryRepository.saveAll(entities);
     }

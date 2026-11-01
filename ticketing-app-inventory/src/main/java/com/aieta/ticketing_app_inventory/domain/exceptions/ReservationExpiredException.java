@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_inventory.domain.exceptions;
 import java.time.Instant;
 
 public class ReservationExpiredException extends DomainException {
+    private static final long serialVersionUID = 1L;
+
     private final String reservationId;
     private final Instant expiredAt;
 

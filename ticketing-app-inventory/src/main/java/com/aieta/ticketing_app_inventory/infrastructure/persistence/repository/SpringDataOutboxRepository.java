@@ -15,10 +15,10 @@ public interface SpringDataOutboxRepository extends JpaRepository<OutboxEventJpa
     List<OutboxEventJpaEntity> findPendingEvents(Pageable pageable);
 
     @Query(value = """
-        SELECT * FROM outbox_events 
-        WHERE status = 'PENDING' 
-        ORDER BY created_at ASC 
-        LIMIT :limit 
+        SELECT * FROM outbox_events
+        WHERE status = 'PENDING'
+        ORDER BY created_at ASC
+        LIMIT :limit
         FOR UPDATE SKIP LOCKED
         """, nativeQuery = true)
     List<OutboxEventJpaEntity> findPendingEventsForUpdateSkipLocked(@Param("limit") int limit);

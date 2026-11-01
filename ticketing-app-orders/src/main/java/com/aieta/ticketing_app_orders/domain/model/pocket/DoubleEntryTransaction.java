@@ -33,13 +33,13 @@ public class DoubleEntryTransaction {
 
         BigDecimal totalDebits = entries.stream()
                 .filter(e -> e.entryType() == LedgerEntry.EntryType.DEBIT)
-                .map(LedgerEntry::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(e -> e.amount())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         BigDecimal totalCredits = entries.stream()
                 .filter(e -> e.entryType() == LedgerEntry.EntryType.CREDIT)
-                .map(LedgerEntry::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(e -> e.amount())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         if (totalDebits.compareTo(totalCredits) != 0) {
             throw new LedgerImbalanceException(totalDebits, totalCredits);

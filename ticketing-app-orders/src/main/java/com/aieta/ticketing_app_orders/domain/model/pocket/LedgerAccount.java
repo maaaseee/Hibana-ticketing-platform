@@ -32,13 +32,13 @@ public record LedgerAccount(
     public BigDecimal computeBalance(List<LedgerEntry> entries) {
         BigDecimal debits = entries.stream()
                 .filter(e -> e.entryType() == LedgerEntry.EntryType.DEBIT)
-                .map(LedgerEntry::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(e -> e.amount())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         BigDecimal credits = entries.stream()
                 .filter(e -> e.entryType() == LedgerEntry.EntryType.CREDIT)
-                .map(LedgerEntry::amount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(e -> e.amount())
+                .reduce(BigDecimal.ZERO, (a, b) -> a.add(b));
 
         return switch (type) {
             case ASSET, EXPENSE -> debits.subtract(credits);

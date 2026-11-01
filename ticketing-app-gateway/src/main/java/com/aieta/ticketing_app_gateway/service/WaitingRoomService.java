@@ -140,7 +140,7 @@ public class WaitingRoomService {
                             .doOnSuccess(v -> log.info("[WAITING-ROOM] Admitted user {} for event {}", userId, eventId));
                 })
                 .count()
-                .map(Long::intValue)
+                .map(count -> count.intValue())
                 .flatMap(admittedCount -> {
                     // Check if queue is now empty
                     return redisTemplate.opsForZSet().size(qKey)

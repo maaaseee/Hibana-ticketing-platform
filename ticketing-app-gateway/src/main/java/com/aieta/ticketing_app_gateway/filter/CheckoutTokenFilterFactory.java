@@ -42,9 +42,6 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
     @Value("${waiting-room.jwt.secret:${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}}")
     private String defaultSecret;
 
-    @Value("${spring.profiles.active:default}")
-    private String activeProfile;
-
     @Value("${waiting-room.jwt.issuer:${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}}")
     private String defaultIssuer;
 

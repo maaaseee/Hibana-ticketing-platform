@@ -1,6 +1,8 @@
 package com.aieta.ticketing_app_orders.domain.exceptions;
 
 public class OrderNotFoundException extends DomainException {
+    private static final long serialVersionUID = 1L;
+
     private final String orderId;
 
     public OrderNotFoundException(String orderId) {

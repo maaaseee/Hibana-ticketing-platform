@@ -31,20 +31,20 @@ public class JpaOrderRepositoryAdapter implements OrderRepositoryPort {
     @Override
     public Optional<Order> findById(OrderId id) {
         return springDataOrderRepository.findById(id.value())
-                .map(OrderMapper::toDomain);
+                .map(o -> OrderMapper.toDomain(o));
     }
 
     @Override
     public Optional<Order> findByReservationId(String reservationId) {
         return springDataOrderRepository.findByReservationId(reservationId)
-                .map(OrderMapper::toDomain);
+                .map(o -> OrderMapper.toDomain(o));
     }
 
     @Override
     public List<Order> findByUserId(String userId, int page, int size) {
         return springDataOrderRepository.findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size))
                 .stream()
-                .map(OrderMapper::toDomain)
+                .map(o -> OrderMapper.toDomain(o))
                 .toList();
     }
 }

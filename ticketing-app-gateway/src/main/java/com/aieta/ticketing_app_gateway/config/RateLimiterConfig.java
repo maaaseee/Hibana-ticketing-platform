@@ -26,6 +26,7 @@ public class RateLimiterConfig {
                 for (String part : parts) {
                     String candidate = part.trim();
                     if (!candidate.isBlank()) {
+                        log.debug("[RATE-LIMIT] Resolved client key from X-Forwarded-For: {}", candidate);
                         return Mono.just(candidate);
                     }
                 }
@@ -34,16 +35,21 @@ public class RateLimiterConfig {
             // 2. Check X-Real-IP
             String xRealIp = exchange.getRequest().getHeaders().getFirst("X-Real-IP");
             if (xRealIp != null && !xRealIp.isBlank()) {
-                return Mono.just(xRealIp.trim());
+                String candidate = xRealIp.trim();
+                log.debug("[RATE-LIMIT] Resolved client key from X-Real-IP: {}", candidate);
+                return Mono.just(candidate);
             }
 
             // 3. Fallback to TCP remote socket address
             InetSocketAddress remoteAddress = exchange.getRequest().getRemoteAddress();
             if (remoteAddress != null && remoteAddress.getAddress() != null) {
-                return Mono.just(remoteAddress.getAddress().getHostAddress());
+                String candidate = remoteAddress.getAddress().getHostAddress();
+                log.debug("[RATE-LIMIT] Resolved client key from RemoteAddress: {}", candidate);
+                return Mono.just(candidate);
             }
 
             // 4. Default fallback
+            log.warn("[RATE-LIMIT] Falling back to default anonymous client key");
             return Mono.just("anonymous-client");
         };
     }

@@ -39,6 +39,7 @@ class ReservationControllerTest {
     private Mediator mediator;
 
     @MockitoBean
+    @SuppressWarnings("unused")
     private ReservationRepositoryPort reservationRepositoryPort;
 
     @Test

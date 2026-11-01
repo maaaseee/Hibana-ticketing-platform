@@ -1,6 +1,8 @@
 package com.aieta.ticketing_app_catalog.domain.exceptions;
 
 public class InvalidEventTitleException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public InvalidEventTitleException() {
         super("Event title cannot be null or blank");
     }

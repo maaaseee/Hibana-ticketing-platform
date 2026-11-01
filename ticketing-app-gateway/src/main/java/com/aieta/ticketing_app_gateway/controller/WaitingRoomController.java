@@ -36,7 +36,7 @@ public class WaitingRoomController {
         String userId = resolveUserId(request.userId());
 
         return waitingRoomService.joinQueue(eventId, userId)
-                .map(ResponseEntity::ok);
+                .map(res -> ResponseEntity.ok(res));
     }
 
     @GetMapping("/status")
@@ -45,7 +45,7 @@ public class WaitingRoomController {
             @RequestParam("userId") String userId
     ) {
         return waitingRoomService.getQueueStatus(eventId, userId)
-                .map(ResponseEntity::ok);
+                .map(res -> ResponseEntity.ok(res));
     }
 
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -78,6 +78,6 @@ public class WaitingRoomController {
         String userId = resolveUserId(request.userId());
 
         return waitingRoomService.skipOrAdmit(eventId, userId)
-                .map(ResponseEntity::ok);
+                .map(res -> ResponseEntity.ok(res));
     }
 }

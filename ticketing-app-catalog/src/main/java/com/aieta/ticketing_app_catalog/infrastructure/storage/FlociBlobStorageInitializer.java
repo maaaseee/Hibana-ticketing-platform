@@ -152,7 +152,6 @@ public class FlociBlobStorageInitializer implements ApplicationRunner {
     private void seedEstadioNacionalSeatMap() {
         try {
             String blobName = "estadio-nacional-seatmap.json";
-            // String blobUrl = blobEndpoint + "/" + venuesContainer + "/" + blobName;
 
             String layoutJson = """
             {

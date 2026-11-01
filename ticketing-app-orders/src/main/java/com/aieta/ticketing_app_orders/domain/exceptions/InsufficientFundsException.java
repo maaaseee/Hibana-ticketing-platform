@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_orders.domain.exceptions;
 import java.math.BigDecimal;
 
 public class InsufficientFundsException extends DomainException {
+    private static final long serialVersionUID = 1L;
+
     private final BigDecimal available;
     private final BigDecimal required;
 

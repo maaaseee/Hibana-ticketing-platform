@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_catalog.domain.exceptions;
 import java.math.BigDecimal;
 
 public class InvalidSectorPricingException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
     public InvalidSectorPricingException(String message) {
         super(message);
     }

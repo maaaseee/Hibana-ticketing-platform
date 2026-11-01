@@ -38,7 +38,7 @@ public interface SpringDataEventRepository extends JpaRepository<EventJpaEntity,
             word_similarity(LOWER(:query), LOWER(e.title)) > 0.3
           )
         ORDER BY
-          CASE 
+          CASE
             WHEN :query IS NULL OR :query = '' THEN 1.0
             WHEN LOWER(e.title) LIKE LOWER(CONCAT('%', :query, '%')) THEN 1.0
             ELSE word_similarity(LOWER(:query), LOWER(e.title))

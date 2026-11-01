@@ -39,6 +39,7 @@ public class TraceIdGlobalFilter implements GlobalFilter, Ordered {
         }
 
         final String finalTraceId = traceId;
+        log.debug("[TRACE-ID] Assigned trace ID [{}] to {} {}", finalTraceId, request.getMethod(), request.getURI().getPath());
 
         ServerHttpRequest mutatedRequest = request.mutate()
                 .headers(h -> {

@@ -53,14 +53,14 @@ public class JpaReservationRepositoryAdapter implements ReservationRepositoryPor
     @Transactional(readOnly = true)
     public Optional<TicketReservation> findById(ReservationId reservationId) {
         return reservationRepository.findById(reservationId.value())
-                .map(reservationMapper::toDomain);
+                .map(r -> reservationMapper.toDomain(r));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<TicketReservation> findByEventIdAndSeatId(String eventId, SeatId seatId) {
         return reservationRepository.findFirstByEventIdAndSeatIdOrderByCreatedAtDesc(eventId, seatId.value())
-                .map(reservationMapper::toDomain);
+                .map(r -> reservationMapper.toDomain(r));
     }
 
     @Override

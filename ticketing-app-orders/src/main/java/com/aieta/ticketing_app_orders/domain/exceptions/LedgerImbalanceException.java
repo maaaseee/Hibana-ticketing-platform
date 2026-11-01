@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_orders.domain.exceptions;
 import java.math.BigDecimal;
 
 public class LedgerImbalanceException extends DomainException {
+    private static final long serialVersionUID = 1L;
+
     private final BigDecimal totalDebits;
     private final BigDecimal totalCredits;
 

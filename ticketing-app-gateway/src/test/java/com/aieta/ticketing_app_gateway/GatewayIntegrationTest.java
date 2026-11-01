@@ -51,6 +51,7 @@ class GatewayIntegrationTest {
     private WebTestClient webTestClient;
 
     @MockitoBean
+    @SuppressWarnings("unused")
     private RedisConnectionFactory redisConnectionFactory;
 
     @MockitoBean
@@ -204,7 +205,7 @@ class GatewayIntegrationTest {
                 .expectStatus().isForbidden()
                 .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
-                .jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("expired"));
+                .jsonPath("$.detail").value(detail -> org.hamcrest.MatcherAssert.assertThat((String) detail, org.hamcrest.Matchers.containsString("expired")));
 
         wireMockServer.verify(0, postRequestedFor(urlEqualTo("/api/v1/reservations")));
     }

@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_inventory.domain.exceptions;
 import com.aieta.ticketing_app_inventory.domain.enums.SeatStatus;
 
 public class InvalidSeatStateTransitionException extends DomainException {
+    private static final long serialVersionUID = 1L;
+
     private final SeatStatus currentStatus;
     private final SeatStatus targetStatus;
 

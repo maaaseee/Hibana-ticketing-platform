@@ -3,6 +3,8 @@ package com.aieta.ticketing_app_orders.domain.exceptions;
 import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 
 public class InvalidOrderStateTransitionException extends DomainException {
+    private static final long serialVersionUID = 1L;
+
     private final OrderStatus currentStatus;
     private final OrderStatus targetStatus;
 

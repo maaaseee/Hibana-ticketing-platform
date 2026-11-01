@@ -16,7 +16,7 @@ public class Mediator {
 
     public Mediator(List<RequestHandler<?, ?>> requestHandlers) {
         this.requestHandlerMap = requestHandlers.stream()
-                .collect(Collectors.toMap(RequestHandler::getRequestType, Function.identity()));
+                .collect(Collectors.toMap(handler -> handler.getRequestType(), Function.identity()));
     }
 
     @SuppressWarnings("unchecked")
