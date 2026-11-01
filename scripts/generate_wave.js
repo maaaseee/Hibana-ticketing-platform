@@ -105,5 +105,12 @@ ${pathsSvg}  </g>
 </svg>`;
 
 const targetPath = path.resolve(__dirname, '../ticketing-frontend/public/Wave Line.svg');
+const targetCleanPath = path.resolve(__dirname, '../ticketing-frontend/public/wave-line.svg');
+const targetBgPath = path.resolve(__dirname, '../ticketing-frontend/public/images/backgrounds/wave-haikei.svg');
+
 fs.writeFileSync(targetPath, svgContent, 'utf-8');
+fs.writeFileSync(targetCleanPath, svgContent, 'utf-8');
+if (fs.existsSync(path.dirname(targetBgPath))) {
+  fs.writeFileSync(targetBgPath, svgContent, 'utf-8');
+}
 console.log('Successfully wrote updated Wave Line.svg with extended overflow (-500 to 2500)!');
