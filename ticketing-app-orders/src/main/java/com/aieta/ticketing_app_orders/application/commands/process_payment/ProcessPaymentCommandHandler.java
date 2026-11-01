@@ -1,6 +1,11 @@
 package com.aieta.ticketing_app_orders.application.commands.process_payment;
 
+import com.aieta.ticketing_app_orders.application.common.InvoiceDataMapper;
 import com.aieta.ticketing_app_orders.application.common.mediator.RequestHandler;
+import com.aieta.ticketing_app_orders.application.dto.InvoiceData;
+import com.aieta.ticketing_app_orders.application.dto.OrderConfirmationEmail;
+import com.aieta.ticketing_app_orders.application.ports.EmailNotificationPort;
+import com.aieta.ticketing_app_orders.application.ports.InvoicePdfPort;
 import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
 import com.aieta.ticketing_app_orders.domain.events.OrderPaidEvent;
@@ -39,17 +44,23 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
     private final LedgerRepositoryPort ledgerRepository;
     private final SpringDataOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
+    private final InvoicePdfPort invoicePdfPort;
+    private final EmailNotificationPort emailNotificationPort;
 
     public ProcessPaymentCommandHandler(OrderRepositoryPort orderRepository,
-                                       WalletRepositoryPort walletRepository,
-                                       LedgerRepositoryPort ledgerRepository,
-                                       SpringDataOutboxRepository outboxRepository,
-                                       ObjectMapper objectMapper) {
+                                        WalletRepositoryPort walletRepository,
+                                        LedgerRepositoryPort ledgerRepository,
+                                        SpringDataOutboxRepository outboxRepository,
+                                        ObjectMapper objectMapper,
+                                        InvoicePdfPort invoicePdfPort,
+                                        EmailNotificationPort emailNotificationPort) {
         this.orderRepository = orderRepository;
         this.walletRepository = walletRepository;
         this.ledgerRepository = ledgerRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
+        this.invoicePdfPort = invoicePdfPort;
+        this.emailNotificationPort = emailNotificationPort;
     }
 
     @Override
@@ -137,6 +148,9 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
 
         log.info("Order {} successfully PAID via {}", savedOrder.getId(), method);
 
+        // Post-checkout: Generate Official PDF Invoice & Trigger Transactional Email
+        dispatchInvoiceAndEmail(savedOrder, request);
+
         return new PaymentResult(
                 savedOrder.getId().toString(),
                 savedOrder.getStatus().name(),
@@ -144,6 +158,42 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
                 savedOrder.getTotal().amount(),
                 savedOrder.getUpdatedAt()
         );
+    }
+
+    private void dispatchInvoiceAndEmail(Order order, ProcessPaymentCommand request) {
+        try {
+            InvoiceData invoiceData = InvoiceDataMapper.fromOrder(
+                    order,
+                    request.buyerName(),
+                    request.buyerEmail(),
+                    request.buyerTaxId()
+            );
+
+            byte[] pdfBytes = null;
+            if (invoicePdfPort != null) {
+                pdfBytes = invoicePdfPort.generateInvoicePdf(invoiceData);
+            }
+
+            if (emailNotificationPort != null) {
+                List<String> seats = List.of(order.getSeatId());
+                OrderConfirmationEmail email = new OrderConfirmationEmail(
+                        order.getId().toString(),
+                        invoiceData.buyerEmail(),
+                        invoiceData.buyerName(),
+                        invoiceData.eventTitle(),
+                        invoiceData.eventDate(),
+                        invoiceData.venueName(),
+                        seats,
+                        order.getTotal().amount(),
+                        pdfBytes
+                );
+                emailNotificationPort.sendOrderConfirmation(email);
+            }
+        } catch (Exception e) {
+            log.error("[CHECKOUT-NOTIFICATION] Failed to generate invoice/send confirmation email for order {}: {}",
+                    order.getId(), e.getMessage(), e);
+            // Non-blocking: order payment remains successfully committed
+        }
     }
 
     @Override

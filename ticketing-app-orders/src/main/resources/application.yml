@@ -40,6 +40,16 @@ spring:
           batch_size: 50
           order_inserts: true
           order_updates: true
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -85,3 +95,12 @@ logging:
     root: INFO
     com.aieta.ticketing_app_orders: DEBUG
     org.flywaydb: INFO
+
+hibana:
+  mailing:
+    provider: ${MAILING_PROVIDER:smtp}
+    from-email: ${MAILING_FROM_EMAIL:no-reply@hibana.tk}
+    from-name: "Hibana.tk Entradas"
+  azure:
+    communication:
+      endpoint: ${AZURE_COMMUNICATION_ENDPOINT:}

@@ -33,10 +33,17 @@ public class PaymentController {
                 ? request.paymentMethod()
                 : com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.POCKET_WALLET;
 
+        String buyerEmail = request != null ? request.buyerEmail() : null;
+        String buyerName = request != null ? request.buyerName() : null;
+        String buyerTaxId = request != null ? request.buyerTaxId() : null;
+
         PaymentResult result = mediator.dispatch(new ProcessPaymentCommand(
                 orderId,
                 effectiveUserId,
-                paymentMethod
+                paymentMethod,
+                buyerEmail,
+                buyerName,
+                buyerTaxId
         ));
 
         return new ProcessPaymentResponse(

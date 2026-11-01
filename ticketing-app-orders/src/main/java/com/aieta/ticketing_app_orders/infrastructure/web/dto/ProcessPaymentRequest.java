@@ -5,6 +5,12 @@ import jakarta.validation.constraints.NotNull;
 
 public record ProcessPaymentRequest(
         @NotNull(message = "paymentMethod is required")
-        PaymentMethod paymentMethod
+        PaymentMethod paymentMethod,
+        String buyerEmail,
+        String buyerName,
+        String buyerTaxId
 ) {
+    public ProcessPaymentRequest(PaymentMethod paymentMethod) {
+        this(paymentMethod, null, null, null);
+    }
 }

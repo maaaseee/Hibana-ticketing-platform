@@ -6,6 +6,13 @@ import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
 public record ProcessPaymentCommand(
         String orderId,
         String userId,
-        PaymentMethod paymentMethod
+        PaymentMethod paymentMethod,
+        String buyerEmail,
+        String buyerName,
+        String buyerTaxId
 ) implements Request<PaymentResult> {
+
+    public ProcessPaymentCommand(String orderId, String userId, PaymentMethod paymentMethod) {
+        this(orderId, userId, paymentMethod, null, null, null);
+    }
 }

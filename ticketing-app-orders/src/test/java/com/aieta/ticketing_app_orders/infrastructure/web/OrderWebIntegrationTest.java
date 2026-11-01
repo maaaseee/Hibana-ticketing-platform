@@ -17,10 +17,14 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.math.BigDecimal;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -79,8 +83,13 @@ class OrderWebIntegrationTest {
         String responseBody = orderResult.getResponse().getContentAsString();
         String orderId = objectMapper.readTree(responseBody).get("orderId").asText();
 
-        // 3. Process payment with POCKET_WALLET
-        ProcessPaymentRequest payReq = new ProcessPaymentRequest(com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.POCKET_WALLET);
+        // 3. Process payment with POCKET_WALLET and buyer info
+        ProcessPaymentRequest payReq = new ProcessPaymentRequest(
+                com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.POCKET_WALLET,
+                "comprador@hibana.tk",
+                "Comprador Test",
+                "20-30123456-7"
+        );
         mockMvc.perform(post("/api/v1/orders/{orderId}/pay", orderId)
                         .header("X-User-Id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -94,6 +103,36 @@ class OrderWebIntegrationTest {
                         .header("X-User-Id", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.balance", is(55.0)));
+
+        // 5. Download Invoice PDF for this paid order
+        mockMvc.perform(get("/api/v1/orders/{orderId}/invoice", orderId)
+                        .header("X-User-Id", userId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string("Content-Disposition", containsString("Factura_Hibana_" + orderId)));
+
+        // 6. Resend confirmation email
+        mockMvc.perform(post("/api/v1/orders/{orderId}/resend-confirmation", orderId)
+                        .header("X-User-Id", userId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("DISPATCHED")));
+    }
+
+    @Test
+    @DisplayName("Should serve preview invoice PDF and email template")
+    void shouldServePreviews() throws Exception {
+        // Preview PDF
+        mockMvc.perform(get("/api/v1/orders/preview/invoice.pdf"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string("Content-Disposition", containsString("Factura_Hibana_Preview.pdf")));
+
+        // Preview HTML
+        mockMvc.perform(get("/api/v1/orders/preview/email.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType("text/html;charset=UTF-8"))
+                .andExpect(content().string(containsString("HIBANA.TK")))
+                .andExpect(content().string(containsString("Confirmación de Compra")));
     }
 
     @Test

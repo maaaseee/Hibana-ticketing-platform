@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/api/v1/orders/preview/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/**").hasRole("USER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/**").hasRole("USER")
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments/**").hasRole("USER")

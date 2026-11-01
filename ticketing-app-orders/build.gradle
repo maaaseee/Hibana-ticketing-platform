@@ -49,6 +49,14 @@ dependencies {
     // 6. AMQP Messaging Backbone for Azure Service Bus / Floci-AZ
     implementation 'org.springframework.boot:spring-boot-starter-amqp'
 
+    // 7. Transactional Emailing (Mailpit / SMTP / Azure ACS ready)
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+    // 8. PDF Generation (OpenPDF) & QR Code Generation (ZXing)
+    implementation 'com.github.librepdf:openpdf:2.0.3'
+    implementation 'com.google.zxing:core:3.5.3'
+    implementation 'com.google.zxing:javase:3.5.3'
+
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
     // 7. Testing Suite
