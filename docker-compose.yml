@@ -14,13 +14,10 @@ services:
       FLOCI_AZ_STORAGE_HYBRID_FLUSH_INTERVAL_MS: 5000
       FLOCI_AZ_STORAGE_WAL_COMPACTION_INTERVAL_MS: 30000
       FLOCI_AZ_SERVICES_REDIS_MOCKED: false
-      
-      # Essential for local development: returns 'localhost' instead of container IP
       FLOCI_AZ_HOSTNAME: localhost
       FLOCI_AZ_BASE_URL: http://localhost:4577
     volumes:
       - ${USERPROFILE:-~}/.floci-studio/data:/app/data
-      # Required for Floci to manage on-demand runtime containers
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     networks:
@@ -66,6 +63,160 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 4. Mailpit: Zero-Cost Local SMTP Server & Mailbox Inspector
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit:v1.20
+    container_name: ticketing-mailpit
+    ports:
+      - "1025:1025"   # SMTP server
+      - "8025:8025"   # Web UI for email & attachment inspection
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    command: ["--smtp-auth-allow-insecure"]
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 5. Catalog Service (Events, Venues, Schedules)
+  # ---------------------------------------------------------------------------
+  catalog:
+    build:
+      context: ./ticketing-app-catalog
+      dockerfile: Dockerfile
+    container_name: ticketing-catalog
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ticketing_admin
+      DB_PASSWORD: dev_password_123
+      DB_NAME: ticketing_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 6. Inventory Service (Seat Locking, Redlock, Capacities)
+  # ---------------------------------------------------------------------------
+  inventory:
+    build:
+      context: ./ticketing-app-inventory
+      dockerfile: Dockerfile
+    container_name: ticketing-inventory
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ticketing_admin
+      DB_PASSWORD: dev_password_123
+      DB_NAME: ticketing_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 7. Orders & Financial Service (Checkout, PDF Invoices, Mailer)
+  # ---------------------------------------------------------------------------
+  orders:
+    build:
+      context: ./ticketing-app-orders
+      dockerfile: Dockerfile
+    container_name: ticketing-orders
+    ports:
+      - "8083:8083"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ticketing_admin
+      DB_PASSWORD: dev_password_123
+      DB_NAME: ticketing_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 8. Spring Cloud Gateway (Waiting Room Token Gating, Rate Limiting, CoreDNS)
+  # ---------------------------------------------------------------------------
+  gateway:
+    build:
+      context: ./ticketing-app-gateway
+      dockerfile: Dockerfile
+    container_name: ticketing-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CATALOG_SERVICE_URL: http://catalog:8081
+      INVENTORY_SERVICE_URL: http://inventory:8082
+      ORDERS_SERVICE_URL: http://orders:8083
+    depends_on:
+      redis:
+        condition: service_healthy
+      catalog:
+        condition: service_started
+      inventory:
+        condition: service_started
+      orders:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  # ---------------------------------------------------------------------------
+  # 9. Frontend Client (Vue 3 / Vite B2C Portal)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./ticketing-frontend
+      dockerfile: Dockerfile
+    container_name: ticketing-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_GATEWAY_URL: http://gateway:8080
+    volumes:
+      - ./ticketing-frontend/src:/app/src
+      - ./ticketing-frontend/public:/app/public
+    depends_on:
+      gateway:
+        condition: service_started
     restart: unless-stopped
     networks:
       - ticketing-net
