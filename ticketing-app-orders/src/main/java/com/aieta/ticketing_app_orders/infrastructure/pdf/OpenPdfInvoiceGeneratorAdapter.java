@@ -7,9 +7,7 @@ import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.lowagie.text.*;
-import com.lowagie.text.pdf.PdfPCell;
-import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.pdf.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,314 +16,380 @@ import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
+/**
+ * High-definition minimalist PDF invoice generator based on Hibana.tk design template.
+ * Combines high-resolution atmospheric corner gradient background with clean typography.
+ */
 @Component
 public class OpenPdfInvoiceGeneratorAdapter implements InvoicePdfPort {
 
     private static final Logger log = LoggerFactory.getLogger(OpenPdfInvoiceGeneratorAdapter.class);
 
-    // Hibana.tk Design System Palette
-    private static final Color COLOR_CANVAS_BASE = new Color(12, 20, 31);    // #0c141f
-    private static final Color COLOR_SURFACE_CARD = new Color(20, 28, 39);   // #141c27
-    private static final Color COLOR_SURFACE_INNER = new Color(16, 24, 37);  // #101825
-    private static final Color COLOR_BORDER_SUBTLE = new Color(35, 53, 77);  // #23354d
-    private static final Color COLOR_PRIMARY_BLUE = new Color(134, 207, 251);// #86cffb
-    private static final Color COLOR_SECONDARY_TEAL = new Color(79, 219, 200);// #4fdbc8
-    private static final Color COLOR_TEXT_WHITE = new Color(241, 245, 249);  // #f1f5f9
-    private static final Color COLOR_TEXT_MUTED = new Color(148, 163, 184);  // #94a3b8
+    // Color Palette matching the modern white minimalist template with Hibana light blue accents
+    private static final Color COLOR_TITLE_WHITE = new Color(255, 255, 255);
+    private static final Color COLOR_TEXT_MAIN = new Color(17, 24, 39);      // #111827 Dark Slate / Black
+    private static final Color COLOR_TEXT_MUTED = new Color(100, 116, 139);   // #64748b Slate Muted
+    private static final Color COLOR_TEXT_SECONDARY = new Color(71, 85, 105); // #475569
+    private static final Color COLOR_RULE_LINE = new Color(17, 24, 39);      // #111827 Clean Dark Rule
+    private static final Color COLOR_ACCENT_BLUE = new Color(0, 104, 143);    // #00688f Hibana Deep Blue Accent
 
-    private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+    private static final DateTimeFormatter DATE_SPANISH = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale.forLanguageTag("es-ES"))
             .withZone(ZoneId.of("America/Argentina/Buenos_Aires"));
+
+    private final byte[] backgroundBytes;
+
+    public OpenPdfInvoiceGeneratorAdapter() {
+        this.backgroundBytes = loadBackgroundImage();
+    }
+
+    private byte[] loadBackgroundImage() {
+        try (InputStream is = getClass().getResourceAsStream("/invoice-background.png")) {
+            if (is != null) {
+                byte[] bytes = is.readAllBytes();
+                log.info("[INVOICE-PDF] Loaded background template from classpath ({} bytes)", bytes.length);
+                return bytes;
+            }
+        } catch (Exception e) {
+            log.warn("[INVOICE-PDF] Could not load background image from classpath: {}", e.getMessage());
+        }
+        return null;
+    }
 
     @Override
     public byte[] generateInvoicePdf(InvoiceData data) {
-        log.debug("[INVOICE-PDF] Generating PDF invoice for order: {}", data.orderId());
+        log.debug("[INVOICE-PDF] Generating minimalist template PDF invoice for order: {}", data.orderId());
 
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            Document document = new Document(PageSize.A4, 28, 28, 28, 28);
-            PdfWriter.getInstance(document, out);
+            // A4 Page with 48pt horizontal margins and 42pt vertical margins
+            Document document = new Document(PageSize.A4, 48, 48, 42, 42);
+            PdfWriter writer = PdfWriter.getInstance(document, out);
+
+            // Register background page event to draw the high-resolution gradient canvas underneath
+            if (backgroundBytes != null) {
+                writer.setPageEvent(new PdfPageEventHelper() {
+                    @Override
+                    public void onEndPage(PdfWriter w, Document doc) {
+                        try {
+                            PdfContentByte cb = w.getDirectContentUnder();
+                            Image bg = Image.getInstance(backgroundBytes);
+                            bg.setAbsolutePosition(0, 0);
+                            bg.scaleAbsolute(PageSize.A4.getWidth(), PageSize.A4.getHeight());
+                            cb.addImage(bg);
+                        } catch (Exception ex) {
+                            log.warn("[INVOICE-PDF] Error stamping background image: {}", ex.getMessage());
+                        }
+                    }
+                });
+            }
+
             document.open();
 
-            // 1. Header (Brand, Document Type Box, Invoice Identifier)
-            addHeader(document, data);
+            // 1. Giant White Title: FACTURA on the Top Aurora Gradient
+            addTopTitle(document);
 
-            // 2. Customer & Event Information Card
-            addCustomerAndEventInfo(document, data);
+            // 2. Client & Issuer Two-Column Block
+            addCustomerAndIssuerBlock(document, data);
 
-            // 3. Line Items Table (Seats, Add-ons, Service Fee)
+            // 3. Clean Minimalist Items Table
             addItemsTable(document, data);
 
-            // 4. Totals, Taxes, and QR Code Validation Block
-            addTotalsAndQr(document, data);
-
-            // 5. Official Footer Note
-            addFooter(document, data);
+            // 4. Bottom Legal / AFIP QR & Totals Summary Block
+            addBottomSummaryAndQr(document, data);
 
             document.close();
             byte[] pdfBytes = out.toByteArray();
-            log.info("[INVOICE-PDF] Successfully generated PDF invoice {} ({} bytes)", data.invoiceNumber(), pdfBytes.length);
+            log.info("[INVOICE-PDF] Successfully generated template PDF invoice {} ({} bytes)", data.invoiceNumber(), pdfBytes.length);
             return pdfBytes;
         } catch (Exception e) {
             log.error("[INVOICE-PDF] Failed to generate invoice PDF for order {}: {}", data.orderId(), e.getMessage(), e);
-            throw new RuntimeException("Error generating invoice PDF", e);
+            throw new RuntimeException("Error generating template invoice PDF", e);
         }
     }
 
-    private void addHeader(Document document, InvoiceData data) throws DocumentException {
-        PdfPTable headerTable = new PdfPTable(3);
-        headerTable.setWidthPercentage(100);
-        headerTable.setWidths(new float[]{42f, 16f, 42f});
-        headerTable.setSpacingAfter(12f);
+    private void addTopTitle(Document document) throws DocumentException {
+        // Space above the title to align perfectly with the upper mesh gradient
+        Paragraph spacer = new Paragraph();
+        spacer.setSpacingBefore(12f);
+        document.add(spacer);
 
-        // Left: Corporate Identity
-        PdfPCell leftCell = new PdfPCell();
-        leftCell.setBorder(Rectangle.NO_BORDER);
-        leftCell.setBackgroundColor(COLOR_CANVAS_BASE);
-        leftCell.setPadding(8f);
-
-        Font brandFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_PRIMARY_BLUE);
-        Font subBrandFont = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_SECONDARY_TEAL);
-        Font legalFont = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_TEXT_MUTED);
-
-        leftCell.addElement(new Paragraph("HIBANA.TK", brandFont));
-        leftCell.addElement(new Paragraph("PLATAFORMA OFICIAL DE ENTRADAS", subBrandFont));
-        leftCell.addElement(new Paragraph("Hibana.tk Entertainment S.A.", legalFont));
-        leftCell.addElement(new Paragraph("CUIT: 30-71829104-9 • IVA Resp. Inscripto", legalFont));
-        leftCell.addElement(new Paragraph("Av. Figueroa Alcorta 7597, CABA, Argentina", legalFont));
-        headerTable.addCell(leftCell);
-
-        // Center: Official Voucher Type Box ("B" Code 006)
-        PdfPCell centerCell = new PdfPCell();
-        centerCell.setBorder(Rectangle.BOX);
-        centerCell.setBorderColor(COLOR_PRIMARY_BLUE);
-        centerCell.setBorderWidth(1.5f);
-        centerCell.setBackgroundColor(COLOR_SURFACE_CARD);
-        centerCell.setHorizontalAlignment(Element.ALIGN_CENTER);
-        centerCell.setVerticalAlignment(Element.ALIGN_MIDDLE);
-        centerCell.setPadding(4f);
-
-        Font typeFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 22, COLOR_PRIMARY_BLUE);
-        Font codeFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, COLOR_TEXT_MUTED);
-
-        Paragraph typeP = new Paragraph("B", typeFont);
-        typeP.setAlignment(Element.ALIGN_CENTER);
-        Paragraph codeP = new Paragraph("COD. 006", codeFont);
-        codeP.setAlignment(Element.ALIGN_CENTER);
-
-        centerCell.addElement(typeP);
-        centerCell.addElement(codeP);
-        headerTable.addCell(centerCell);
-
-        // Right: Invoice Metadata
-        PdfPCell rightCell = new PdfPCell();
-        rightCell.setBorder(Rectangle.NO_BORDER);
-        rightCell.setBackgroundColor(COLOR_CANVAS_BASE);
-        rightCell.setPadding(8f);
-        rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-
-        Font invoiceTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, COLOR_TEXT_WHITE);
-        Font invoiceDataFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_PRIMARY_BLUE);
-        Font invoiceDetailFont = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_TEXT_MUTED);
-
-        Paragraph rightP = new Paragraph();
-        rightP.setAlignment(Element.ALIGN_RIGHT);
-        rightP.add(new Chunk("FACTURA\n", invoiceTitleFont));
-        rightP.add(new Chunk(data.invoiceNumber() + "\n", invoiceDataFont));
-        rightP.add(new Chunk("Fecha: " + DATE_FMT.format(data.issuedAt()) + "\n", invoiceDetailFont));
-        rightP.add(new Chunk("Orden Ref: #" + data.orderId() + "\n", invoiceDetailFont));
-        rightP.add(new Chunk("Moneda: " + data.currency() + "\n", invoiceDetailFont));
-        rightCell.addElement(rightP);
-
-        headerTable.addCell(rightCell);
-        document.add(headerTable);
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 36f, COLOR_TITLE_WHITE);
+        Paragraph titleP = new Paragraph("FACTURA", titleFont);
+        titleP.setSpacingAfter(48f);
+        document.add(titleP);
     }
 
-    private void addCustomerAndEventInfo(Document document, InvoiceData data) throws DocumentException {
-        PdfPTable infoTable = new PdfPTable(2);
-        infoTable.setWidthPercentage(100);
-        infoTable.setWidths(new float[]{50f, 50f});
-        infoTable.setSpacingAfter(14f);
+    private void addCustomerAndIssuerBlock(Document document, InvoiceData data) throws DocumentException {
+        PdfPTable metaTable = new PdfPTable(2);
+        metaTable.setWidthPercentage(100);
+        metaTable.setWidths(new float[]{55f, 45f});
+        metaTable.setSpacingAfter(36f);
 
-        Font sectionHeaderFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_SECONDARY_TEAL);
-        Font labelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, COLOR_TEXT_MUTED);
-        Font valFont = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_TEXT_WHITE);
+        // --- LEFT COLUMN: Buyer Info & Invoice Number ---
+        PdfPCell leftCell = new PdfPCell();
+        leftCell.setBorder(Rectangle.NO_BORDER);
+        leftCell.setPadding(0);
 
-        // Left: Buyer Info
-        PdfPCell buyerCell = new PdfPCell();
-        buyerCell.setBackgroundColor(COLOR_SURFACE_CARD);
-        buyerCell.setBorderColor(COLOR_BORDER_SUBTLE);
-        buyerCell.setPadding(8f);
+        Font nameFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14f, COLOR_TEXT_MAIN);
+        Font invoiceNoFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12f, COLOR_TEXT_MAIN);
+        Font subDetailFont = FontFactory.getFont(FontFactory.HELVETICA, 9.5f, COLOR_TEXT_SECONDARY);
+        Font tinyDetailFont = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, COLOR_TEXT_MUTED);
 
-        buyerCell.addElement(new Paragraph("DATOS DEL COMPRADOR", sectionHeaderFont));
-        buyerCell.addElement(createKeyValue("Nombre:", data.buyerName(), labelFont, valFont));
-        buyerCell.addElement(createKeyValue("Email:", data.buyerEmail(), labelFont, valFont));
-        buyerCell.addElement(createKeyValue("Identificación / CUIT:", data.buyerTaxId(), labelFont, valFont));
-        buyerCell.addElement(createKeyValue("Medio de Pago:", data.paymentMethod(), labelFont, valFont));
-        infoTable.addCell(buyerCell);
+        Paragraph nameP = new Paragraph(data.buyerName().toUpperCase(), nameFont);
+        nameP.setSpacingAfter(6f);
+        leftCell.addElement(nameP);
 
-        // Right: Event Details
-        PdfPCell eventCell = new PdfPCell();
-        eventCell.setBackgroundColor(COLOR_SURFACE_CARD);
-        eventCell.setBorderColor(COLOR_BORDER_SUBTLE);
-        eventCell.setPadding(8f);
+        Paragraph invP = new Paragraph("FACTURA Nº " + cleanInvoiceNumber(data.invoiceNumber()), invoiceNoFont);
+        invP.setSpacingAfter(8f);
+        leftCell.addElement(invP);
 
-        eventCell.addElement(new Paragraph("DETALLE DEL ESPECTÁCULO", sectionHeaderFont));
-        eventCell.addElement(createKeyValue("Show:", data.eventTitle(), labelFont, valFont));
-        eventCell.addElement(createKeyValue("Fecha y Hora:", data.eventDate(), labelFont, valFont));
-        eventCell.addElement(createKeyValue("Recinto:", data.venueName(), labelFont, valFont));
-        eventCell.addElement(createKeyValue("Ubicación:", data.venueAddress(), labelFont, valFont));
-        infoTable.addCell(eventCell);
+        if (data.eventTitle() != null && !data.eventTitle().isBlank()) {
+            Paragraph eventP = new Paragraph(data.eventTitle(), subDetailFont);
+            leftCell.addElement(eventP);
+        }
 
-        document.add(infoTable);
+        if (data.venueName() != null) {
+            String venueStr = data.venueName() + (data.eventDate() != null ? " • " + data.eventDate() : "");
+            leftCell.addElement(new Paragraph(venueStr, tinyDetailFont));
+        }
+
+        metaTable.addCell(leftCell);
+
+        // --- RIGHT COLUMN: Issue Date & Issuer Company Details ---
+        PdfPCell rightCell = new PdfPCell();
+        rightCell.setBorder(Rectangle.NO_BORDER);
+        rightCell.setPadding(0);
+        rightCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+
+        Font labelDateFont = FontFactory.getFont(FontFactory.HELVETICA, 9f, COLOR_TEXT_MUTED);
+        Font valDateFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9.5f, COLOR_TEXT_MAIN);
+        Font issuerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9f, COLOR_TEXT_SECONDARY);
+        Font legalFont = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, COLOR_TEXT_MUTED);
+        Font emailLinkFont = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, COLOR_ACCENT_BLUE);
+
+        Paragraph dateLabelP = new Paragraph("Fecha de expedición:", labelDateFont);
+        dateLabelP.setAlignment(Element.ALIGN_RIGHT);
+        rightCell.addElement(dateLabelP);
+
+        Paragraph dateValP = new Paragraph(DATE_SPANISH.format(data.issuedAt()), valDateFont);
+        dateValP.setAlignment(Element.ALIGN_RIGHT);
+        dateValP.setSpacingAfter(10f);
+        rightCell.addElement(dateValP);
+
+        Paragraph issuerP = new Paragraph("Hibana.tk Entertainment S.A.", issuerFont);
+        issuerP.setAlignment(Element.ALIGN_RIGHT);
+        rightCell.addElement(issuerP);
+
+        Paragraph addressP = new Paragraph("Av. Figueroa Alcorta 7597, CABA, CP: 1428", legalFont);
+        addressP.setAlignment(Element.ALIGN_RIGHT);
+        rightCell.addElement(addressP);
+
+        Paragraph cuitP = new Paragraph("CUIT: 30-71829104-9 • IVA Resp. Inscripto", legalFont);
+        cuitP.setAlignment(Element.ALIGN_RIGHT);
+        rightCell.addElement(cuitP);
+
+        Paragraph contactP = new Paragraph("hola@hibana.tk • www.hibana.tk", emailLinkFont);
+        contactP.setAlignment(Element.ALIGN_RIGHT);
+        rightCell.addElement(contactP);
+
+        metaTable.addCell(rightCell);
+        document.add(metaTable);
     }
 
     private void addItemsTable(Document document, InvoiceData data) throws DocumentException {
-        PdfPTable table = new PdfPTable(5);
+        PdfPTable table = new PdfPTable(4);
         table.setWidthPercentage(100);
-        table.setWidths(new float[]{40f, 25f, 10f, 12f, 13f});
-        table.setSpacingAfter(14f);
+        table.setWidths(new float[]{55f, 13f, 16f, 16f});
+        table.setSpacingAfter(32f);
 
-        Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, COLOR_PRIMARY_BLUE);
-        Font cellFont = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_TEXT_WHITE);
-        Font numFont = FontFactory.getFont(FontFactory.HELVETICA, 8, COLOR_TEXT_WHITE);
+        Font headFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9.5f, COLOR_TEXT_MAIN);
+        Font itemTitleFont = FontFactory.getFont(FontFactory.HELVETICA, 9.5f, COLOR_TEXT_MAIN);
+        Font itemSubFont = FontFactory.getFont(FontFactory.HELVETICA, 8.5f, COLOR_TEXT_MUTED);
+        Font qtyFont = FontFactory.getFont(FontFactory.HELVETICA, 9.5f, COLOR_TEXT_MAIN);
+        Font priceFont = FontFactory.getFont(FontFactory.HELVETICA, 9.5f, COLOR_TEXT_MAIN);
+        Font totalFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9.5f, COLOR_TEXT_MAIN);
 
-        // Table Headers
-        String[] headers = {"DESCRIPCIÓN DEL ÍTEM", "SECTOR / UBICACIÓN", "CANT.", "PRECIO UNIT.", "TOTAL"};
-        for (int i = 0; i < headers.length; i++) {
-            PdfPCell hCell = new PdfPCell(new Phrase(headers[i], headFont));
-            hCell.setBackgroundColor(COLOR_SURFACE_INNER);
-            hCell.setBorderColor(COLOR_BORDER_SUBTLE);
-            hCell.setPadding(6f);
-            if (i >= 2) {
-                hCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            }
-            table.addCell(hCell);
-        }
+        // Header Row with top border line
+        addHeaderCell(table, "DESCRIPCIÓN", headFont, Element.ALIGN_LEFT);
+        addHeaderCell(table, "CANT.", headFont, Element.ALIGN_CENTER);
+        addHeaderCell(table, "PRECIO", headFont, Element.ALIGN_RIGHT);
+        addHeaderCell(table, "TOTAL", headFont, Element.ALIGN_RIGHT);
 
-        // Table Rows
+        // Items Rows
+        boolean isFirst = true;
         for (InvoiceData.InvoiceItem item : data.items()) {
-            addTableRow(table, item.description(), cellFont, Element.ALIGN_LEFT);
-            addTableRow(table, item.sectorAndSeat(), cellFont, Element.ALIGN_LEFT);
-            addTableRow(table, String.valueOf(item.quantity()), numFont, Element.ALIGN_RIGHT);
-            addTableRow(table, "$" + item.unitPrice().setScale(2).toString(), numFont, Element.ALIGN_RIGHT);
-            addTableRow(table, "$" + item.totalPrice().setScale(2).toString(), numFont, Element.ALIGN_RIGHT);
+            PdfPCell descCell = new PdfPCell();
+            descCell.setBorder(Rectangle.NO_BORDER);
+            descCell.setPaddingTop(isFirst ? 14f : 8f);
+            descCell.setPaddingBottom(8f);
+
+            Paragraph p = new Paragraph(item.description(), itemTitleFont);
+            if (item.sectorAndSeat() != null && !item.sectorAndSeat().isBlank()) {
+                p.add(new Chunk("\n" + item.sectorAndSeat(), itemSubFont));
+            }
+            descCell.addElement(p);
+            table.addCell(descCell);
+
+            addContentCell(table, String.valueOf(item.quantity()), qtyFont, Element.ALIGN_CENTER, isFirst);
+            addContentCell(table, formatCurrency(item.unitPrice(), data.currency()), priceFont, Element.ALIGN_RIGHT, isFirst);
+            addContentCell(table, formatCurrency(item.totalPrice(), data.currency()), totalFont, Element.ALIGN_RIGHT, isFirst);
+            isFirst = false;
         }
+
+        // Service Fee row if applicable
+        if (data.serviceFee() != null && data.serviceFee().compareTo(BigDecimal.ZERO) > 0) {
+            PdfPCell feeDescCell = new PdfPCell();
+            feeDescCell.setBorder(Rectangle.NO_BORDER);
+            feeDescCell.setPaddingTop(8f);
+            feeDescCell.setPaddingBottom(8f);
+            feeDescCell.addElement(new Paragraph("Cargo por Servicio Oficial (Plataforma y Emisión)", itemTitleFont));
+            table.addCell(feeDescCell);
+
+            addContentCell(table, "1", qtyFont, Element.ALIGN_CENTER, false);
+            addContentCell(table, formatCurrency(data.serviceFee(), data.currency()), priceFont, Element.ALIGN_RIGHT, false);
+            addContentCell(table, formatCurrency(data.serviceFee(), data.currency()), totalFont, Element.ALIGN_RIGHT, false);
+        }
+
+        // Bottom border rule across the entire table
+        PdfPCell borderRule = new PdfPCell();
+        borderRule.setColspan(4);
+        borderRule.setBorder(Rectangle.BOTTOM);
+        borderRule.setBorderWidthBottom(1.2f);
+        borderRule.setBorderColorBottom(COLOR_RULE_LINE);
+        borderRule.setPadding(0);
+        borderRule.setMinimumHeight(10f);
+        table.addCell(borderRule);
 
         document.add(table);
     }
 
-    private void addTableRow(PdfPTable table, String text, Font font, int alignment) {
-        PdfPCell cell = new PdfPCell(new Phrase(text != null ? text : "-", font));
-        cell.setBackgroundColor(COLOR_CANVAS_BASE);
-        cell.setBorderColor(COLOR_BORDER_SUBTLE);
-        cell.setPadding(6f);
+    private void addHeaderCell(PdfPTable table, String text, Font font, int alignment) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.TOP | Rectangle.BOTTOM);
+        cell.setBorderWidthTop(1.2f);
+        cell.setBorderWidthBottom(1.2f);
+        cell.setBorderColorTop(COLOR_RULE_LINE);
+        cell.setBorderColorBottom(COLOR_RULE_LINE);
+        cell.setPaddingTop(8f);
+        cell.setPaddingBottom(8f);
         cell.setHorizontalAlignment(alignment);
         cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
         table.addCell(cell);
     }
 
-    private void addTotalsAndQr(Document document, InvoiceData data) throws DocumentException {
+    private void addContentCell(PdfPTable table, String text, Font font, int alignment, boolean isFirst) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPaddingTop(isFirst ? 14f : 8f);
+        cell.setPaddingBottom(8f);
+        cell.setHorizontalAlignment(alignment);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+
+    private void addBottomSummaryAndQr(Document document, InvoiceData data) throws DocumentException {
         PdfPTable bottomTable = new PdfPTable(2);
         bottomTable.setWidthPercentage(100);
         bottomTable.setWidths(new float[]{55f, 45f});
-        bottomTable.setSpacingAfter(10f);
 
-        // Left Cell: QR Code & AFIP / Fiscal CAE
+        // --- LEFT COLUMN: AFIP QR Code & Legal Data ---
         PdfPCell leftCell = new PdfPCell();
-        leftCell.setBackgroundColor(COLOR_SURFACE_CARD);
-        leftCell.setBorderColor(COLOR_BORDER_SUBTLE);
-        leftCell.setPadding(8f);
+        leftCell.setBorder(Rectangle.NO_BORDER);
+        leftCell.setPadding(0);
 
-        Font caeLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, COLOR_TEXT_MUTED);
-        Font caeVal = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8, COLOR_TEXT_WHITE);
+        Font qrTitleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 8f, COLOR_TEXT_MAIN);
+        Font qrMetaFont = FontFactory.getFont(FontFactory.HELVETICA, 7.5f, COLOR_TEXT_MUTED);
 
         try {
             String qrPayload = "https://hibana.tk/verify/" + data.orderId() + "?invoice=" + data.invoiceNumber() + "&cuit=30718291049";
-            Image qrImage = generateQrImage(qrPayload, 80, 80);
-            qrImage.setAlignment(Element.ALIGN_LEFT);
+            Image qrImage = generateQrImage(qrPayload, 65, 65);
 
-            PdfPTable qrTable = new PdfPTable(2);
-            qrTable.setWidthPercentage(100);
-            qrTable.setWidths(new float[]{30f, 70f});
+            PdfPTable qrLayout = new PdfPTable(2);
+            qrLayout.setWidthPercentage(100);
+            qrLayout.setWidths(new float[]{25f, 75f});
 
             PdfPCell imgCell = new PdfPCell(qrImage);
             imgCell.setBorder(Rectangle.NO_BORDER);
             imgCell.setPadding(0);
-            qrTable.addCell(imgCell);
+            qrLayout.addCell(imgCell);
 
             PdfPCell metaCell = new PdfPCell();
             metaCell.setBorder(Rectangle.NO_BORDER);
             metaCell.setPaddingLeft(6f);
-            metaCell.addElement(new Paragraph("CAE N°: " + data.caeNumber(), caeVal));
-            metaCell.addElement(new Paragraph("Vto. CAE: " + DATE_FMT.format(data.caeExpiresAt()), caeLabel));
-            metaCell.addElement(new Paragraph("Código de Control: AFIP / HIBANA SEC-01", caeLabel));
-            qrTable.addCell(metaCell);
+            metaCell.addElement(new Paragraph("Comprobante Fiscal Electrónico AFIP", qrTitleFont));
+            metaCell.addElement(new Paragraph("CAE Nº: " + data.caeNumber(), qrMetaFont));
+            metaCell.addElement(new Paragraph("Vto. CAE: " + DATE_SPANISH.format(data.caeExpiresAt()), qrMetaFont));
+            metaCell.addElement(new Paragraph("Id. Orden: #" + data.orderId(), qrMetaFont));
+            qrLayout.addCell(metaCell);
 
-            leftCell.addElement(qrTable);
+            leftCell.addElement(qrLayout);
         } catch (Exception e) {
-            leftCell.addElement(new Paragraph("CAE N°: " + data.caeNumber(), caeVal));
-            leftCell.addElement(new Paragraph("Vto. CAE: " + DATE_FMT.format(data.caeExpiresAt()), caeLabel));
+            leftCell.addElement(new Paragraph("CAE Nº: " + data.caeNumber(), qrTitleFont));
+            leftCell.addElement(new Paragraph("Vto. CAE: " + DATE_SPANISH.format(data.caeExpiresAt()), qrMetaFont));
         }
 
         bottomTable.addCell(leftCell);
 
-        // Right Cell: Subtotals, VAT, and Grand Total
+        // --- RIGHT COLUMN: Totals Summary ---
         PdfPCell rightCell = new PdfPCell();
-        rightCell.setBackgroundColor(COLOR_SURFACE_CARD);
-        rightCell.setBorderColor(COLOR_BORDER_SUBTLE);
-        rightCell.setPadding(8f);
+        rightCell.setBorder(Rectangle.NO_BORDER);
+        rightCell.setPadding(0);
 
-        Font totLabel = FontFactory.getFont(FontFactory.HELVETICA, 9, COLOR_TEXT_MUTED);
-        Font totVal = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_TEXT_WHITE);
-        Font grandLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, COLOR_PRIMARY_BLUE);
-        Font grandVal = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, COLOR_PRIMARY_BLUE);
+        Font totLabelFont = FontFactory.getFont(FontFactory.HELVETICA, 9.5f, COLOR_TEXT_SECONDARY);
+        Font totValFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9.5f, COLOR_TEXT_MAIN);
+        Font grandLabelFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10.5f, COLOR_TEXT_MAIN);
+        Font grandValFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12.5f, COLOR_TEXT_MAIN);
 
-        PdfPTable totalsGrid = new PdfPTable(2);
-        totalsGrid.setWidthPercentage(100);
-        totalsGrid.setWidths(new float[]{60f, 40f});
+        PdfPTable totalsTable = new PdfPTable(2);
+        totalsTable.setWidthPercentage(100);
+        totalsTable.setWidths(new float[]{55f, 45f});
 
-        addTotalLine(totalsGrid, "Subtotal Neto:", "$" + data.subtotal().setScale(2), totLabel, totVal);
-        addTotalLine(totalsGrid, "Cargo por Servicio (7%):", "$" + data.serviceFee().setScale(2), totLabel, totVal);
-        addTotalLine(totalsGrid, "IVA Débito Fiscal (21%):", "$" + data.vatTax().setScale(2), totLabel, totVal);
-        addTotalLine(totalsGrid, "TOTAL ABONADO:", "$" + data.grandTotal().setScale(2) + " " + data.currency(), grandLabel, grandVal);
+        addSummaryLine(totalsTable, "IMPORTE TOTAL:", formatCurrency(data.subtotal(), data.currency()), totLabelFont, totValFont);
+        addSummaryLine(totalsTable, "IVA (21%):", formatCurrency(data.vatTax(), data.currency()), totLabelFont, totValFont);
+        addSummaryLine(totalsTable, "IMPORTE A PAGAR:", formatCurrency(data.grandTotal(), data.currency()), grandLabelFont, grandValFont);
 
-        rightCell.addElement(totalsGrid);
+        rightCell.addElement(totalsTable);
         bottomTable.addCell(rightCell);
 
         document.add(bottomTable);
     }
 
-    private void addTotalLine(PdfPTable table, String label, String val, Font lFont, Font vFont) {
+    private void addSummaryLine(PdfPTable table, String label, String value, Font lFont, Font vFont) {
         PdfPCell lCell = new PdfPCell(new Phrase(label, lFont));
         lCell.setBorder(Rectangle.NO_BORDER);
-        lCell.setPadding(3f);
+        lCell.setPaddingTop(4f);
+        lCell.setPaddingBottom(4f);
+        lCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
         table.addCell(lCell);
 
-        PdfPCell vCell = new PdfPCell(new Phrase(val, vFont));
+        PdfPCell vCell = new PdfPCell(new Phrase(value, vFont));
         vCell.setBorder(Rectangle.NO_BORDER);
+        vCell.setPaddingTop(4f);
+        vCell.setPaddingBottom(4f);
         vCell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        vCell.setPadding(3f);
         table.addCell(vCell);
     }
 
-    private void addFooter(Document document, InvoiceData data) throws DocumentException {
-        Font footFont = FontFactory.getFont(FontFactory.HELVETICA, 7, COLOR_TEXT_MUTED);
-        Paragraph footP = new Paragraph();
-        footP.setAlignment(Element.ALIGN_CENTER);
-        footP.setSpacingBefore(8f);
-        footP.add(new Chunk("Comprobante oficial emitido por Hibana.tk S.A. • Registro Electrónico AFIP RG 4291/2018\n", footFont));
-        footP.add(new Chunk("Para verificar la autenticidad de esta factura escanee el código QR o visite https://hibana.tk/verify/" + data.orderId(), footFont));
-        document.add(footP);
+    private String cleanInvoiceNumber(String raw) {
+        if (raw == null || raw.isBlank()) return "001";
+        return raw;
     }
 
-    private Paragraph createKeyValue(String key, String val, Font keyFont, Font valFont) {
-        Paragraph p = new Paragraph();
-        p.setLeading(11f);
-        p.add(new Chunk(key + " ", keyFont));
-        p.add(new Chunk((val != null ? val : "-") + "\n", valFont));
-        return p;
+    private String formatCurrency(BigDecimal amount, String currency) {
+        if (amount == null) return "0,00";
+        String formatted = String.format(Locale.GERMAN, "%,.2f", amount);
+        if ("EUR".equalsIgnoreCase(currency)) {
+            return formatted + " €";
+        }
+        if ("USD".equalsIgnoreCase(currency)) {
+            return "USD " + formatted;
+        }
+        return "$ " + formatted + " ARS";
     }
 
     private Image generateQrImage(String text, int width, int height) throws Exception {
