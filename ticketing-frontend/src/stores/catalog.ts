@@ -95,8 +95,8 @@ export const useCatalogStore = defineStore('catalog', () => {
         events.value = results
       }
       return results
-    } catch (err: any) {
-      error.value = err?.message || 'Error en la búsqueda'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error en la búsqueda'
       return []
     } finally {
       isLoading.value = false
@@ -111,8 +111,8 @@ export const useCatalogStore = defineStore('catalog', () => {
       if (data && data.length > 0) {
         events.value = data
       }
-    } catch (err: any) {
-      error.value = err?.message || 'Error al sincronizar catálogo'
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Error al sincronizar catálogo'
     } finally {
       isLoading.value = false
     }

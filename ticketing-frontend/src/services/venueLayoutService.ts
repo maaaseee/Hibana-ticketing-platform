@@ -22,6 +22,18 @@ export function resolveVenueSeatMapUrl(venueIdOrUrl?: string): string {
   return `/seat-maps/${venueIdOrUrl}.json`
 }
 
+interface NodeTestEnv {
+  process?: {
+    cwd: () => string
+    env?: Record<string, string | undefined>
+  }
+  require?: (id: string) => {
+    existsSync: (path: string) => boolean
+    readFileSync: (path: string, encoding: string) => string
+    resolve: (...paths: string[]) => string
+  }
+}
+
 /**
  * Returns a cached layout synchronously if already loaded.
  * In unit testing environments (Node/Vitest), synchronously pre-warms the layout from public/
@@ -33,17 +45,17 @@ export function getCachedVenueLayout(venueIdOrUrl?: string): VenueSeatMapLayout 
   const filename = resolvedPath.substring(resolvedPath.lastIndexOf('/') + 1)
   if (layoutCache.has(filename)) return layoutCache.get(filename)!
 
-  const globalObj = globalThis as Record<string, any>
+  const globalEnv = globalThis as unknown as NodeTestEnv
   if (
-    globalObj.process &&
-    (import.meta.env?.MODE === 'test' || globalObj.process.env?.NODE_ENV === 'test')
+    globalEnv.process &&
+    (import.meta.env?.MODE === 'test' || globalEnv.process.env?.NODE_ENV === 'test')
   ) {
     try {
-      const req = globalObj['require'] || (globalThis as Record<string, any>)['require']
+      const req = globalEnv.require
       if (req) {
         const fs = req('fs')
         const path = req('path')
-        const publicPath = path.resolve(globalObj.process.cwd(), 'public/seat-maps', filename)
+        const publicPath = path.resolve(globalEnv.process.cwd(), 'public/seat-maps', filename)
         if (fs.existsSync(publicPath)) {
           const raw = fs.readFileSync(publicPath, 'utf-8')
           const data = JSON.parse(raw) as VenueSeatMapLayout
@@ -71,18 +83,18 @@ export async function getVenueLayout(venueIdOrUrl?: string): Promise<VenueSeatMa
   const resolvedPath = resolveVenueSeatMapUrl(venueIdOrUrl)
   const filename = resolvedPath.substring(resolvedPath.lastIndexOf('/') + 1)
 
-  const globalObj = globalThis as Record<string, any>
+  const globalEnv = globalThis as unknown as NodeTestEnv
   const isTest =
-    import.meta.env?.MODE === 'test' || globalObj.process?.env?.NODE_ENV === 'test'
+    import.meta.env?.MODE === 'test' || globalEnv.process?.env?.NODE_ENV === 'test'
 
   // In test / offline environments: load public asset without attempting failing network sockets
-  if (isTest && globalObj.process) {
+  if (isTest && globalEnv.process) {
     try {
       const fsModuleName = 'fs'
       const pathModuleName = 'path'
       const fs = await import(/* @vite-ignore */ fsModuleName)
       const path = await import(/* @vite-ignore */ pathModuleName)
-      const publicPath = path.resolve(globalObj.process.cwd(), 'public/seat-maps', filename)
+      const publicPath = path.resolve(globalEnv.process.cwd(), 'public/seat-maps', filename)
       if (fs.existsSync(publicPath)) {
         const raw = fs.readFileSync(publicPath, 'utf-8')
         const data = JSON.parse(raw) as VenueSeatMapLayout

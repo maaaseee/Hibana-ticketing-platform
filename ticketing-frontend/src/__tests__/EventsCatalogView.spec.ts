@@ -3,7 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
 import EventsCatalogView from '../views/EventsCatalogView.vue'
-import { useCatalogStore, getMinEventPrice } from '../stores/catalog'
+import { useCatalogStore } from '../stores/catalog'
 
 function setupTestEnvironment() {
   const pinia = createPinia()

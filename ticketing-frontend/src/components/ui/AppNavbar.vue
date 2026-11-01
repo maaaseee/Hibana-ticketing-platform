@@ -63,11 +63,6 @@ onUnmounted(() => {
     mediaQueryList.removeEventListener('change', handleMediaQueryChange)
   }
 })
-
-function navigateTo(routeName: string) {
-  isMobileSidebarOpen.value = false
-  router.push({ name: routeName })
-}
 </script>
 
 <template>

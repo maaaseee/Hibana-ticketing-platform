@@ -16,7 +16,7 @@ export interface CategoryDefinition {
   description: string
 }
 
-const props = defineProps<{
+defineProps<{
   activeAccordion: string
   categoryDefinitions: CategoryDefinition[]
   selectedSector: GeneralSector
@@ -24,7 +24,7 @@ const props = defineProps<{
   maxTicketsAllowed: number
   campoTicketCount: number
   isCampoMode: boolean
-  getCategoryPriceRangeFormatted: (catName: any) => string
+  getCategoryPriceRangeFormatted: (catName: CategoryDefinition['name']) => string
   getBackendSectorInfo: (secId: string, secName: string, fallbackPrice?: number) => SectorPricingInfo
 }>()
 

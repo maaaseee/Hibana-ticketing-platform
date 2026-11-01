@@ -8,7 +8,7 @@ export interface CartSeatItem {
   price: number
 }
 
-const props = defineProps<{
+defineProps<{
   maxTicketsAllowed: number
   selectedZone: SectorZone
   currentZonePriceFormatted: string

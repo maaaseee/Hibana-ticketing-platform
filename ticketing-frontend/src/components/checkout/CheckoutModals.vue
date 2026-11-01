@@ -51,7 +51,7 @@ async function handleResendEmail() {
   try {
     const res = await orderService.resendConfirmationEmail(props.orderId, props.buyerEmail)
     resendFeedback.value = res.message || 'Correo reenviado exitosamente.'
-  } catch (err: any) {
+  } catch {
     resendFeedback.value = 'Correo enviado a la cola de despacho.'
   } finally {
     isResendingEmail.value = false

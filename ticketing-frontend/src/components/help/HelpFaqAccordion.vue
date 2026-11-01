@@ -117,7 +117,7 @@ const emit = defineEmits<{
         </div>
         <button
           @click="emit('clearSearch')"
-          class="mt-2 bg-surface-elevated hover:bg-surface-interactive text-primary px-4 py-2 rounded-lg font-mono text-xs border border-border-subtle transition-colors cursor-pointer"
+          class="mt-2 bg-surface-elevated hover:bg-surface-interactive text-primary px-4 py-2 rounded-lg font-label-sm font-mono text-xs border border-border-subtle transition-colors cursor-pointer"
         >
           Borrar búsqueda
         </button>

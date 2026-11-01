@@ -39,7 +39,7 @@ export async function request<T>(
     'Trace-ID': traceId,
     'X-Trace-Id': traceId,
     ...(storedToken ? { 'X-Checkout-Token': storedToken } : {}),
-    ...((options.headers as Record<string, string>) || {}),
+    ...(options.headers as Record<string, string>),
   }
 
   try {
@@ -73,8 +73,8 @@ export async function request<T>(
     }
 
     return (await response.json()) as T
-  } catch (err: any) {
-    if (err.name === 'AbortError') {
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
       throw new ApiError(408, 'La solicitud al servidor excedió el tiempo límite.')
     }
     throw err
@@ -85,7 +85,7 @@ export async function request<T>(
 
 export const apiClient = {
   get: <T>(url: string, options?: RequestInit) => request<T>(url, { ...options, method: 'GET' }),
-  post: <T>(url: string, body?: any, options?: RequestInit) =>
+  post: <T>(url: string, body?: unknown, options?: RequestInit) =>
     request<T>(url, {
       ...options,
       method: 'POST',

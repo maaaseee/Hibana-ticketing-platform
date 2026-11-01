@@ -8,7 +8,7 @@ import {
   DialogDescription
 } from 'radix-vue'
 
-const props = defineProps<{
+defineProps<{
   showExitModal: boolean
   showTimeExpiredModal: boolean
 }>()

@@ -84,7 +84,7 @@ const event = computed(() => catalogStore.getEventById(eventId.value))
 
 // Política dinámica de compra según el organizador del evento
 const maxTicketsAllowed = computed<number>(() => {
-  const policy = event.value?.maxTicketsPerUser || (event.value as any)?.salesPolicy?.maxTicketsPerUser
+  const policy = event.value?.maxTicketsPerUser || event.value?.salesPolicy?.maxTicketsPerUser
   if (typeof policy === 'number' && policy > 0) {
     return policy
   }
@@ -140,7 +140,7 @@ const activeAccordion = ref<string>('platea_alta')
 const venueLayout = ref<VenueSeatMapLayout | null>(venueLayoutService.getCachedVenueLayout(event.value?.venueId || 'arena-buenos-aires'))
 
 async function loadVenueMap() {
-  const targetVenue = event.value?.venueId || (event.value as any)?.seatMapUrl || 'arena-buenos-aires'
+  const targetVenue = event.value?.venueId || event.value?.seatMapUrl || 'arena-buenos-aires'
   const loaded = await venueLayoutService.getVenueLayout(targetVenue)
   if (loaded) {
     venueLayout.value = loaded
@@ -465,7 +465,6 @@ const categoryDefinitions: CategoryDefinition[] = [
 
 // Default active sector: Platea Alta Sur
 const selectedSector = ref<GeneralSector>(generalSectors[0]!)
-const hoveredSectorId = ref<string | null>(null)
 
 // Campo Ticket Counter (Orden de llegada - Límite dinámico según política del evento, inicia en 0)
 const campoTicketCount = ref<number>(0)
@@ -560,7 +559,6 @@ const sectorZones: SectorZone[] = [
 
 // Default active zone: Zona A2
 const selectedZone = ref<SectorZone>(sectorZones[1]!)
-const hoveredZoneId = ref<string | null>(null)
 
 // Buscar subsector en el backend para la zona y sector activo
 function findZoneBackendSector(zone: SectorZone) {

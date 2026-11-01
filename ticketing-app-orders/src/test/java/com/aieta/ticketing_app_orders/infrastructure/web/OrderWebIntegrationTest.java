@@ -2,7 +2,6 @@ package com.aieta.ticketing_app_orders.infrastructure.web;
 
 import com.aieta.ticketing_app_orders.infrastructure.web.dto.CreateOrderRequest;
 import com.aieta.ticketing_app_orders.infrastructure.web.dto.ProcessPaymentRequest;
-import com.aieta.ticketing_app_orders.infrastructure.web.dto.TopUpWalletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,7 +17,6 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -51,26 +49,17 @@ class OrderWebIntegrationTest {
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.orderId", notNullValue()))
-                .andExpect(jsonPath("$.userId", is("web-user-1")))
+                .andExpect(jsonPath("$.reservationId", is(reservationId)))
                 .andExpect(jsonPath("$.status", is("PENDING_PAYMENT")))
                 .andExpect(jsonPath("$.totalAmount", is(59.0)));
     }
 
     @Test
-    @DisplayName("Should top up wallet and pay order successfully")
-    void shouldTopUpAndPayOrder() throws Exception {
-        String userId = "web-user-topup-" + UUID.randomUUID();
+    @DisplayName("Should pay order with Mercado Pago strategy successfully")
+    void shouldPayOrderWithMercadoPago() throws Exception {
+        String userId = "web-user-mp-" + UUID.randomUUID();
 
-        // 1. Top-up wallet with 100 EUR
-        TopUpWalletRequest topUp = new TopUpWalletRequest(new BigDecimal("100.00"));
-        mockMvc.perform(post("/api/v1/wallets/me/top-up")
-                        .header("X-User-Id", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(topUp)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.balance", is(100.0)));
-
-        // 2. Create order for 45 EUR
+        // 1. Create order for 45 EUR / Pesos
         String reservationId = "res-" + UUID.randomUUID();
         CreateOrderRequest createReq = new CreateOrderRequest(reservationId, "evt-200", "seat-200", new BigDecimal("45.00"));
         MvcResult orderResult = mockMvc.perform(post("/api/v1/orders")
@@ -83,9 +72,9 @@ class OrderWebIntegrationTest {
         String responseBody = orderResult.getResponse().getContentAsString();
         String orderId = objectMapper.readTree(responseBody).get("orderId").asText();
 
-        // 3. Process payment with POCKET_WALLET and buyer info
+        // 2. Process payment with MERCADO_PAGO and buyer info
         ProcessPaymentRequest payReq = new ProcessPaymentRequest(
-                com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.POCKET_WALLET,
+                com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.MERCADO_PAGO,
                 "comprador@hibana.tk",
                 "Comprador Test",
                 "20-30123456-7"
@@ -96,22 +85,16 @@ class OrderWebIntegrationTest {
                         .content(objectMapper.writeValueAsString(payReq)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("PAID")))
-                .andExpect(jsonPath("$.paymentMethod", is("POCKET_WALLET")));
+                .andExpect(jsonPath("$.paymentMethod", is("MERCADO_PAGO")));
 
-        // 4. Verify wallet balance decreased to 55 EUR
-        mockMvc.perform(get("/api/v1/wallets/me/balance")
-                        .header("X-User-Id", userId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.balance", is(55.0)));
-
-        // 5. Download Invoice PDF for this paid order
+        // 3. Download Invoice PDF for this paid order
         mockMvc.perform(get("/api/v1/orders/{orderId}/invoice", orderId)
                         .header("X-User-Id", userId))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string("Content-Disposition", containsString("Factura_Hibana_" + orderId)));
 
-        // 6. Resend confirmation email
+        // 4. Resend confirmation email
         mockMvc.perform(post("/api/v1/orders/{orderId}/resend-confirmation", orderId)
                         .header("X-User-Id", userId))
                 .andExpect(status().isOk())
@@ -138,7 +121,6 @@ class OrderWebIntegrationTest {
     @Test
     @DisplayName("Should return 400 Bad Request when request body is invalid")
     void shouldReturnBadRequestOnValidationFailure() throws Exception {
-        // Missing reservationId, negative total
         String invalidJson = """
                 {
                     "reservationId": "",

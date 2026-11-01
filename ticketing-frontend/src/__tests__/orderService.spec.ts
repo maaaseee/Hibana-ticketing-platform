@@ -13,11 +13,11 @@ describe('orderService', () => {
 
   it('triggers browser download when invoice is requested', async () => {
     const mockBlob = new Blob(['%PDF-mock-data'], { type: 'application/pdf' })
-    const mockFetch = vi.fn().mockResolvedValue({
+    const mockFetch = vi.fn<() => Promise<unknown>>().mockResolvedValue({
       ok: true,
       blob: () => Promise.resolve(mockBlob),
     })
-    globalThis.fetch = mockFetch
+    globalThis.fetch = mockFetch as unknown as typeof fetch
 
     const createObjectURLSpy = vi.spyOn(window.URL, 'createObjectURL').mockReturnValue('blob:mock-url')
     const revokeObjectURLSpy = vi.spyOn(window.URL, 'revokeObjectURL').mockImplementation(() => {})

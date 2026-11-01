@@ -21,9 +21,9 @@ async function loadPdfBlob() {
       URL.revokeObjectURL(pdfBlobUrl.value)
     }
     pdfBlobUrl.value = URL.createObjectURL(blob)
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[INVOICE-PREVIEW] Error loading PDF blob:', err)
-    loadError.value = err.message || 'No se pudo generar el documento PDF.'
+    loadError.value = err instanceof Error ? err.message : 'No se pudo generar el documento PDF.'
   } finally {
     isLoading.value = false
   }

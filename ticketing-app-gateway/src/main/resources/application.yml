@@ -97,7 +97,7 @@ spring:
               uri: ${ORDERS_SERVICE_URL:http://localhost:8083}
               order: 110
               predicates:
-                - Path=/api/v1/orders/**, /api/v1/payments/**, /api/v1/wallets/**
+                - Path=/api/v1/orders/**, /api/v1/payments/**, /api/v1/vouchers/**
               filters:
                 - name: RequestRateLimiter
                   args:

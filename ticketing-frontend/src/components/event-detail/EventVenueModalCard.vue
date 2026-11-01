@@ -10,13 +10,13 @@ import {
   DialogClose
 } from 'radix-vue'
 import VenueSectorMap from '../ui/VenueSectorMap.vue'
-import type { EventItem, VenueInfo } from '../../types'
+import type { EventItem, VenueInfo, SectorPricing } from '../../types'
 
 defineProps<{
   event: EventItem
   venueExteriorImage?: string | null
   currentVenue?: VenueInfo
-  sectors: any[]
+  sectors: SectorPricing[]
 }>()
 </script>
 

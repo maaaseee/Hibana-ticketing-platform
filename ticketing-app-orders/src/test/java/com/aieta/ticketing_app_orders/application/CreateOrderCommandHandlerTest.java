@@ -3,7 +3,6 @@ package com.aieta.ticketing_app_orders.application;
 import com.aieta.ticketing_app_orders.application.commands.create_order.CreateOrderCommand;
 import com.aieta.ticketing_app_orders.application.commands.create_order.CreateOrderCommandHandler;
 import com.aieta.ticketing_app_orders.application.commands.create_order.CreateOrderResult;
-import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.model.Money;
 import com.aieta.ticketing_app_orders.domain.model.Order;
 import com.aieta.ticketing_app_orders.domain.model.ReservationId;

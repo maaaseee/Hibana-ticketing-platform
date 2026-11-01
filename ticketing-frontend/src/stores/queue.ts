@@ -41,7 +41,7 @@ export const useQueueStore = defineStore('queue', () => {
   const tokenExpiresAt = ref<number | null>(null)
   const isConnected = ref<boolean>(true)
 
-  let timerId: any = null
+  let timerId: ReturnType<typeof setInterval> | null = null
   let eventSource: EventSource | null = null
 
   const progressPercentage = computed(() => {

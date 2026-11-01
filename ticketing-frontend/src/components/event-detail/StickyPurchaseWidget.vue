@@ -40,7 +40,7 @@ defineProps<{
   parkingInfo: ParkingInfo
   parseFunctionDate: (fn: EventFunction) => { day: string; month: string }
   cleanTime: (t?: string) => string
-  getFunctionStatusLabel: (status: any) => string
+  getFunctionStatusLabel: (status: EventFunction['status']) => string
   getPaymentLogo: (bank: string) => string
 }>()
 

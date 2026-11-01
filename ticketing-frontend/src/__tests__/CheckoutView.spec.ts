@@ -101,9 +101,9 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
     await wrapper.vm.$nextTick()
 
     // All 3 tab triggers exist
+    expect(wrapper.text()).toContain('Tarjeta de Débito')
     expect(wrapper.text()).toContain('Tarjeta de Crédito')
-    expect(wrapper.text()).toContain('Billetera Digital')
-    expect(wrapper.text()).toContain('Transferencia Bancaria')
+    expect(wrapper.text()).toContain('Mercado Pago')
 
     // Form inputs for Credit Card
     expect(wrapper.find('input[placeholder="0000 0000 0000 0000"]').exists()).toBe(true)

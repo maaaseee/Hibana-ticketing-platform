@@ -1,5 +1,9 @@
 package com.aieta.ticketing_app_orders.application.commands.process_payment;
 
+import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.PaymentContext;
+import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.PaymentExecutionResult;
+import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.PaymentStrategy;
+import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.PaymentStrategyRegistry;
 import com.aieta.ticketing_app_orders.application.common.InvoiceDataMapper;
 import com.aieta.ticketing_app_orders.application.common.mediator.RequestHandler;
 import com.aieta.ticketing_app_orders.application.dto.InvoiceData;
@@ -10,17 +14,14 @@ import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
 import com.aieta.ticketing_app_orders.domain.events.OrderPaidEvent;
 import com.aieta.ticketing_app_orders.domain.exceptions.DomainException;
-import com.aieta.ticketing_app_orders.domain.exceptions.InsufficientFundsException;
 import com.aieta.ticketing_app_orders.domain.exceptions.OrderNotFoundException;
 import com.aieta.ticketing_app_orders.domain.model.Order;
 import com.aieta.ticketing_app_orders.domain.model.OrderId;
-import com.aieta.ticketing_app_orders.domain.model.VirtualWallet;
 import com.aieta.ticketing_app_orders.domain.model.pocket.DoubleEntryTransaction;
 import com.aieta.ticketing_app_orders.domain.model.pocket.LedgerAccount;
 import com.aieta.ticketing_app_orders.domain.model.pocket.LedgerEntry;
 import com.aieta.ticketing_app_orders.domain.ports.LedgerRepositoryPort;
 import com.aieta.ticketing_app_orders.domain.ports.OrderRepositoryPort;
-import com.aieta.ticketing_app_orders.domain.ports.WalletRepositoryPort;
 import com.aieta.ticketing_app_orders.infrastructure.persistence.entity.OutboxEventJpaEntity;
 import com.aieta.ticketing_app_orders.infrastructure.persistence.repository.SpringDataOutboxRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -40,7 +41,7 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
     private static final Logger log = LoggerFactory.getLogger(ProcessPaymentCommandHandler.class);
 
     private final OrderRepositoryPort orderRepository;
-    private final WalletRepositoryPort walletRepository;
+    private final PaymentStrategyRegistry paymentStrategyRegistry;
     private final LedgerRepositoryPort ledgerRepository;
     private final SpringDataOutboxRepository outboxRepository;
     private final ObjectMapper objectMapper;
@@ -48,14 +49,14 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
     private final EmailNotificationPort emailNotificationPort;
 
     public ProcessPaymentCommandHandler(OrderRepositoryPort orderRepository,
-                                        WalletRepositoryPort walletRepository,
+                                        PaymentStrategyRegistry paymentStrategyRegistry,
                                         LedgerRepositoryPort ledgerRepository,
                                         SpringDataOutboxRepository outboxRepository,
                                         ObjectMapper objectMapper,
                                         InvoicePdfPort invoicePdfPort,
                                         EmailNotificationPort emailNotificationPort) {
         this.orderRepository = orderRepository;
-        this.walletRepository = walletRepository;
+        this.paymentStrategyRegistry = paymentStrategyRegistry;
         this.ledgerRepository = ledgerRepository;
         this.outboxRepository = outboxRepository;
         this.objectMapper = objectMapper;
@@ -79,40 +80,46 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
             return new PaymentResult(
                     order.getId().toString(),
                     order.getStatus().name(),
-                    order.getPaymentMethod() != null ? order.getPaymentMethod().name() : PaymentMethod.POCKET_WALLET.name(),
+                    order.getPaymentMethod() != null ? order.getPaymentMethod().name() : PaymentMethod.CREDIT_CARD.name(),
                     order.getTotal().amount(),
                     order.getUpdatedAt()
             );
         }
 
-        PaymentMethod method = request.paymentMethod() != null ? request.paymentMethod() : PaymentMethod.POCKET_WALLET;
+        PaymentMethod method = request.paymentMethod() != null ? request.paymentMethod() : PaymentMethod.CREDIT_CARD;
 
-        // Process payment based on method
-        if (method == PaymentMethod.POCKET_WALLET) {
-            VirtualWallet wallet = walletRepository.findByUserIdForUpdate(request.userId())
-                    .orElseThrow(() -> new InsufficientFundsException(order.getTotal().amount(), order.getTotal().amount()));
-
-            // Debit user wallet
-            wallet.debit(order.getTotal().amount());
-            walletRepository.save(wallet);
-
-            // Double-entry bookkeeping ledger (com.aieta.pocket)
-            UUID txRef = UUID.randomUUID();
-            LedgerAccount revenueAccount = ledgerRepository.findAccountByOwnerIdAndType("PLATFORM", LedgerAccount.AccountType.REVENUE)
-                    .orElseGet(() -> ledgerRepository.saveAccount(new LedgerAccount(
-                            UUID.randomUUID(), "PLATFORM", LedgerAccount.AccountType.REVENUE, order.getTotal().amount(), Currency.getInstance("EUR"))));
-
-            LedgerAccount assetAccount = ledgerRepository.findAccountByOwnerIdAndType("PLATFORM", LedgerAccount.AccountType.ASSET)
-                    .orElseGet(() -> ledgerRepository.saveAccount(new LedgerAccount(
-                            UUID.randomUUID(), "PLATFORM", LedgerAccount.AccountType.ASSET, order.getTotal().amount(), Currency.getInstance("EUR"))));
-
-            DoubleEntryTransaction doubleEntryTx = new DoubleEntryTransaction(txRef)
-                    .addDebit(assetAccount.id(), order.getTotal().amount(), "Settlement deposit for order " + order.getId())
-                    .addCredit(revenueAccount.id(), order.getTotal().amount(), "Ticket revenue for order " + order.getId());
-
-            List<LedgerEntry> entries = doubleEntryTx.buildAndValidate();
-            ledgerRepository.recordEntries(entries);
+        // 1. Strategy Pattern: execute payment according to the selected gateway
+        PaymentStrategy strategy = paymentStrategyRegistry.getStrategy(method);
+        PaymentContext context = new PaymentContext(
+                order,
+                request.userId(),
+                request.buyerEmail(),
+                request.buyerName(),
+                request.buyerTaxId(),
+                request.installments(),
+                request.issuingBank()
+        );
+        PaymentExecutionResult executionResult = strategy.execute(context);
+        if (!executionResult.success()) {
+            throw new DomainException("Payment processing failed: " + executionResult.message());
         }
+
+        // 2. Double-entry bookkeeping ledger (com.aieta.pocket) for platform settlement
+        UUID txRef = UUID.randomUUID();
+        LedgerAccount revenueAccount = ledgerRepository.findAccountByOwnerIdAndType("PLATFORM", LedgerAccount.AccountType.REVENUE)
+                .orElseGet(() -> ledgerRepository.saveAccount(new LedgerAccount(
+                        UUID.randomUUID(), "PLATFORM", LedgerAccount.AccountType.REVENUE, order.getTotal().amount(), Currency.getInstance("EUR"))));
+
+        LedgerAccount assetAccount = ledgerRepository.findAccountByOwnerIdAndType("PLATFORM", LedgerAccount.AccountType.ASSET)
+                .orElseGet(() -> ledgerRepository.saveAccount(new LedgerAccount(
+                        UUID.randomUUID(), "PLATFORM", LedgerAccount.AccountType.ASSET, order.getTotal().amount(), Currency.getInstance("EUR"))));
+
+        DoubleEntryTransaction doubleEntryTx = new DoubleEntryTransaction(txRef)
+                .addDebit(assetAccount.id(), order.getTotal().amount(), "Settlement via " + method.name() + " for order " + order.getId())
+                .addCredit(revenueAccount.id(), order.getTotal().amount(), "Ticket revenue for order " + order.getId());
+
+        List<LedgerEntry> entries = doubleEntryTx.buildAndValidate();
+        ledgerRepository.recordEntries(entries);
 
         // Transition order status
         order.markProcessing(method);

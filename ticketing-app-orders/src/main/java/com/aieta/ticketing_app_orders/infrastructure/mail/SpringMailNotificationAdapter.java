@@ -13,6 +13,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @Component
 public class SpringMailNotificationAdapter implements EmailNotificationPort {
@@ -68,6 +69,10 @@ public class SpringMailNotificationAdapter implements EmailNotificationPort {
                 ? String.join(", ", data.seats())
                 : "General VIP";
 
+        String formattedTotal = data.totalAmount() != null
+                ? String.format(Locale.GERMANY, "$ %,.2f", data.totalAmount())
+                : "$ 0,00";
+
         return """
             <!DOCTYPE html>
             <html lang="es">
@@ -99,6 +104,7 @@ public class SpringMailNotificationAdapter implements EmailNotificationPort {
               <div class="wrapper">
                 <div class="card">
                   <div style="text-align: center;">
+                    <img src="/logo.png" alt="Hibana.tk" width="64" height="64" style="display: block; margin: 0 auto 12px auto; border-radius: 50%%; box-shadow: 0 0 16px rgba(134,207,251,0.4);" />
                     <div class="header-logo">HIBANA.TK</div>
                     <div class="header-sub">PLATAFORMA OFICIAL DE ENTRADAS</div>
                     <div class="badge">✔ PAGO APROBADO & ENTRADAS ASIGNADAS</div>
@@ -126,7 +132,7 @@ public class SpringMailNotificationAdapter implements EmailNotificationPort {
                       </tr>
                       <tr>
                         <td style="padding: 8px 0; color: #94a3b8; border-top: 1px solid #23354d; font-size: 14px;">Total Abonado:</td>
-                        <td style="padding: 8px 0; color: #86cffb; font-weight: bold; text-align: right; border-top: 1px solid #23354d; font-size: 16px;">$%s ARS</td>
+                        <td style="padding: 8px 0; color: #86cffb; font-weight: bold; text-align: right; border-top: 1px solid #23354d; font-size: 16px;">%s</td>
                       </tr>
                     </table>
                   </div>
@@ -154,7 +160,7 @@ public class SpringMailNotificationAdapter implements EmailNotificationPort {
                 data.eventDate(),
                 data.venueName(),
                 seatsList,
-                data.totalAmount().setScale(2)
+                formattedTotal
         );
     }
 }

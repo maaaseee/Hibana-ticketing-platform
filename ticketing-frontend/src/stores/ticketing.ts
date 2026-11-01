@@ -31,7 +31,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
   const lockTimeRemaining = ref<number>(600)
   const isLockActive = ref<boolean>(false)
   const isTimerExpired = ref<boolean>(false)
-  let lockTimerInterval: any = null
+  let lockTimerInterval: ReturnType<typeof setInterval> | null = null
 
   // Generated grid of seats
   const seats = ref<Seat[]>(generateMockSeats())
@@ -91,7 +91,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
       } else {
         isTimerExpired.value = true
         releaseExpiredLocks()
-        clearInterval(lockTimerInterval)
+        if (lockTimerInterval) clearInterval(lockTimerInterval)
       }
     }, 1000)
   }
@@ -146,7 +146,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
         })
 
         startLockTimer(result.countdownSeconds || 600)
-      } catch (err: any) {
+      } catch (err: unknown) {
         // Rollback optimistic select on lock collision
         seat.status = 'RESERVED'
         selectedSeats.value = selectedSeats.value.filter(s => s.id !== seatId)
@@ -172,7 +172,7 @@ export const useTicketingStore = defineStore('ticketing', () => {
       }
       activeHolds.value = []
       return true
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (err instanceof ApiError) {
         lastError.value = err.problem || null
         errorNotification.value = err.problem?.detail || 'Error confirmando reserva de asientos.'

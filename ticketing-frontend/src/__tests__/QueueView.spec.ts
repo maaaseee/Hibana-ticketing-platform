@@ -4,7 +4,6 @@ import { createRouter, createMemoryHistory } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
 import QueueView from '../views/QueueView.vue'
 import { useQueueStore } from '../stores/queue'
-import { useCatalogStore } from '../stores/catalog'
 
 function setupTestEnvironment(initialRoute = '/event/chronos-fest-2026/queue') {
   const pinia = createPinia()

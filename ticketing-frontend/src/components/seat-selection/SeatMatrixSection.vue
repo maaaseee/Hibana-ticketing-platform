@@ -16,7 +16,7 @@ export interface SeatRow {
   seats: SeatItem[]
 }
 
-const props = defineProps<{
+defineProps<{
   selectedSector: GeneralSector
   selectedSectorBackend: SectorPricingInfo
   selectedZone: SectorZone

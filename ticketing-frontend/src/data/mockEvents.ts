@@ -1,13 +1,9 @@
-import type { EventItem, SectorPricing, EventFunction } from '../types'
+import type { EventItem, SectorPricing } from '../types'
 import { mockVenues } from './mockVenues'
 
 const monumentalVenue = mockVenues.find(v => v.id === 'estadio-monumental')!
 const arenaVenue = mockVenues.find(v => v.id === 'arena-buenos-aires')!
 const rexVenue = mockVenues.find(v => v.id === 'teatro-rex')!
-
-function buildAvailableDates(functions: EventFunction[]): string[] {
-  return functions.map(fn => `${fn.formattedDate} - ${fn.showStart}`)
-}
 
 function buildTicketTypes(sectors: SectorPricing[]): { name: string; price: number }[] {
   return sectors.map(sec => ({

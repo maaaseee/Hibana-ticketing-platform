@@ -31,11 +31,13 @@ public class PaymentController {
         String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
         var paymentMethod = (request != null && request.paymentMethod() != null)
                 ? request.paymentMethod()
-                : com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.POCKET_WALLET;
+                : com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.CREDIT_CARD;
 
         String buyerEmail = request != null ? request.buyerEmail() : null;
         String buyerName = request != null ? request.buyerName() : null;
         String buyerTaxId = request != null ? request.buyerTaxId() : null;
+        Integer installments = request != null ? request.installments() : 1;
+        String issuingBank = request != null ? request.issuingBank() : "OTHER";
 
         PaymentResult result = mediator.dispatch(new ProcessPaymentCommand(
                 orderId,
@@ -43,7 +45,9 @@ public class PaymentController {
                 paymentMethod,
                 buyerEmail,
                 buyerName,
-                buyerTaxId
+                buyerTaxId,
+                installments,
+                issuingBank
         ));
 
         return new ProcessPaymentResponse(

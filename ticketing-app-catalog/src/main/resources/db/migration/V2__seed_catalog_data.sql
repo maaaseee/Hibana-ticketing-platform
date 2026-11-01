@@ -1,4 +1,4 @@
--- V2__seed_catalog_data.sql: Initial seed data for Venues, Organizers, Events, and Sectors
+﻿-- V2__seed_catalog_data.sql: Initial seed data for Venues, Organizers, Events, and Sectors
 INSERT INTO organizers (id, name, legal_name, contact_email)
 VALUES 
     ('org_hibana_live', 'Hibana Live Productions', 'Hibana Entertainment SpA', 'contact@hibana.tk'),
@@ -36,9 +36,9 @@ INSERT INTO events (
     'PUBLISHED',
     'CONCERT',
     ARRAY['Rock', 'Pop', 'Alternative'],
-    '2026-10-27 18:00:00-03',
-    '2026-10-27 21:00:00-03',
-    '2026-10-28 00:00:00-03',
+    '2026-11-27 18:00:00-03',
+    '2026-11-27 21:00:00-03',
+    '2026-11-28 00:00:00-03',
     'America/Santiago',
     '{"bannerUrl":"/images/events/coldplay-tour.jpg","posterUrl":"/images/events/coldplay-tour.jpg"}'::jsonb,
     '{"maxTicketsPerUser":4,"waitingRoomEnabled":true}'::jsonb,
@@ -240,3 +240,4 @@ ON CONFLICT (id) DO UPDATE SET
     currency = EXCLUDED.currency,
     base_price = EXCLUDED.base_price,
     service_fee = EXCLUDED.service_fee;
+

@@ -36,7 +36,7 @@ export interface SectorPricingInfo {
   priceRangeFormatted: string
 }
 
-const props = defineProps<{
+defineProps<{
   generalSectors: GeneralSector[]
   selectedSectorId: string
   getBackendSectorInfo: (secId: string, secName: string, fallbackPrice?: number) => SectorPricingInfo

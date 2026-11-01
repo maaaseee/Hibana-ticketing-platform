@@ -115,10 +115,9 @@ describe('HelpCenterView.spec.ts - Refined User-Centric FAQ & Clean UI', () => {
 
     // Clear search
     const resetBtn = wrapper.find('button.font-label-sm')
-    if (resetBtn.exists()) {
-      await resetBtn.trigger('click')
-      expect(wrapper.text()).toContain('¿Cómo y cuándo recibo mis entradas después de comprar?')
-    }
+    expect(resetBtn.exists()).toBe(true)
+    await resetBtn.trigger('click')
+    expect(wrapper.text()).toContain('¿Cómo y cuándo recibo mis entradas después de comprar?')
   })
 
   it('renders the support escalation banner linking to support chat and tickets', () => {

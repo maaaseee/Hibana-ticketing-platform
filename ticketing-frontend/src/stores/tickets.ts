@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Ticket } from '../types'
+import type { Ticket, Seat } from '../types'
 
 export const useTicketsStore = defineStore('tickets', () => {
   const tickets = ref<Ticket[]>([
@@ -83,7 +83,7 @@ export const useTicketsStore = defineStore('tickets', () => {
     return true
   }
 
-  function addIssuedTickets(eventTitle: string, eventDate: string, venue: string, selectedSeats: any[], orderId: string, customerName: string, customerEmail: string) {
+  function addIssuedTickets(eventTitle: string, eventDate: string, venue: string, selectedSeats: Seat[], orderId: string, customerName: string, customerEmail: string) {
     selectedSeats.forEach((seat, idx) => {
       const id = `tkt_${Date.now().toString(36)}_${idx}`
       tickets.value.unshift({

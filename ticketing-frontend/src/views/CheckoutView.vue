@@ -5,7 +5,7 @@ import { useCatalogStore } from '../stores/catalog'
 import { useTicketingStore } from '../stores/ticketing'
 import { useCheckoutStore } from '../stores/checkout'
 import { useTicketsStore } from '../stores/tickets'
-import type { EventItem } from '../types'
+import type { EventItem, Seat } from '../types'
 
 import CheckoutHeader from '../components/checkout/CheckoutHeader.vue'
 import CheckoutStepper from '../components/checkout/CheckoutStepper.vue'
@@ -90,7 +90,7 @@ const grandTotal = computed(() => {
 
 // Redlock 10-minute Timer (Atomic Redis Hold)
 const fallbackSeconds = ref(600)
-let fallbackTimer: any = null
+let fallbackTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   if (!ticketingStore.isLockActive) {
@@ -98,7 +98,7 @@ onMounted(() => {
       if (fallbackSeconds.value > 0) {
         fallbackSeconds.value--
       } else {
-        clearInterval(fallbackTimer)
+        if (fallbackTimer) clearInterval(fallbackTimer)
         showTimeExpiredModal.value = true
       }
     }, 1000)
@@ -123,7 +123,9 @@ const formattedCountdown = computed(() => {
 const isTimeCritical = computed(() => currentCountdownSeconds.value <= 120)
 
 // Payment form state
-const selectedPaymentTab = ref<'credit_card' | 'pocket_wallet' | 'bank_transfer'>('credit_card')
+const selectedPaymentTab = ref<'debit_card' | 'credit_card' | 'mercado_pago'>('debit_card')
+const issuingBank = ref<string>('GALICIA')
+const installments = ref<number>(1)
 const cardNumber = ref('')
 const cardHolder = ref('CARLOS MENDOZA')
 const cardExpiry = ref('12/28')
@@ -207,20 +209,18 @@ async function handleCompleteOrder() {
     const newOrderId = `ORD-${Date.now().toString().slice(-5)}`
     orderId.value = newOrderId
 
-    const currentEvent = event.value || catalogStore.events[0]
-
     // Confirm remote reservation holds
     if (selectedSeats.value.length > 0) {
       await ticketingStore.confirmAllActiveReservations(newOrderId)
     }
 
     // Add issued tickets into the user's digital wallet
-    const seatsToIssue =
+    const seatsToIssue: Seat[] =
       selectedSeats.value.length > 0
         ? selectedSeats.value
         : [
-            { id: 'seat-wireframe-1', sector: 'VIP Access', row: '12', number: 'A', price: 150 },
-            { id: 'seat-wireframe-2', sector: 'VIP Access', row: '12', number: 'B', price: 150 },
+            { id: 'seat-wireframe-1', sector: 'VIP Access', row: '12', number: 1, price: 150, status: 'RESERVED', x: 0, y: 0 },
+            { id: 'seat-wireframe-2', sector: 'VIP Access', row: '12', number: 2, price: 150, status: 'RESERVED', x: 0, y: 0 },
           ]
 
     ticketsStore.addIssuedTickets(
@@ -295,14 +295,13 @@ function copyToClipboard(text: string, label: string) {
         v-model:card-expiry="cardExpiry"
         v-model:card-cvc="cardCvc"
         v-model:save-card="saveCard"
-        :pocket-balance="checkoutStore.pocketBalance"
+        v-model:issuing-bank="issuingBank"
+        v-model:installments="installments"
         :grand-total="grandTotal"
-        :copied-notice="copiedNotice"
         :is-processing="isProcessing"
         @format-card-number="formatCardNumber"
         @format-expiry="formatExpiry"
         @format-cvc="formatCvc"
-        @copy="copyToClipboard"
         @complete-order="handleCompleteOrder"
       />
     </main>

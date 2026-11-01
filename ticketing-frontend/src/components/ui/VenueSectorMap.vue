@@ -136,11 +136,11 @@ async function loadVenueMap() {
     } else {
       throw new Error(`No se pudo cargar el mapa para ${props.venueId}`)
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (import.meta.env?.MODE !== 'test') {
       console.warn('Error loading seat map json:', err)
     }
-    error.value = err?.message || 'Error al cargar mapa'
+    error.value = err instanceof Error ? err.message : 'Error al cargar mapa'
   } finally {
     loading.value = false
   }
@@ -245,49 +245,6 @@ function getSectorPrice(sec: SectorGeometry): number | undefined {
   if (byType) return byType.price
 
   return undefined
-}
-
-function getSectorPricingInfo(sec: SectorGeometry): SectorPricing | undefined {
-  if (!props.sectorsPricing || props.sectorsPricing.length === 0) return undefined
-  return props.sectorsPricing.find(p =>
-    p.id === sec.id ||
-    p.id.endsWith(sec.id) ||
-    sec.id.endsWith(p.id) ||
-    p.name.trim().toLowerCase() === sec.name.trim().toLowerCase() ||
-    p.type === sec.type
-  )
-}
-
-function getSectorStatusLabel(sec: SectorGeometry): string {
-  if (sec.selectable === false || sec.vendible === false) return 'Técnico'
-  const info = getSectorPricingInfo(sec)
-  switch (info?.status) {
-    case 'AVAILABLE':
-      return 'Disponible'
-    case 'FEW_SEATS':
-      return 'Últimos lugares'
-    case 'SOLD_OUT':
-      return 'Agotado'
-    default:
-      return 'Disponible'
-  }
-}
-
-function getSectorStatusClasses(sec: SectorGeometry): string {
-  if (sec.selectable === false || sec.vendible === false) {
-    return 'bg-amber-950/80 text-amber-300 border-amber-800/60'
-  }
-  const info = getSectorPricingInfo(sec)
-  switch (info?.status) {
-    case 'AVAILABLE':
-      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
-    case 'FEW_SEATS':
-      return 'bg-amber-950/80 text-amber-400 border-amber-800/60'
-    case 'SOLD_OUT':
-      return 'bg-rose-950/80 text-rose-400 border-rose-800/60'
-    default:
-      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
-  }
 }
 
 function handleSectorClick(sec: SectorGeometry) {

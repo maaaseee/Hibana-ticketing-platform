@@ -1,3 +1,5 @@
+import type { EventFunction } from './event'
+
 // ---------------------------------------------------------------------------
 // Backend Microservices Contracts (Catalog & Inventory)
 // ---------------------------------------------------------------------------
@@ -46,6 +48,7 @@ export interface CatalogEventResponse {
   description?: string
   salesPolicyJson?: string
   sectors: CatalogSectorResponse[]
+  functions?: EventFunction[]
 }
 
 export interface SeatResponseDto {

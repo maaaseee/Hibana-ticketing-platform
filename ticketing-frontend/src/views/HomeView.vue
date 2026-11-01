@@ -3,7 +3,6 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCatalogStore } from '../stores/catalog'
 import { mockVenues } from '../data/mockVenues'
-import type { VenueInfo } from '../types'
 
 import HeroFeaturedCarousel from '../components/home/HeroFeaturedCarousel.vue'
 import ShowcaseSection from '../components/home/ShowcaseSection.vue'

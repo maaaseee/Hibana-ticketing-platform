@@ -1,6 +1,5 @@
 package com.aieta.ticketing_app_orders.infrastructure.persistence;
 
-import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.model.Money;
 import com.aieta.ticketing_app_orders.domain.model.Order;
 import com.aieta.ticketing_app_orders.domain.model.ReservationId;

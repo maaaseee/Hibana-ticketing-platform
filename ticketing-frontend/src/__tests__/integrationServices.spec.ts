@@ -5,7 +5,7 @@ import { catalogService } from '../services/catalogService'
 import { inventoryService } from '../services/inventoryService'
 import { useTicketingStore } from '../stores/ticketing'
 import { useCatalogStore } from '../stores/catalog'
-import type { CatalogEventResponse, EventSeatsResponse } from '../types'
+import type { CatalogEventResponse, EventSeatsResponse, VenueParking } from '../types'
 
 describe('Frontend <-> Backend Microservices Integration Test Suite', () => {
   beforeEach(() => {
@@ -48,15 +48,17 @@ describe('Frontend <-> Backend Microservices Integration Test Suite', () => {
         })
       )
 
+      let caughtError: unknown
       try {
         await apiClient.post('/api/v1/reservations', { seatId: 'A-1' })
-        expect.fail('Should have thrown an ApiError')
-      } catch (err: any) {
-        expect(err).toBeInstanceOf(ApiError)
-        expect(err.status).toBe(409)
-        expect(err.message).toBe('Seat A-1 is currently held by another customer')
-        expect(err.problem?.code).toBe('SEAT_ALREADY_HELD')
+      } catch (err: unknown) {
+        caughtError = err
       }
+      expect(caughtError).toBeInstanceOf(ApiError)
+      const apiErr = caughtError as ApiError
+      expect(apiErr.status).toBe(409)
+      expect(apiErr.message).toBe('Seat A-1 is currently held by another customer')
+      expect(apiErr.problem?.code).toBe('SEAT_ALREADY_HELD')
     })
   })
 
@@ -129,7 +131,7 @@ describe('Frontend <-> Backend Microservices Integration Test Suite', () => {
           status: 'AVAILABLE',
           sectors: [],
           functions: [],
-          parking: {} as any,
+          parking: {} as VenueParking,
           paymentPromotions: [],
         },
       ])

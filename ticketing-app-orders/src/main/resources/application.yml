@@ -104,3 +104,11 @@ hibana:
   azure:
     communication:
       endpoint: ${AZURE_COMMUNICATION_ENDPOINT:}
+
+mercadopago:
+  access-token: ${MERCADO_PAGO_ACCESS_TOKEN:TEST-sample-access-token}
+  public-key: ${MERCADO_PAGO_PUBLIC_KEY:TEST-sample-public-key}
+  back-url-success: ${MERCADO_PAGO_BACK_URL_SUCCESS:http://localhost:5173/checkout/success}
+  back-url-failure: ${MERCADO_PAGO_BACK_URL_FAILURE:http://localhost:5173/checkout/failure}
+  back-url-pending: ${MERCADO_PAGO_BACK_URL_PENDING:http://localhost:5173/checkout/pending}
+  notification-url: ${MERCADO_PAGO_NOTIFICATION_URL:http://localhost:8080/api/v1/payments/mercadopago/webhook}

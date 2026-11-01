@@ -2,7 +2,7 @@
 import type { GeneralSector, SectorPricingInfo } from './MacroVenueMap.vue'
 import type { SectorZone } from './ZoneSelectorCanvas.vue'
 
-const props = defineProps<{
+defineProps<{
   selectedZone: SectorZone
   selectedSector: GeneralSector
   selectedSectorBackend: SectorPricingInfo

@@ -2,6 +2,7 @@ package com.aieta.ticketing_app_orders.domain;
 
 import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
+import com.aieta.ticketing_app_orders.domain.exceptions.DomainException;
 import com.aieta.ticketing_app_orders.domain.exceptions.InvalidOrderStateTransitionException;
 import com.aieta.ticketing_app_orders.domain.model.Money;
 import com.aieta.ticketing_app_orders.domain.model.Order;
@@ -30,9 +31,9 @@ class OrderInvariantsTest {
     void shouldFollowHappyPathTransitions() {
         Order order = Order.create("usr-1", new ReservationId("res-1"), "evt-1", "seat-1", Money.of(new BigDecimal("59.00")));
 
-        order.markProcessing(PaymentMethod.POCKET_WALLET);
+        order.markProcessing(PaymentMethod.MERCADO_PAGO);
         assertEquals(OrderStatus.PROCESSING, order.getStatus());
-        assertEquals(PaymentMethod.POCKET_WALLET, order.getPaymentMethod());
+        assertEquals(PaymentMethod.MERCADO_PAGO, order.getPaymentMethod());
 
         order.markPaid();
         assertEquals(OrderStatus.PAID, order.getStatus());
@@ -48,11 +49,11 @@ class OrderInvariantsTest {
     }
 
     @Test
-    @DisplayName("Should allow refund on PAID order")
-    void shouldAllowRefundOnPaidOrder() {
-        Order order = Order.create("usr-1", new ReservationId("res-1"), "evt-1", "seat-1", Money.of(new BigDecimal("59.00")));
-        order.markPaid();
-        order.refund();
-        assertEquals(OrderStatus.REFUNDED, order.getStatus());
+    @DisplayName("Should validate monetary immutability and non-negative constraints")
+    void shouldEnforceMonetaryIntegrity() {
+        assertThrows(DomainException.class, () -> Money.of(new BigDecimal("-1.00")));
+        Money m1 = Money.of(new BigDecimal("10.00"));
+        Money m2 = Money.of(new BigDecimal("20.00"));
+        assertEquals(new BigDecimal("30.00"), m1.add(m2).amount());
     }
 }

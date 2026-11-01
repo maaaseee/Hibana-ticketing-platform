@@ -51,7 +51,7 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
     timeZone: eventTimezone
   }) + ' hs'
 
-  let functions: EventFunction[] = (backend as any).functions || []
+  let functions: EventFunction[] = backend.functions || []
   let maxTicketsPerUser = 4
   let salesPolicyObj: { maxTicketsPerUser?: number; waitingRoomEnabled?: boolean } | undefined = undefined
 

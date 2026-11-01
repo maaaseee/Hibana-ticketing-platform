@@ -88,15 +88,15 @@ public final class InvoiceDataMapper {
                         "Entrada Platea Preferencial VIP - Hibana Music Fest",
                         "Sector A, Fila 4, Butaca 12",
                         1,
-                        new BigDecimal("75.00"),
-                        new BigDecimal("75.00")
+                        new BigDecimal("85000.00"),
+                        new BigDecimal("85000.00")
                 ),
                 new InvoiceData.InvoiceItem(
-                        "Pase Fast-Pass & Merchandising Kit",
-                        "Acceso Preferente",
+                        "Pase Fast-Pass & Merchandising Kit Oficial",
+                        "Acceso Preferente al Recinto",
                         1,
-                        new BigDecimal("15.00"),
-                        new BigDecimal("15.00")
+                        new BigDecimal("18000.00"),
+                        new BigDecimal("18000.00")
                 )
         );
 
@@ -106,21 +106,21 @@ public final class InvoiceDataMapper {
                 now,
                 "74281930491823",
                 now.plusSeconds(10L * 86400L),
-                "Martina Gómez",
-                "martina.gomez@hibana.tk",
-                "CUIT: 27-38912401-4",
-                "POCKET_WALLET",
+                "Daniel Casanova",
+                "daniel.casanova@hibana.tk",
+                "DNI: 35.882.109",
+                "TARJETA_CREDITO",
                 "event-hibana-music-fest-2026",
                 "Hibana Music Fest 2026 - World Tour",
                 "Sábado 15 de Noviembre, 2026 - 21:00 hs",
                 "Estadio Hibana Arena",
                 "Av. del Libertador 7401, CABA",
                 sampleItems,
-                new BigDecimal("90.00"),
-                new BigDecimal("12.00"),
-                new BigDecimal("18.90"),
-                new BigDecimal("120.90"),
-                "EUR"
+                new BigDecimal("103000.00"),
+                new BigDecimal("10300.00"),
+                new BigDecimal("23793.00"),
+                new BigDecimal("137093.00"),
+                "ARS"
         );
     }
 }

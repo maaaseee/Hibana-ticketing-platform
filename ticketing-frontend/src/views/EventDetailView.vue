@@ -9,9 +9,9 @@ import { TooltipProvider } from 'radix-vue'
 
 import EventVenueModalCard from '../components/event-detail/EventVenueModalCard.vue'
 import EventScheduleLineup from '../components/event-detail/EventScheduleLineup.vue'
-import EventFaqAccordion, { type EventFaq } from '../components/event-detail/EventFaqAccordion.vue'
+import EventFaqAccordion from '../components/event-detail/EventFaqAccordion.vue'
 import EventInteractiveMapSection from '../components/event-detail/EventInteractiveMapSection.vue'
-import EventTransitGuide, { type TransitInfo } from '../components/event-detail/EventTransitGuide.vue'
+import EventTransitGuide from '../components/event-detail/EventTransitGuide.vue'
 import StickyPurchaseWidget from '../components/event-detail/StickyPurchaseWidget.vue'
 import SecurityTrustBadges from '../components/event-detail/SecurityTrustBadges.vue'
 
@@ -114,20 +114,6 @@ const countdownFormatted = computed<string | null>(() => {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `Faltan ${days}d, ${pad(hours)}h, ${pad(minutes)}m, ${pad(seconds)}s`
 })
-
-function getEstimatedExit(showStart?: string): string {
-  if (!showStart) return '23:30 hs'
-  const match = showStart.match(/(\d{1,2}):(\d{2})/)
-  if (!match || !match[1] || !match[2]) return '23:30 hs'
-  let hours = parseInt(match[1], 10) + 2
-  let mins = parseInt(match[2], 10) + 30
-  if (mins >= 60) {
-    hours += 1
-    mins -= 60
-  }
-  if (hours >= 24) hours -= 24
-  return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')} hs`
-}
 
 function getPaymentLogo(bankOrMethod: string): string {
   const b = (bankOrMethod || '').toLowerCase()
@@ -366,46 +352,6 @@ onUnmounted(() => {
   }
 })
 
-function formatSectorType(type?: string): string {
-  if (!type) return 'General'
-  switch (type) {
-    case 'VIP':
-      return 'VIP / Preferencial'
-    case 'NUMBERED_SEATS':
-      return 'Butacas Numeradas'
-    case 'GENERAL_ADMISSION':
-      return 'Campo General'
-    default:
-      return type.replace(/_/g, ' ')
-  }
-}
-
-function getSectorStatusLabel(status?: string): string {
-  switch (status) {
-    case 'AVAILABLE':
-      return 'Disponible'
-    case 'FEW_SEATS':
-      return 'Últimos lugares'
-    case 'SOLD_OUT':
-      return 'Agotado'
-    default:
-      return 'Disponible'
-  }
-}
-
-function getSectorStatusClass(status?: string): string {
-  switch (status) {
-    case 'AVAILABLE':
-      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
-    case 'FEW_SEATS':
-      return 'bg-amber-950/80 text-amber-400 border-amber-800/60'
-    case 'SOLD_OUT':
-      return 'bg-rose-950/80 text-rose-400 border-rose-800/60'
-    default:
-      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
-  }
-}
-
 function getFunctionStatusLabel(status: EventFunction['status']): string {
   switch (status) {
     case 'AVAILABLE':
@@ -418,21 +364,6 @@ function getFunctionStatusLabel(status: EventFunction['status']): string {
       return 'Fila Virtual'
     default:
       return 'Disponible'
-  }
-}
-
-function getFunctionStatusClass(status: EventFunction['status']): string {
-  switch (status) {
-    case 'AVAILABLE':
-      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
-    case 'FEW_SEATS':
-      return 'bg-amber-950/80 text-amber-400 border-amber-800/60'
-    case 'SOLD_OUT':
-      return 'bg-rose-950/80 text-rose-400 border-rose-800/60'
-    case 'QUEUE_ACTIVE':
-      return 'bg-cyan-950/80 text-cyan-400 border-cyan-800/60'
-    default:
-      return 'bg-emerald-950/80 text-emerald-400 border-emerald-800/60'
   }
 }
 

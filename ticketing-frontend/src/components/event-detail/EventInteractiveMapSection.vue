@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import VenueSectorMap from '../ui/VenueSectorMap.vue'
-import type { EventItem, VenueInfo } from '../../types'
+import type { EventItem, VenueInfo, SectorPricing } from '../../types'
 
 defineProps<{
   event: EventItem
   currentVenue?: VenueInfo
-  sectors: any[]
+  sectors: SectorPricing[]
 }>()
 </script>
 

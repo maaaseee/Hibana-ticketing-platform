@@ -6,11 +6,12 @@ import type {
   ConfirmReservationRequest,
   ConfirmReservationResponse,
   Seat,
+  SeatResponseDto,
 } from '../types'
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_INVENTORY_API_URL || '/api/v1'
 
-export function mapDtoToSeat(dto: any, index: number): Seat {
+export function mapDtoToSeat(dto: SeatResponseDto, index: number): Seat {
   // Generate deterministic grid position if coordinates are not stored in DB
   const col = (index % 12) + 1
   const rowIdx = Math.floor(index / 12)

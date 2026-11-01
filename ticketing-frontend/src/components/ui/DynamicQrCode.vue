@@ -14,7 +14,7 @@ const props = defineProps<{
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
 const secondsLeft = ref<number>(15)
-let timer: any = null
+let timer: ReturnType<typeof setInterval> | null = null
 
 function drawQr() {
   const canvas = canvasRef.value

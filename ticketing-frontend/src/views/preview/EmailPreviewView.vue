@@ -43,9 +43,9 @@ async function triggerTestEmail() {
   isSendingTest.value = true
   testSentStatus.value = null
   try {
-    const res = await orderService.resendConfirmationEmail('TEST-SAMPLE-001', 'preview-tester@hibana.tk')
+    await orderService.resendConfirmationEmail('TEST-SAMPLE-001', 'preview-tester@hibana.tk')
     testSentStatus.value = '✓ Correo de prueba enviado a Mailpit (puerto 8025)'
-  } catch (err: any) {
+  } catch {
     testSentStatus.value = 'Error al despachar el correo de prueba.'
   } finally {
     isSendingTest.value = false

@@ -17,7 +17,7 @@ export interface SectorZone {
   rect: { x: number; y: number; width: number; height: number }
 }
 
-const props = defineProps<{
+defineProps<{
   selectedSector: GeneralSector
   sectorZones: SectorZone[]
   selectedZone: SectorZone
