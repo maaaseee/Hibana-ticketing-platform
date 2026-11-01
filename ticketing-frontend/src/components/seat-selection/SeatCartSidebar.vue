@@ -84,9 +84,8 @@ const emit = defineEmits<{
           <span>{{ selectedSector.name }} (x{{ selectedSeatsCount }})</span>
           <span class="text-[#f1f5f9]">{{ formatMoney(subtotalPrice) }}</span>
         </div>
-        <div class="flex justify-between text-[#94a3b8]">
-          <span>Cargos de gestión (10%)</span>
-          <span class="text-[#f1f5f9]">{{ formatMoney(serviceFeePrice) }}</span>
+        <div class="text-[11px] text-[#86cffb] italic pt-1 border-t border-[#23354d]/50">
+          * El costo por servicio de la página se desglosará en el siguiente paso (Checkout).
         </div>
       </div>
 
@@ -101,7 +100,7 @@ const emit = defineEmits<{
     <div class="p-4 bg-[#141c27] border-t border-[#23354d]">
       <div class="flex justify-between items-center mb-3">
         <span class="text-[#94a3b8] font-mono text-sm">Subtotal ({{ selectedSeatsCount }} asientos)</span>
-        <span class="text-white font-mono text-xl font-bold">{{ formatMoney(grandTotalPrice) }}</span>
+        <span class="text-white font-mono text-xl font-bold">{{ formatMoney(subtotalPrice) }}</span>
       </div>
 
       <button

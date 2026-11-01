@@ -24,10 +24,14 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
     ? (matchedVenue?.sectors || [])
     : (backend.sectors?.map((s, idx) => {
         const cleanId = s.sectorId?.includes('__') ? s.sectorId.split('__')[1]! : (s.sectorId || `sec-${idx}`)
+        const basePrice = s.basePrice || s.totalPrice || 0
         return {
           id: cleanId,
           name: s.name,
-          price: s.totalPrice || s.basePrice || 0,
+          price: basePrice,
+          basePrice: s.basePrice,
+          serviceFee: s.serviceFee,
+          totalPrice: s.totalPrice,
           currency: (s.currency === 'USD' ? 'USD' : 'ARS'),
           capacity: s.totalCapacity,
           type: (s.type === 'VIP' ? 'VIP' : s.type === 'NUMBERED_SEATS' ? 'NUMBERED_SEATS' : 'GENERAL_ADMISSION'),
@@ -53,7 +57,8 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
 
   let functions: EventFunction[] = backend.functions || []
   let maxTicketsPerUser = 4
-  let salesPolicyObj: { maxTicketsPerUser?: number; waitingRoomEnabled?: boolean } | undefined = undefined
+  let serviceFeePercentage = backend.serviceFeePercentage ?? 10
+  let salesPolicyObj: { maxTicketsPerUser?: number; waitingRoomEnabled?: boolean; serviceFeePercentage?: number } | undefined = undefined
 
   if (backend.salesPolicyJson) {
     try {
@@ -61,6 +66,9 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
       salesPolicyObj = sp
       if (typeof sp?.maxTicketsPerUser === 'number' && sp.maxTicketsPerUser > 0) {
         maxTicketsPerUser = sp.maxTicketsPerUser
+      }
+      if (typeof sp?.serviceFeePercentage === 'number' && sp.serviceFeePercentage >= 0) {
+        serviceFeePercentage = sp.serviceFeePercentage
       }
       if (functions.length === 0 && Array.isArray(sp?.annexedDates) && sp.annexedDates.length > 0) {
         functions = sp.annexedDates
@@ -117,6 +125,7 @@ function mapCatalogToEventItem(backend: CatalogEventResponse): EventItem {
     functions,
     availableDates,
     maxTicketsPerUser,
+    serviceFeePercentage,
     salesPolicy: salesPolicyObj,
     parking: matchedVenue?.parking || defaultVenue.parking,
     transit: matchedVenue?.transit || defaultVenue.transit,

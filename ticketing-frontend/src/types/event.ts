@@ -13,6 +13,9 @@ export interface SectorPricing {
   id: string
   name: string
   price: number
+  basePrice?: number
+  serviceFee?: number
+  totalPrice?: number
   currency: 'USD' | 'ARS'
   capacity?: number
   type: 'GENERAL_ADMISSION' | 'NUMBERED_SEATS' | 'VIP'
@@ -64,8 +67,10 @@ export interface EventItem {
   availableDates?: string[]
   ticketTypes?: { name: string; price: number }[]
   maxTicketsPerUser?: number
+  serviceFeePercentage?: number
   salesPolicy?: {
     maxTicketsPerUser?: number
     waitingRoomEnabled?: boolean
+    serviceFeePercentage?: number
   }
 }

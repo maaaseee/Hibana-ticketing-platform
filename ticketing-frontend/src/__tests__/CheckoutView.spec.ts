@@ -82,8 +82,7 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
 
     expect(wrapper.text()).toContain('Resumen del Pedido')
     expect(wrapper.text()).toContain('Subtotal')
-    expect(wrapper.text()).toContain('Cargo por Servicio (7%)')
-    expect(wrapper.text()).toContain('Impuestos')
+    expect(wrapper.text()).toContain('Costo por Servicio')
     expect(wrapper.text()).toContain('Total')
     expect(wrapper.text()).toContain('1x Pase de Estacionamiento')
     expect(wrapper.text()).toContain('Pago 100% Seguro')
@@ -123,16 +122,18 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
     })
     await wrapper.vm.$nextTick()
 
-    // Wireframe initial total: $398.68 ($300 seats + $45 parking = $345 subtotal)
-    expect(wrapper.text()).toContain('$398.68')
+    const parkingCheckbox = wrapper.find('input[type="checkbox"]')
+    expect(parkingCheckbox.exists()).toBe(true)
+
+    // Initial total includes tickets ($90.000) + fee 10% ($9.000) + parking ($15.000) = $114.000
+    expect(wrapper.text()).toContain('114.000')
 
     // Toggle off parking pass
-    const parkingCheckbox = wrapper.find('input[type="checkbox"]')
     await parkingCheckbox.setValue(false)
     await wrapper.vm.$nextTick()
 
-    // New subtotal is $300.00, fee is $21.00, taxes ~$25.68 -> Total $346.68
-    expect(wrapper.text()).toContain('$346.68')
+    // Recalculated total without parking is $99.000 ($90.000 + $9.000)
+    expect(wrapper.text()).toContain('99.000')
   })
 
   it('triggers payment processing overlay and completes order issuing tickets', async () => {

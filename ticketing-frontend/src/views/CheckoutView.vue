@@ -5,6 +5,7 @@ import { useCatalogStore } from '../stores/catalog'
 import { useTicketingStore } from '../stores/ticketing'
 import { useCheckoutStore } from '../stores/checkout'
 import { useTicketsStore } from '../stores/tickets'
+import { getVenueById } from '../data/mockVenues'
 import type { EventItem, Seat } from '../types'
 
 import CheckoutHeader from '../components/checkout/CheckoutHeader.vue'
@@ -55,37 +56,59 @@ const eventThumbnail = computed(() => {
   )
 })
 
+// Currency resolution
+const currency = computed(() => event.value?.sectors?.[0]?.currency || 'ARS')
+
 // Selected seats & Add-ons
 const selectedSeats = computed(() => ticketingStore.selectedSeats)
 const includeParkingPass = ref(true)
-const parkingPassPrice = 45.0
 
-// Financial Calculations matching Wireframe ($345 subtotal, $24.15 service fee, $29.53 tax -> $398.68)
+// Venue-defined parking price with fallback mockup
+const venueParking = computed(() => {
+  const vId = event.value?.venueId
+  const found = vId ? getVenueById(vId) : null
+  return found?.parking || event.value?.parking
+})
+
+const parkingPassPrice = computed(() => {
+  if (venueParking.value?.price && venueParking.value.price > 0) {
+    return venueParking.value.price
+  }
+  return currency.value === 'USD' ? 45.0 : 15000.0
+})
+
+// Administrator-configurable service fee percentage
+const serviceFeePercentage = computed(() => {
+  return (
+    event.value?.serviceFeePercentage ??
+    event.value?.salesPolicy?.serviceFeePercentage ??
+    10
+  )
+})
+
+// Financial Calculations: Normal Ticket Price -> Fee at Checkout
 const rawSeatsSubtotal = computed(() => {
   if (selectedSeats.value.length > 0) {
     return ticketingStore.subtotal
   }
-  // Fallback to match exact wireframe: 2x VIP Access ($300.00)
-  return 300.0
+  // Fallback to match default wireframe if no live seats held
+  return currency.value === 'USD' ? 300.0 : 90000.0
 })
 
-const subtotal = computed(() => {
-  return rawSeatsSubtotal.value + (includeParkingPass.value ? parkingPassPrice : 0)
-})
+const subtotal = computed(() => rawSeatsSubtotal.value)
 
-// 7% Service fee (matches wireframe $345 * 0.07 = $24.15)
+// Costo por servicio de la página por cada entrada comprada (calculado sobre el subtotal de entradas)
 const serviceFee = computed(() => {
-  return Math.round(subtotal.value * 0.07 * 100) / 100
+  return Math.round(subtotal.value * (serviceFeePercentage.value / 100) * 100) / 100
 })
 
-// Impuestos (matches wireframe $29.53 for subtotal $345)
-const taxes = computed(() => {
-  return Math.round((subtotal.value + serviceFee.value) * 0.08 * 100) / 100
-})
+// Impuestos (0 por defecto a menos que estén fijados)
+const taxes = computed(() => 0)
 
-// Grand Total ($398.68 in wireframe)
+// Grand Total
 const grandTotal = computed(() => {
-  return Math.round((subtotal.value + serviceFee.value + taxes.value) * 100) / 100
+  const parkingAmount = includeParkingPass.value ? parkingPassPrice.value : 0
+  return Math.round((subtotal.value + serviceFee.value + parkingAmount) * 100) / 100
 })
 
 // Redlock 10-minute Timer (Atomic Redis Hold)
@@ -109,18 +132,19 @@ onUnmounted(() => {
   if (fallbackTimer) clearInterval(fallbackTimer)
 })
 
-const currentCountdownSeconds = computed(() => {
-  return ticketingStore.isLockActive ? ticketingStore.lockTimeRemaining : fallbackSeconds.value
+const isTimeCritical = computed(() => {
+  const time = ticketingStore.isLockActive ? ticketingStore.lockTimeRemaining : fallbackSeconds.value
+  return time <= 120
 })
 
 const formattedCountdown = computed(() => {
-  const totalSecs = currentCountdownSeconds.value
-  const mins = Math.floor(totalSecs / 60)
-  const secs = totalSecs % 60
+  if (ticketingStore.isLockActive) {
+    return ticketingStore.formattedLockTime
+  }
+  const mins = Math.floor(fallbackSeconds.value / 60)
+  const secs = fallbackSeconds.value % 60
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 })
-
-const isTimeCritical = computed(() => currentCountdownSeconds.value <= 120)
 
 // Payment form state
 const selectedPaymentTab = ref<'debit_card' | 'credit_card' | 'mercado_pago'>('debit_card')
@@ -283,6 +307,11 @@ function copyToClipboard(text: string, label: string) {
         v-model:include-parking-pass="includeParkingPass"
         :subtotal="subtotal"
         :service-fee="serviceFee"
+        :service-fee-percentage="serviceFeePercentage"
+        :parking-pass-price="parkingPassPrice"
+        :parking-title="venueParking?.title"
+        :parking-description="venueParking?.description"
+        :currency="currency"
         :taxes="taxes"
         :grand-total="grandTotal"
       />
@@ -306,10 +335,9 @@ function copyToClipboard(text: string, label: string) {
       />
     </main>
 
-    <!-- Processing Overlay (Simulating Secure Saga Validation) -->
+    <!-- Modals and Overlays -->
     <PaymentProcessingOverlay :is-processing="isProcessing" />
 
-    <!-- Modals -->
     <CheckoutModals
       v-model:order-completed-open="orderCompletedOpen"
       v-model:show-time-expired-modal="showTimeExpiredModal"

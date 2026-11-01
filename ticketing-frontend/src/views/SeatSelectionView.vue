@@ -804,8 +804,9 @@ const subtotalPrice = computed(() => {
   }
   return selectedSeatsCount.value * currentZonePrice.value
 })
-const serviceFeePrice = computed(() => Math.round(subtotalPrice.value * 0.10))
-const grandTotalPrice = computed(() => subtotalPrice.value + serviceFeePrice.value)
+// Service fee is calculated at Checkout stage per user requirements
+const serviceFeePrice = computed(() => 0)
+const grandTotalPrice = computed(() => subtotalPrice.value)
 
 function formatMoney(amount: number) {
   return selectedSectorBackend.value.currency === 'ARS'

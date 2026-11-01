@@ -10,7 +10,12 @@ defineProps<{
   includeParkingPass: boolean
   subtotal: number
   serviceFee: number
-  taxes: number
+  serviceFeePercentage?: number
+  parkingPassPrice?: number
+  parkingTitle?: string
+  parkingDescription?: string
+  currency?: string
+  taxes?: number
   grandTotal: number
 }>()
 
@@ -62,7 +67,7 @@ const emit = defineEmits<{
                 1x {{ seat.sector }}
               </span>
               <span class="text-[#f1f5f9] font-medium font-mono text-sm sm:text-base">
-                ${{ seat.price.toFixed(2) }}
+                ${{ seat.price.toLocaleString('es-AR') }}
               </span>
             </div>
             <div class="text-[#94a3b8] text-xs font-mono">
@@ -103,11 +108,11 @@ const emit = defineEmits<{
               </span>
             </label>
             <span class="text-[#f1f5f9] font-medium font-mono text-sm sm:text-base" :class="{ 'line-through text-muted opacity-60': !includeParkingPass }">
-              $45.00
+              ${{ (parkingPassPrice || 45).toLocaleString('es-AR') }}
             </span>
           </div>
           <div class="text-[#94a3b8] text-xs font-mono pl-6">
-            Acceso exclusivo a Playón Norte Techado
+            {{ parkingTitle ? `${parkingTitle} • ` : '' }}{{ parkingDescription || 'Acceso exclusivo a estacionamiento techado oficial' }}
           </div>
         </div>
       </div>
@@ -115,21 +120,25 @@ const emit = defineEmits<{
       <!-- Cost Breakdown Totals -->
       <div class="flex flex-col gap-2.5">
         <div class="flex justify-between items-center text-[#94a3b8] text-sm">
-          <span>Subtotal</span>
-          <span class="font-mono text-[#cbd5e1]">${{ subtotal.toFixed(2) }}</span>
+          <span>Subtotal Entradas</span>
+          <span class="font-mono text-[#cbd5e1]">${{ subtotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
         </div>
         <div class="flex justify-between items-center text-[#94a3b8] text-sm">
-          <span>Cargo por Servicio (7%)</span>
-          <span class="font-mono text-[#cbd5e1]">${{ serviceFee.toFixed(2) }}</span>
+          <span>Costo por Servicio ({{ serviceFeePercentage ?? 10 }}%)</span>
+          <span class="font-mono text-[#cbd5e1]">${{ serviceFee.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
         </div>
-        <div class="flex justify-between items-center text-[#94a3b8] text-sm">
+        <div v-if="includeParkingPass" class="flex justify-between items-center text-[#94a3b8] text-sm">
+          <span>Estacionamiento</span>
+          <span class="font-mono text-[#cbd5e1]">${{ (parkingPassPrice || 45).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
+        </div>
+        <div v-if="taxes && taxes > 0" class="flex justify-between items-center text-[#94a3b8] text-sm">
           <span>Impuestos</span>
-          <span class="font-mono text-[#cbd5e1]">${{ taxes.toFixed(2) }}</span>
+          <span class="font-mono text-[#cbd5e1]">${{ taxes.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</span>
         </div>
         <div class="flex justify-between items-center mt-3 pt-3 border-t border-[#23354d]">
           <span class="font-display font-bold text-[#f1f5f9] text-xl">Total</span>
           <span class="font-display font-bold text-[#86cffb] text-2xl font-mono">
-            ${{ grandTotal.toFixed(2) }}
+            ${{ grandTotal.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
           </span>
         </div>
       </div>

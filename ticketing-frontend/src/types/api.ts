@@ -48,6 +48,7 @@ export interface CatalogEventResponse {
   description?: string
   salesPolicyJson?: string
   sectors: CatalogSectorResponse[]
+  serviceFeePercentage?: number
   functions?: EventFunction[]
 }
 

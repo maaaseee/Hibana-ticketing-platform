@@ -211,12 +211,11 @@ export const useTicketingStore = defineStore('ticketing', () => {
     return selectedSeats.value.reduce((acc, s) => acc + s.price, 0)
   })
 
-  const serviceFee = computed(() => {
-    return Math.round(subtotal.value * 0.12)
-  })
+  // Service fees are calculated dynamically in Checkout based on admin configuration
+  const serviceFee = computed(() => 0)
 
   const total = computed(() => {
-    return subtotal.value + serviceFee.value
+    return subtotal.value
   })
 
   return {
