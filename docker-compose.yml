@@ -16,8 +16,10 @@ services:
       FLOCI_AZ_SERVICES_REDIS_MOCKED: false
       FLOCI_AZ_HOSTNAME: localhost
       FLOCI_AZ_BASE_URL: http://localhost:4577
+      FLOCI_AZ_SERVICES_ENTRA_SEED_FILE: /app/config/entra-seed.json
     volumes:
       - ${USERPROFILE:-~}/.floci-studio/data:/app/data
+      - ./infra/local-dev/entra-seed.json:/app/config/entra-seed.json:ro
       - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
     networks:

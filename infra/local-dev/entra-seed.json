@@ -1,0 +1,50 @@
+{
+  "tenantId": "00000000-0000-0000-0000-000000000002",
+  "applications": [
+    {
+      "id": "app-admin-portal-01",
+      "appId": "hibana-admin-portal",
+      "displayName": "Hibana Admin Portal",
+      "clientSecret": "dev-admin-secret"
+    }
+  ],
+  "users": [
+    {
+      "id": "usr-alex-thorne-01",
+      "userPrincipalName": "alex.thorne@hibana.tk",
+      "displayName": "Alex Thorne",
+      "mail": "alex.thorne@hibana.tk"
+    },
+    {
+      "id": "usr-operator-01",
+      "userPrincipalName": "operator@hibana.tk",
+      "displayName": "Operador de Guardia",
+      "mail": "operator@hibana.tk"
+    },
+    {
+      "id": "usr-public-01",
+      "userPrincipalName": "user@hibana.tk",
+      "displayName": "Usuario Regular",
+      "mail": "user@hibana.tk"
+    }
+  ],
+  "groups": [
+    {
+      "id": "grp-role-admin",
+      "displayName": "ROLE_ADMIN",
+      "securityEnabled": true,
+      "members": [
+        "usr-alex-thorne-01"
+      ]
+    },
+    {
+      "id": "grp-role-operator",
+      "displayName": "ROLE_OPERATOR",
+      "securityEnabled": true,
+      "members": [
+        "usr-alex-thorne-01",
+        "usr-operator-01"
+      ]
+    }
+  ]
+}

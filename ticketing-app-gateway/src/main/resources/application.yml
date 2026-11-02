@@ -25,6 +25,24 @@ spring:
       server:
         webflux:
           routes:
+            # 0. Catalog Admin & Management Mutations (Order 30 - Gated by Entra ID RBAC Filter)
+            - id: catalog-admin-mutations
+              uri: ${CATALOG_SERVICE_URL:http://localhost:8081}
+              order: 30
+              predicates:
+                - Path=/api/v1/events/**, /api/v1/venues/**, /api/v1/admin/**
+                - Method=POST,PUT,PATCH,DELETE
+              filters:
+                - name: AdminRbac
+                  args:
+                    requiredRoles:
+                      - ROLE_ADMIN
+                      - ROLE_OPERATOR
+                - name: CircuitBreaker
+                  args:
+                    name: catalogCircuitBreaker
+                    fallbackUri: forward:/fallback/catalog
+
             # 1. Inventory Seat Queries (Order 50 - High Precedence before Catalog)
             - id: inventory-seats-public
               uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
@@ -200,6 +218,11 @@ waiting-room:
     secret: ${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}
     issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
   url: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
+
+azure:
+  entra:
+    jwks-url: ${AZURE_ENTRA_JWKS_URL:http://localhost:4577/common/discovery/v2.0/keys}
+    issuer: ${AZURE_ENTRA_ISSUER:http://localhost:4577/00000000-0000-0000-0000-000000000002/v2.0}
 
 management:
   endpoints:

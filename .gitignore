@@ -17,7 +17,8 @@ PROJECT.md
 # Session Temporary Documentation (outside of repository scope)
 .vscode/
 .github
-infra
+infra/*
+!infra/local-dev/entra-seed.json
 
 .gemini
 .worktrees/
