@@ -63,14 +63,14 @@ flowchart TD
 ```
 
 ### Fase 1: Feature Flagging de Medios de Pago
-- [ ] Backend: Agregar configuración `payment.methods.mercado-pago.enabled: false` en `ticketing-app-orders/src/main/resources/application.yml`.
-- [ ] Backend: Exponer endpoint `GET /api/v1/orders/payment-methods` con el estado activo/inactivo de cada método.
-- [ ] Backend: Si se intenta pagar con un método inactivo, responder HTTP 400 Bad Request (`PaymentMethodDisabledException`).
-- [ ] Frontend: En `PaymentTabs.vue`, mostrar Mercado Pago deshabilitado con etiqueta informativa *"Próximamente"* o deshabilitar su selector.
+- [x] Backend: Agregar configuración `payment.methods.mercado-pago.enabled: false` en `ticketing-app-orders/src/main/resources/application.yml`.
+- [x] Backend: Exponer endpoint `GET /api/v1/orders/payment-methods` con el estado activo/inactivo de cada método.
+- [x] Backend: Si se intenta pagar con un método inactivo, responder HTTP 400 Bad Request (`PaymentMethodDisabledException`).
+- [x] Frontend: En `PaymentTabs.vue`, mostrar Mercado Pago deshabilitado con etiqueta informativa *"Próximamente"* o deshabilitar su selector.
 
 ### Fase 2: Conexión Real del Checkout (Frontend ➔ Gateway ➔ Orders)
-- [ ] Actualizar `orderService.ts` con `createOrder()` y `processPayment()`.
-- [ ] En `CheckoutView.vue`, reemplazar la simulación local:
+- [x] Actualizar `orderService.ts` con `createOrder()` y `processPayment()`.
+- [x] En `CheckoutView.vue`, reemplazar la simulación local:
   1. Invocar `orderService.createOrder()` con `reservationId`, `eventId`, `seatId`, `subtotal` y `serviceFee`.
   2. Invocar `orderService.processPayment()` con método de pago seleccionado, cuotas y datos del pagador.
   3. Redirigir a la pantalla de éxito con el `orderId` real y descargar la factura PDF generada por el backend.

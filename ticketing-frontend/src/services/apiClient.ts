@@ -18,6 +18,20 @@ function generateTraceId(): string {
   return `trc-${timestamp}-${random}`
 }
 
+export function getCurrentUserId(): string {
+  if (typeof sessionStorage !== 'undefined') {
+    const existing =
+      sessionStorage.getItem('waiting_room_user_id') ||
+      sessionStorage.getItem('hibana_user_id')
+    if (existing) return existing
+
+    const generated = `usr-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 7)}`
+    sessionStorage.setItem('waiting_room_user_id', generated)
+    return generated
+  }
+  return 'frontend-buyer'
+}
+
 export async function request<T>(
   url: string,
   options: RequestInit = {},
@@ -33,11 +47,14 @@ export async function request<T>(
       ? sessionStorage.getItem('waiting_room_checkout_token')
       : null
 
+  const currentUserId = getCurrentUserId()
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
     'Trace-ID': traceId,
     'X-Trace-Id': traceId,
+    'X-User-Id': currentUserId,
     ...(storedToken ? { 'X-Checkout-Token': storedToken } : {}),
     ...(options.headers as Record<string, string>),
   }

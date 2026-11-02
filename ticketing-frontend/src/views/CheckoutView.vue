@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCatalogStore } from '../stores/catalog'
 import { useTicketingStore } from '../stores/ticketing'
 import { useCheckoutStore } from '../stores/checkout'
 import { useTicketsStore } from '../stores/tickets'
+import { orderService, type PaymentMethodStatusDto } from '../services/orderService'
+import { ApiError } from '../services/apiClient'
 import { getVenueById } from '../data/mockVenues'
 import type { EventItem, Seat } from '../types'
 
@@ -97,56 +99,39 @@ const rawSeatsSubtotal = computed(() => {
 
 const subtotal = computed(() => rawSeatsSubtotal.value)
 
-// Costo por servicio de la página por cada entrada comprada (calculado sobre el subtotal de entradas)
+// Costo por servicio de la página por cada entrada comprada
 const serviceFee = computed(() => {
-  return Math.round(subtotal.value * (serviceFeePercentage.value / 100) * 100) / 100
+  return (rawSeatsSubtotal.value * serviceFeePercentage.value) / 100
 })
 
-// Impuestos (0 por defecto a menos que estén fijados)
-const taxes = computed(() => 0)
+// Impuestos locales / IVA (21% del total)
+const taxes = computed(() => {
+  const taxableBase =
+    subtotal.value +
+    serviceFee.value +
+    (includeParkingPass.value ? parkingPassPrice.value : 0)
+  return taxableBase * 0.21
+})
 
-// Grand Total
 const grandTotal = computed(() => {
-  const parkingAmount = includeParkingPass.value ? parkingPassPrice.value : 0
-  return Math.round((subtotal.value + serviceFee.value + parkingAmount) * 100) / 100
+  return (
+    subtotal.value +
+    serviceFee.value +
+    (includeParkingPass.value ? parkingPassPrice.value : 0) +
+    taxes.value
+  )
 })
 
-// Redlock 10-minute Timer (Atomic Redis Hold)
-const fallbackSeconds = ref(600)
-let fallbackTimer: ReturnType<typeof setInterval> | null = null
-
-onMounted(() => {
-  if (!ticketingStore.isLockActive) {
-    fallbackTimer = setInterval(() => {
-      if (fallbackSeconds.value > 0) {
-        fallbackSeconds.value--
-      } else {
-        if (fallbackTimer) clearInterval(fallbackTimer)
-        showTimeExpiredModal.value = true
-      }
-    }, 1000)
-  }
-})
-
-onUnmounted(() => {
-  if (fallbackTimer) clearInterval(fallbackTimer)
-})
-
-const isTimeCritical = computed(() => {
-  const time = ticketingStore.isLockActive ? ticketingStore.lockTimeRemaining : fallbackSeconds.value
-  return time <= 120
-})
+// Timer critical threshold (< 2 mins)
+const isTimeCritical = computed(() => ticketingStore.lockTimeRemaining < 120)
 
 const formattedCountdown = computed(() => {
-  if (ticketingStore.isLockActive) {
-    return ticketingStore.formattedLockTime
-  }
-  const mins = Math.floor(fallbackSeconds.value / 60)
-  const secs = fallbackSeconds.value % 60
+  const mins = Math.floor(ticketingStore.lockTimeRemaining / 60)
+  const secs = ticketingStore.lockTimeRemaining % 60
   return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
 })
 
-// Payment form state
+// Payment Form State
 const selectedPaymentTab = ref<'debit_card' | 'credit_card' | 'mercado_pago'>('debit_card')
 const issuingBank = ref<string>('GALICIA')
 const installments = ref<number>(1)
@@ -155,6 +140,17 @@ const cardHolder = ref('CARLOS MENDOZA')
 const cardExpiry = ref('12/28')
 const cardCvc = ref('888')
 const saveCard = ref(true)
+
+// Feature flag for payment methods from backend
+const paymentMethods = ref<PaymentMethodStatusDto[]>([])
+const mercadoPagoEnabled = computed(() => {
+  const mp = paymentMethods.value.find((m) => m.id === 'MERCADO_PAGO')
+  return mp ? mp.enabled : false
+})
+
+onMounted(async () => {
+  paymentMethods.value = await orderService.getPaymentMethods()
+})
 
 // Formatting helpers
 function formatCardNumber(e: Event) {
@@ -197,7 +193,7 @@ const isProcessing = ref(false)
 const orderCompletedOpen = ref(false)
 const showTimeExpiredModal = ref(false)
 const orderId = ref('')
-const copiedNotice = ref('')
+const checkoutError = ref<string | null>(null)
 
 watch(
   () => ticketingStore.isTimerExpired,
@@ -223,47 +219,104 @@ function handleReturnToSeats() {
 }
 
 async function handleCompleteOrder() {
+  if (selectedPaymentTab.value === 'mercado_pago' && !mercadoPagoEnabled.value) {
+    checkoutError.value =
+      'Mercado Pago se encuentra en fase de homologación para el MVP. Por favor selecciona Débito o Crédito.'
+    return
+  }
+
   isProcessing.value = true
+  checkoutError.value = null
 
-  // Sync payment method with Pinia store
-  checkoutStore.paymentMethod = selectedPaymentTab.value
-  const success = checkoutStore.completeOrder(grandTotal.value)
+  // 1. Identify primary held seat & reservation ID
+  const primaryHold = ticketingStore.activeHolds[0]
+  const primarySeat = selectedSeats.value[0]
 
-  if (success) {
-    const newOrderId = `ORD-${Date.now().toString().slice(-5)}`
-    orderId.value = newOrderId
+  const reservationId = primaryHold?.reservationId || `res_${Date.now()}`
+  const seatId = primaryHold?.seatId || primarySeat?.id || 'seat-default'
 
-    // Confirm remote reservation holds
-    if (selectedSeats.value.length > 0) {
-      await ticketingStore.confirmAllActiveReservations(newOrderId)
-    }
+  // Map selected payment tab to backend PaymentMethod enum
+  const paymentMethod: 'DEBIT_CARD' | 'CREDIT_CARD' | 'MERCADO_PAGO' =
+    selectedPaymentTab.value === 'debit_card'
+      ? 'DEBIT_CARD'
+      : selectedPaymentTab.value === 'credit_card'
+      ? 'CREDIT_CARD'
+      : 'MERCADO_PAGO'
 
-    // Add issued tickets into the user's digital wallet
-    const seatsToIssue: Seat[] =
-      selectedSeats.value.length > 0
-        ? selectedSeats.value
-        : [
-            { id: 'seat-wireframe-1', sector: 'VIP Access', row: '12', number: 1, price: 150, status: 'RESERVED', x: 0, y: 0 },
-            { id: 'seat-wireframe-2', sector: 'VIP Access', row: '12', number: 2, price: 150, status: 'RESERVED', x: 0, y: 0 },
-          ]
+  try {
+    // 2. Call Orders Backend: POST /api/v1/orders
+    const createdOrder = await orderService.createOrder({
+      reservationId,
+      eventId: eventId.value,
+      seatId,
+      totalAmount: grandTotal.value,
+      subtotalAmount: subtotal.value,
+      serviceFeeAmount: serviceFee.value,
+    })
 
-    ticketsStore.addIssuedTickets(
-      eventTitle.value,
-      eventDateFormatted.value,
-      eventVenue.value,
-      seatsToIssue,
-      newOrderId,
-      checkoutStore.buyerName,
-      checkoutStore.buyerEmail
-    )
+    const realOrderId = createdOrder.orderId
+    orderId.value = realOrderId
+    checkoutStore.lastOrderId = realOrderId
 
-    // Simulate secure transaction validation as in wireframe
-    setTimeout(() => {
+    // 3. Call Orders Backend Settlement: POST /api/v1/orders/{orderId}/pay
+    const paymentResult = await orderService.processPayment(realOrderId, {
+      paymentMethod,
+      buyerEmail: checkoutStore.buyerEmail,
+      buyerName: checkoutStore.buyerName,
+      buyerTaxId: checkoutStore.buyerDni,
+      installments: installments.value,
+      issuingBank: issuingBank.value,
+    })
+
+    if (paymentResult.status === 'PAID') {
+      // 4. Confirm remote reservation holds in Inventory (Redlock hold -> Booked)
+      if (selectedSeats.value.length > 0) {
+        await ticketingStore.confirmAllActiveReservations(realOrderId)
+      }
+
+      // 5. Add issued tickets into the user's digital wallet in Pinia
+      const seatsToIssue: Seat[] =
+        selectedSeats.value.length > 0
+          ? selectedSeats.value
+          : [
+              {
+                id: 'seat-ticket-1',
+                sector: 'Acceso General',
+                row: '1',
+                number: 1,
+                price: grandTotal.value,
+                status: 'RESERVED',
+                x: 0,
+                y: 0,
+              },
+            ]
+
+      ticketsStore.addIssuedTickets(
+        eventTitle.value,
+        eventDateFormatted.value,
+        eventVenue.value,
+        seatsToIssue,
+        realOrderId,
+        checkoutStore.buyerName,
+        checkoutStore.buyerEmail
+      )
+
       ticketingStore.releaseExpiredLocks()
+      checkoutStore.isCompleted = true
       isProcessing.value = false
       orderCompletedOpen.value = true
-    }, 2800)
-  } else {
+    } else {
+      throw new Error(`El pago no pudo completarse. Estado: ${paymentResult.status}`)
+    }
+  } catch (err: unknown) {
+    console.error('[CHECKOUT-ERROR] Error procesando la orden en el backend:', err)
+    let msg = 'Hubo un inconveniente al procesar tu orden. Por favor verifica tus datos e intenta nuevamente.'
+    if (err instanceof ApiError) {
+      msg = err.problem?.detail || err.message || msg
+    } else if (err instanceof Error) {
+      msg = err.message
+    }
+    checkoutError.value = msg
     isProcessing.value = false
   }
 }
@@ -271,15 +324,6 @@ async function handleCompleteOrder() {
 function navigateToTickets() {
   orderCompletedOpen.value = false
   router.push({ name: 'tickets' })
-}
-
-function copyToClipboard(text: string, label: string) {
-  navigator.clipboard.writeText(text).then(() => {
-    copiedNotice.value = `¡${label} copiado!`
-    setTimeout(() => {
-      copiedNotice.value = ''
-    }, 2500)
-  })
 }
 </script>
 
@@ -296,6 +340,24 @@ function copyToClipboard(text: string, label: string) {
     <main class="flex-grow w-full max-w-[1280px] mx-auto px-4 sm:px-6 md:px-12 py-8 md:py-12 grid grid-cols-1 lg:grid-cols-12 gap-8">
       <!-- Progress Stepper -->
       <CheckoutStepper />
+
+      <!-- Error Banner if checkout or payment failed -->
+      <div
+        v-if="checkoutError"
+        class="col-span-1 lg:col-span-12 p-4 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-between gap-3 text-red-300 text-sm"
+      >
+        <div class="flex items-center gap-2.5">
+          <span class="material-symbols-outlined text-red-400">error</span>
+          <span>{{ checkoutError }}</span>
+        </div>
+        <button
+          type="button"
+          @click="checkoutError = null"
+          class="text-xs text-red-400 hover:text-red-200 underline cursor-pointer"
+        >
+          Descartar
+        </button>
+      </div>
 
       <!-- Left Column: Order Summary -->
       <OrderSummaryCard
@@ -328,6 +390,7 @@ function copyToClipboard(text: string, label: string) {
         v-model:installments="installments"
         :grand-total="grandTotal"
         :is-processing="isProcessing"
+        :mercado-pago-enabled="mercadoPagoEnabled"
         @format-card-number="formatCardNumber"
         @format-expiry="formatExpiry"
         @format-cvc="formatCvc"
