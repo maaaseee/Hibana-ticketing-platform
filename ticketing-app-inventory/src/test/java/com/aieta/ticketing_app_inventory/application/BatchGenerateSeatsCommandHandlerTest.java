@@ -57,6 +57,13 @@ class BatchGenerateSeatsCommandHandlerTest {
         assertTrue(savedSeats.stream().allMatch(s -> s.getStatus() == SeatStatus.AVAILABLE));
         assertTrue(savedSeats.stream().allMatch(s -> s.getEventId().equals("evt_test")));
         assertTrue(savedSeats.stream().allMatch(s -> "ARS".equals(s.getPrice().currency())));
+        // Verify seat prices strictly equal sector basePrice without service fee added in inventory
+        assertTrue(savedSeats.stream()
+                .filter(s -> "sec_ga".equals(s.getSectorId()))
+                .allMatch(s -> s.getPrice().amount().compareTo(new BigDecimal("5000.00")) == 0));
+        assertTrue(savedSeats.stream()
+                .filter(s -> "sec_num".equals(s.getSectorId()))
+                .allMatch(s -> s.getPrice().amount().compareTo(new BigDecimal("10000.00")) == 0));
 
         // Verify numbered sector respected custom seatsPerRow (10 seats/row -> R1..R4)
         List<Seat> numberedSeats = savedSeats.stream()

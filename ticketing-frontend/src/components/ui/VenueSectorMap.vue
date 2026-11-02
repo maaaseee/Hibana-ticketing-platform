@@ -525,7 +525,7 @@ function handleSectorClick(sec: SectorGeometry) {
       <!-- Botonera Flotante Estilo Google Maps -->
       <div
         v-if="interactive && !compact"
-        class="absolute bottom-4 right-4 flex flex-col items-center bg-[#081524]/90 border border-[#1e3a5f] rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-20"
+        class="absolute bottom-4 right-4 flex flex-col items-center bg-[#081524]/90 border border-border-structural rounded-xl shadow-2xl backdrop-blur-md overflow-hidden z-20"
       >
         <button
           @click.stop="zoomIn"
@@ -536,7 +536,7 @@ function handleSectorClick(sec: SectorGeometry) {
         >
           <span class="material-symbols-outlined text-xl">add</span>
         </button>
-        <div class="w-full h-px bg-[#1e3a5f]"></div>
+        <div class="w-full h-px bg-border-structural"></div>
         <button
           @click.stop="zoomOut"
           type="button"
@@ -546,7 +546,7 @@ function handleSectorClick(sec: SectorGeometry) {
         >
           <span class="material-symbols-outlined text-xl">remove</span>
         </button>
-        <div class="w-full h-px bg-[#1e3a5f]"></div>
+        <div class="w-full h-px bg-border-structural"></div>
         <button
           @click.stop="resetView"
           type="button"
@@ -561,7 +561,7 @@ function handleSectorClick(sec: SectorGeometry) {
       <!-- Ayuda Flotante en la esquina inferior izquierda -->
       <div
         v-if="interactive && !compact"
-        class="absolute bottom-4 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#081524]/85 border border-[#1e3a5f]/70 text-[11px] font-mono text-muted-light backdrop-blur-md pointer-events-none z-10 shadow-lg"
+        class="absolute bottom-4 left-4 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#081524]/85 border border-border-structural/70 text-[11px] font-mono text-muted-light backdrop-blur-md pointer-events-none z-10 shadow-lg"
       >
         <span class="material-symbols-outlined text-xs text-primary">pan_tool</span>
         <span>Arrastra para mover</span>
@@ -575,7 +575,7 @@ function handleSectorClick(sec: SectorGeometry) {
         <div
           v-if="activeSector && interactive"
           :class="[
-            'sector-inspector-card absolute top-4 left-4 max-w-[260px] sm:max-w-[280px] w-full bg-[#0c1c2e]/95 border border-[#0099ff]/50 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2.5 animate-in fade-in-0 duration-150',
+            'sector-inspector-card absolute top-4 left-4 max-w-65 sm:max-w-70 w-full bg-[#0c1c2e]/95 border border-[#0099ff]/50 rounded-2xl p-3.5 shadow-2xl backdrop-blur-md z-30 flex flex-col gap-2.5 animate-in fade-in-0 duration-150',
             selectedSector ? 'pointer-events-auto' : 'pointer-events-none'
           ]"
         >
@@ -603,7 +603,7 @@ function handleSectorClick(sec: SectorGeometry) {
           </div>
 
           <!-- Precio del Sector -->
-          <div class="flex flex-col gap-0.5 pt-2 border-t border-[#1e3a5f]/60">
+          <div class="flex flex-col gap-0.5 pt-2 border-t border-border-structural/60">
             <div class="flex items-baseline justify-between text-xs">
               <span class="font-mono text-muted-light">Precio:</span>
               <span v-if="getSectorPrice(activeSector)" class="font-display font-extrabold text-sm sm:text-base text-[#00d2ff]">
@@ -615,7 +615,7 @@ function handleSectorClick(sec: SectorGeometry) {
               </span>
             </div>
             <div v-if="getSectorPrice(activeSector)" class="text-right">
-              <span class="font-mono text-[11px] text-[#7dd3fc] font-semibold tracking-tight">
+              <span class="font-mono text-[11px] text-accent-sky-light font-semibold tracking-tight">
                 + cargo por servicio
               </span>
             </div>

@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,8 +29,7 @@ public class BatchGenerateSeatsCommandHandler implements RequestHandler<BatchGen
         List<Seat> allSeats = new ArrayList<>();
 
         for (SectorDefinition sector : command.sectors()) {
-            BigDecimal totalPrice = sector.basePrice().add(sector.serviceFee());
-            Money price = Money.of(totalPrice, sector.currency());
+            Money price = Money.of(sector.basePrice(), sector.currency());
 
             if ("GENERAL_ADMISSION".equalsIgnoreCase(sector.type())) {
                 for (int i = 1; i <= sector.totalCapacity(); i++) {

@@ -1,20 +1,22 @@
--- V1__create_orders_schema.sql: Initial DDL schema for Orders & Financial Engine
+-- V1__create_orders_schema.sql: Consolidated DDL schema for Orders & Financial Engine
 CREATE SCHEMA IF NOT EXISTS orders;
 SET search_path = orders;
 
 -- 1. Orders table
 CREATE TABLE IF NOT EXISTS orders (
-    id              UUID            PRIMARY KEY,
-    user_id         VARCHAR(60)     NOT NULL,
-    reservation_id  VARCHAR(60)     NOT NULL,
-    event_id        VARCHAR(60)     NOT NULL,
-    seat_id         VARCHAR(60)     NOT NULL,
-    total_amount    NUMERIC(10,2)   NOT NULL CHECK (total_amount >= 0),
-    currency        VARCHAR(3)      NOT NULL DEFAULT 'EUR',
-    status          VARCHAR(25)     NOT NULL DEFAULT 'PENDING_PAYMENT',
-    payment_method  VARCHAR(25),
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
+    id                  UUID            PRIMARY KEY,
+    user_id             VARCHAR(60)     NOT NULL,
+    reservation_id      VARCHAR(60)     NOT NULL,
+    event_id            VARCHAR(60)     NOT NULL,
+    seat_id             VARCHAR(60)     NOT NULL,
+    total_amount        NUMERIC(10,2)   NOT NULL CHECK (total_amount >= 0),
+    subtotal_amount     NUMERIC(10,2)   DEFAULT NULL,
+    service_fee_amount  NUMERIC(10,2)   DEFAULT NULL,
+    currency            VARCHAR(3)      NOT NULL DEFAULT 'EUR',
+    status              VARCHAR(25)     NOT NULL DEFAULT 'PENDING_PAYMENT',
+    payment_method      VARCHAR(25),
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders (user_id);
@@ -35,17 +37,23 @@ CREATE TABLE IF NOT EXISTS order_items (
 
 CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON order_items (order_id);
 
--- 3. Pocket Wallets (Virtual Wallets)
-CREATE TABLE IF NOT EXISTS pocket_wallets (
-    id          UUID            PRIMARY KEY,
-    user_id     VARCHAR(60)     NOT NULL UNIQUE,
-    balance     NUMERIC(10,2)   NOT NULL DEFAULT 0.00 CHECK (balance >= 0),
-    currency    VARCHAR(3)      NOT NULL DEFAULT 'EUR',
-    created_at  TIMESTAMPTZ     NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ     NOT NULL DEFAULT now()
+-- 3. Discount Vouchers for compensation, refunds and marketing promotions
+CREATE TABLE IF NOT EXISTS discount_vouchers (
+    id              UUID            PRIMARY KEY,
+    code            VARCHAR(40)     NOT NULL UNIQUE,
+    user_id         VARCHAR(60)     NOT NULL,
+    discount_type   VARCHAR(20)     NOT NULL, -- 'PERCENTAGE', 'FIXED_AMOUNT'
+    amount          NUMERIC(10,2)   NOT NULL CHECK (amount > 0),
+    min_purchase    NUMERIC(10,2)   DEFAULT 0.00,
+    currency        VARCHAR(3)      NOT NULL DEFAULT 'ARS',
+    is_used         BOOLEAN         NOT NULL DEFAULT FALSE,
+    used_at         TIMESTAMPTZ,
+    expires_at      TIMESTAMPTZ     NOT NULL,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_pocket_wallets_user ON pocket_wallets (user_id);
+CREATE INDEX IF NOT EXISTS idx_vouchers_user_id ON discount_vouchers (user_id);
+CREATE INDEX IF NOT EXISTS idx_vouchers_code ON discount_vouchers (code);
 
 -- 4. Ledger Accounts (Double-Entry Bookkeeping - com.aieta.pocket)
 CREATE TABLE IF NOT EXISTS ledger_accounts (

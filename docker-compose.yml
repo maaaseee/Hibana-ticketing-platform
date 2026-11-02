@@ -101,6 +101,7 @@ services:
       DB_USER: ticketing_admin
       DB_PASSWORD: dev_password_123
       DB_NAME: ticketing_db
+      SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
@@ -128,6 +129,7 @@ services:
       DB_USER: ticketing_admin
       DB_PASSWORD: dev_password_123
       DB_NAME: ticketing_db
+      SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
     depends_on:
@@ -155,6 +157,7 @@ services:
       DB_USER: ticketing_admin
       DB_PASSWORD: dev_password_123
       DB_NAME: ticketing_db
+      SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
       MAIL_HOST: mailpit
