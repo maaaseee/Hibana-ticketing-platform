@@ -61,7 +61,8 @@ export interface OrderItemDetail {
 }
 
 export interface OrderDetailDto {
-  id: string
+  orderId: string
+  id?: string
   userId: string
   reservationId: string
   eventId: string
@@ -105,6 +106,13 @@ export const orderService = {
         { id: 'MERCADO_PAGO', name: 'Mercado Pago', enabled: false, badge: 'Próximamente' },
       ]
     }
+  },
+
+  /**
+   * Retrieves all orders for the current authenticated user from backend.
+   */
+  async getMyOrders(page = 0, size = 20): Promise<OrderDetailDto[]> {
+    return apiClient.get<OrderDetailDto[]>(`/api/v1/orders/me?page=${page}&size=${size}`)
   },
 
   /**

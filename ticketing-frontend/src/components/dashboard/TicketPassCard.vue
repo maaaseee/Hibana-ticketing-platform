@@ -1,14 +1,30 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import DynamicQrCode from '../ui/DynamicQrCode.vue'
 import type { Ticket } from '../../types'
+import { orderService } from '../../services/orderService'
 
-defineProps<{
+const props = defineProps<{
   ticket: Ticket
 }>()
 
 defineEmits<{
   (e: 'transfer', ticket: Ticket): void
 }>()
+
+const isDownloadingInvoice = ref(false)
+
+async function handleDownloadInvoice() {
+  if (!props.ticket.orderId) return
+  isDownloadingInvoice.value = true
+  try {
+    await orderService.downloadInvoicePdf(props.ticket.orderId)
+  } catch (err) {
+    console.error('Error al descargar factura:', err)
+  } finally {
+    isDownloadingInvoice.value = false
+  }
+}
 </script>
 
 <template>
@@ -75,6 +91,16 @@ defineEmits<{
         </div>
 
         <div class="flex items-center gap-3">
+          <button
+            @click="handleDownloadInvoice"
+            :disabled="isDownloadingInvoice"
+            class="px-4 py-2 rounded-xl text-xs font-semibold bg-surface-elevated hover:bg-surface-interactive border border-border-subtle text-high-emphasis cursor-pointer transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            title="Descargar Factura Oficial PDF"
+          >
+            <span class="material-symbols-outlined text-[16px] text-secondary">receipt_long</span>
+            <span>{{ isDownloadingInvoice ? 'Descargando...' : 'Factura PDF' }}</span>
+          </button>
+
           <button
             v-if="ticket.status === 'ISSUED'"
             @click="$emit('transfer', ticket)"

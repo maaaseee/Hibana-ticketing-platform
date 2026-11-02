@@ -1,12 +1,64 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useTicketsStore } from '../stores/tickets'
+import { orderService, type OrderDetailDto } from '../services/orderService'
 import type { Ticket } from '../types'
 import TicketPassCard from '../components/dashboard/TicketPassCard.vue'
 import TicketTransferModal from '../components/dashboard/TicketTransferModal.vue'
 import TicketsEmptyState from '../components/dashboard/TicketsEmptyState.vue'
 
 const ticketsStore = useTicketsStore()
+const isLoadingOrders = ref(false)
+const userOrders = ref<OrderDetailDto[]>([])
+
+onMounted(async () => {
+  try {
+    isLoadingOrders.value = true
+    const orders = await orderService.getMyOrders()
+    userOrders.value = orders || []
+
+    // If real paid orders exist on the backend, ensure tickets are in store
+    if (orders && orders.length > 0) {
+      for (const order of orders) {
+        if (order.status === 'PAID') {
+          const alreadyExists = ticketsStore.tickets.some(t => t.orderId === order.orderId)
+          if (!alreadyExists) {
+            ticketsStore.addIssuedTickets(
+              'Evento Hibana',
+              new Date(order.createdAt).toLocaleDateString('es-AR', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+              }) + ' ART',
+              'Recinto Principal',
+              [
+                {
+                  id: order.seatId || 'seat-1',
+                  sector: 'Acceso General',
+                  row: '1',
+                  number: 1,
+                  price: order.totalAmount,
+                  status: 'RESERVED',
+                  x: 0,
+                  y: 0,
+                },
+              ],
+              order.orderId,
+              'Comprador Hibana',
+              ''
+            )
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('[DASHBOARD] Could not fetch remote user orders:', err)
+  } finally {
+    isLoadingOrders.value = false
+  }
+})
 
 // Transfer Modal State
 const showTransferModal = ref(false)

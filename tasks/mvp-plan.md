@@ -81,8 +81,8 @@ flowchart TD
   - Garantizar idempotencia si la reserva ya estaba confirmada.
 
 ### Fase 4: Persistencia y Consulta de Entradas
-- [ ] Endpoint `GET /api/v1/orders?userId={userId}` o `GET /api/v1/orders/{orderId}` para recuperar el detalle de la compra.
-- [ ] Conectar `DashboardTicketsView.vue` para que liste las órdenes pagadas y permita descargar la factura PDF oficial en cualquier momento.
+- [x] Endpoint `GET /api/v1/orders?userId={userId}` o `GET /api/v1/orders/{orderId}` para recuperar el detalle de la compra.
+- [x] Conectar `DashboardTicketsView.vue` para que liste las órdenes pagadas y permita descargar la factura PDF oficial en cualquier momento.
 
 ### Fase 5: Verificación E2E Integral
 - [ ] Ejecutar prueba de extremo a extremo automatizada verificando:
