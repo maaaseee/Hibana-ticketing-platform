@@ -11,7 +11,10 @@
     "infra:status": "docker compose ps",
     "build:frontend": "bun run --cwd ticketing-frontend build",
     "dev:frontend": "bun run --cwd ticketing-frontend dev",
-    "test:frontend": "bun run --cwd ticketing-frontend test:unit -- --run"
+    "test:frontend": "bun run --cwd ticketing-frontend test:unit -- --run",
+    "docs:serve:openapi": "npx @scalar/cli serve docs/specs/openapi/gateway-api.yaml",
+    "docs:serve:events": "npx @asyncapi/cli start studio -f docs/specs/asyncapi/servicebus-events.yaml",
+    "docs:types": "npx openapi-typescript docs/specs/openapi/gateway-api.yaml -o ticketing-frontend/src/api/schema.d.ts"
   },
   "devDependencies": {
     "@types/node": "^26.6.5"

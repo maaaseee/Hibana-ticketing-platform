@@ -1,0 +1,340 @@
+asyncapi: 3.0.0
+info:
+  title: Hibana Event Mesh & Async Contracts (Azure Service Bus & WebSockets)
+  version: 1.0.0
+  description: |
+    Asynchronous event bus contracts and real-time WebSocket channels for the Hibana Ticketing platform.
+    Every cross-service mutation guarantees reliable at-least-once delivery via the **Transactional Outbox Pattern**
+    persisted locally in PostgreSQL before relaying to Azure Service Bus Topics.
+    All consumers implement consumer-side idempotency tracking.
+
+servers:
+  serviceBusLocal:
+    host: localhost:5672
+    protocol: amqp
+    description: Floci-AZ / RabbitMQ AMQP Emulation
+  serviceBusProd:
+    host: hibana-servicebus.servicebus.windows.net
+    protocol: amqps
+    description: Azure Service Bus Flexible Server (Entra ID Passwordless)
+  supportWebSocket:
+    host: localhost:8084
+    protocol: ws
+    pathname: /ws/chat
+    description: Spring WebFlux WebSocket chat server backed by Redis Pub/Sub
+
+channels:
+  # =======================================================
+  # 1. EVENT & VENUE CATALOG LIFECYCLE
+  # =======================================================
+  eventLifecycleTopic:
+    address: topics/catalog.events
+    messages:
+      EventCreatedMessage:
+        $ref: '#/components/messages/EventCreated'
+      EventPublishedMessage:
+        $ref: '#/components/messages/EventPublished'
+      EventCancelledMessage:
+        $ref: '#/components/messages/EventCancelled'
+
+  # =======================================================
+  # 2. INVENTORY & SEAT LOCKING LIFECYCLE
+  # =======================================================
+  inventoryEventsTopic:
+    address: topics/inventory.events
+    messages:
+      SeatHeldMessage:
+        $ref: '#/components/messages/SeatHeld'
+      SeatReleasedMessage:
+        $ref: '#/components/messages/SeatReleased'
+      ReservationConfirmedMessage:
+        $ref: '#/components/messages/ReservationConfirmed'
+
+  # =======================================================
+  # 3. ORDER & PAYMENT SAGA LIFECYCLE
+  # =======================================================
+  orderEventsTopic:
+    address: topics/orders.events
+    messages:
+      OrderCreatedMessage:
+        $ref: '#/components/messages/OrderCreated'
+      OrderPaidMessage:
+        $ref: '#/components/messages/OrderPaid'
+      PaymentFailedMessage:
+        $ref: '#/components/messages/PaymentFailed'
+      OrderCancelledMessage:
+        $ref: '#/components/messages/OrderCancelled'
+
+  # =======================================================
+  # 4. CUSTOMER SUPPORT & OPS WEBSOCKET
+  # =======================================================
+  chatRoomChannel:
+    address: /ws/chat/{ticketId}
+    parameters:
+      ticketId:
+        description: Support dispute or customer care ticket UUID
+    messages:
+      ChatMessageSent:
+        $ref: '#/components/messages/ChatMessage'
+      ChatSessionStarted:
+        $ref: '#/components/messages/ChatSession'
+
+operations:
+  # Outbox Publishers
+  publishEventCreated:
+    action: send
+    channel:
+      $ref: '#/channels/eventLifecycleTopic'
+    summary: Catalog Service emits when new event is created
+    messages:
+      - $ref: '#/channels/eventLifecycleTopic/messages/EventCreatedMessage'
+
+  publishSeatHeld:
+    action: send
+    channel:
+      $ref: '#/channels/inventoryEventsTopic'
+    summary: Inventory Service emits when Redlock holds a seat for 10 minutes
+    messages:
+      - $ref: '#/channels/inventoryEventsTopic/messages/SeatHeldMessage'
+
+  publishOrderPaid:
+    action: send
+    channel:
+      $ref: '#/channels/orderEventsTopic'
+    summary: Orders Service emits when payment authorization succeeds
+    messages:
+      - $ref: '#/channels/orderEventsTopic/messages/OrderPaidMessage'
+
+  # Consumers / Subscribers
+  subscribeEventCreatedInInventory:
+    action: receive
+    channel:
+      $ref: '#/channels/eventLifecycleTopic'
+    summary: Inventory service creates initial seat allocations in PostgreSQL
+    messages:
+      - $ref: '#/channels/eventLifecycleTopic/messages/EventCreatedMessage'
+
+  subscribeOrderPaidInInventory:
+    action: receive
+    channel:
+      $ref: '#/channels/orderEventsTopic'
+    summary: Inventory service permanently marks reserved seat as SOLD
+    messages:
+      - $ref: '#/channels/orderEventsTopic/messages/OrderPaidMessage'
+
+  subscribeOrderCancelledInInventory:
+    action: receive
+    channel:
+      $ref: '#/channels/orderEventsTopic'
+    summary: Inventory service releases Redis lock and PostgreSQL hold
+    messages:
+      - $ref: '#/channels/orderEventsTopic/messages/OrderCancelledMessage'
+
+components:
+  messages:
+    # ----------------------------------------------------
+    # Domain Message: EventCreated
+    # ----------------------------------------------------
+    EventCreated:
+      name: EventCreatedEvent
+      title: Event Created Integration Event
+      summary: Fired when an organizer registers a spectacle in the Catalog bounded context
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        required: [eventId, slug, title, totalCapacity, sectors]
+        properties:
+          eventId:
+            type: string
+            format: uuid
+          slug:
+            type: string
+          title:
+            type: string
+          venueId:
+            type: string
+            format: uuid
+          totalCapacity:
+            type: integer
+          doorsOpenAt:
+            type: string
+            format: date-time
+          startsAt:
+            type: string
+            format: date-time
+          sectors:
+            type: array
+            items:
+              type: object
+              properties:
+                name: { type: string }
+                type: { type: string }
+                capacity: { type: integer }
+                basePrice: { type: number }
+
+    EventPublished:
+      name: EventPublishedEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          eventId: { type: string, format: uuid }
+          publishedAt: { type: string, format: date-time }
+
+    EventCancelled:
+      name: EventCancelledEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          eventId: { type: string, format: uuid }
+          reason: { type: string }
+          cancelledAt: { type: string, format: date-time }
+
+    # ----------------------------------------------------
+    # Domain Message: Inventory Locks
+    # ----------------------------------------------------
+    SeatHeld:
+      name: SeatHeldEvent
+      title: Seat Locked via Redlock
+      summary: Broadcasts that a seat is currently held with an active TTL
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        required: [reservationId, eventId, seatId, userId, expiresAt]
+        properties:
+          reservationId: { type: string, format: uuid }
+          eventId: { type: string, format: uuid }
+          seatId: { type: string }
+          userId: { type: string }
+          expiresAt: { type: string, format: date-time }
+          lockTtlSeconds: { type: integer, example: 600 }
+
+    SeatReleased:
+      name: SeatReleasedEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          reservationId: { type: string, format: uuid }
+          eventId: { type: string, format: uuid }
+          seatId: { type: string }
+          reason:
+            type: string
+            enum: [EXPIRED_TTL, USER_CANCELLED, SAGA_COMPENSATION]
+
+    ReservationConfirmed:
+      name: ReservationConfirmedEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          reservationId: { type: string, format: uuid }
+          eventId: { type: string, format: uuid }
+          seatId: { type: string }
+          confirmedAt: { type: string, format: date-time }
+
+    # ----------------------------------------------------
+    # Domain Message: Orders & Payments
+    # ----------------------------------------------------
+    OrderCreated:
+      name: OrderCreatedEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          orderId: { type: string }
+          userId: { type: string }
+          reservationId: { type: string, format: uuid }
+          totalAmount: { type: number }
+
+    OrderPaid:
+      name: OrderPaidEvent
+      title: Order Payment Confirmed
+      summary: Successfully authorizes checkout Saga and commands Ticket Issuance
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        required: [orderId, userId, reservationId, totalAmount, paidAt]
+        properties:
+          orderId: { type: string }
+          userId: { type: string }
+          reservationId: { type: string, format: uuid }
+          totalAmount: { type: number }
+          paymentMethod: { type: string }
+          paidAt: { type: string, format: date-time }
+
+    PaymentFailed:
+      name: PaymentFailedEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          orderId: { type: string }
+          reservationId: { type: string, format: uuid }
+          failureReason: { type: string }
+
+    OrderCancelled:
+      name: OrderCancelledEvent
+      headers:
+        $ref: '#/components/schemas/StandardOutboxHeaders'
+      payload:
+        type: object
+        properties:
+          orderId: { type: string }
+          reservationId: { type: string, format: uuid }
+          reason: { type: string }
+
+    # ----------------------------------------------------
+    # WebSocket Support Live Chat Messages
+    # ----------------------------------------------------
+    ChatMessage:
+      name: ChatMessageSent
+      payload:
+        type: object
+        required: [ticketId, senderId, senderRole, message, timestamp]
+        properties:
+          ticketId: { type: string, format: uuid }
+          senderId: { type: string }
+          senderRole:
+            type: string
+            enum: [USER, OPERATOR, AI_ASSISTANT]
+          message: { type: string }
+          timestamp: { type: string, format: date-time }
+
+    ChatSession:
+      name: ChatSessionStarted
+      payload:
+        type: object
+        properties:
+          ticketId: { type: string, format: uuid }
+          userId: { type: string }
+          status: { type: string, enum: [OPEN, IN_PROGRESS, RESOLVED] }
+
+  schemas:
+    StandardOutboxHeaders:
+      type: object
+      required: [eventId, eventType, timestamp, traceId]
+      properties:
+        eventId:
+          type: string
+          format: uuid
+          description: Unique idempotency key for consumer deduplication
+        eventType:
+          type: string
+          description: Fully-qualified domain event type
+        timestamp:
+          type: string
+          format: date-time
+        traceId:
+          type: string
+          description: Distributed W3C Trace-ID propagated from Spring Cloud Gateway

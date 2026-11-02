@@ -1,0 +1,943 @@
+openapi: 3.1.0
+info:
+  title: Hibana Ticketing - API Gateway Contract
+  version: 1.0.0
+  description: |
+    Comprehensive OpenAPI specification for the Hibana Ticketing platform edge gateway (`ticketing-app-gateway`).
+    Routes requests to bounded contexts (Catalog, Inventory, Orders, IAM, and Support) while enforcing
+    Virtual Waiting Room gate validation (`X-Checkout-Token`), Redis token-bucket rate limiting (100 req/min),
+    and distributed tracing via `Trace-ID`.
+servers:
+  - url: http://localhost:8080
+    description: Local Floci-AZ / Docker Environment
+  - url: https://api.hibana.tk
+    description: Production Edge Gateway
+tags:
+  - name: Virtual Waiting Room
+    description: Queue admission and real-time pass issuance
+  - name: Event Catalog
+    description: Public spectacles, tour dates, venues, and seat map metadata
+  - name: Inventory & Locking
+    description: Real-time seat availability and 10-minute Redlock reservation
+  - name: Orders & Payments
+    description: Shopping checkout, invoice generation, and payment processing
+  - name: Live Support & Operations
+    description: Real-time operator chat and dispute handling
+
+paths:
+  # ==========================================
+  # 1. VIRTUAL WAITING ROOM (Gateway Native)
+  # ==========================================
+  /api/v1/queue/join:
+    post:
+      tags: [Virtual Waiting Room]
+      summary: Join the virtual waiting room for an event
+      description: |
+        Registers a user into the Redis Sorted Set (`queue:event:{eventId}`) with millisecond timestamp score.
+      operationId: joinQueue
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueJoinRequest'
+      responses:
+        '200':
+          description: Enqueued status or instant admission if below threshold
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStatusResponse'
+
+  /api/v1/queue/status:
+    get:
+      tags: [Virtual Waiting Room]
+      summary: Poll current position in queue
+      operationId: getQueueStatus
+      parameters:
+        - name: eventId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current position, estimated wait time, and checkout token if admitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueStatusResponse'
+
+  /api/v1/queue/stream:
+    get:
+      tags: [Virtual Waiting Room]
+      summary: Server-Sent Events stream of queue position
+      description: Real-time stream updating queue position every second.
+      operationId: streamQueueStatus
+      parameters:
+        - name: eventId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Server-Sent Event stream
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/QueueStatusResponse'
+
+  # ==========================================
+  # 2. EVENT & VENUE CATALOG (Catalog Service)
+  # ==========================================
+  /api/v1/events:
+    get:
+      tags: [Event Catalog]
+      summary: Retrieve upcoming events with optional category or text search
+      operationId: getUpcomingEvents
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+          example: CONCERTS
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          example: Coldplay
+        - name: venue
+          in: query
+          required: false
+          schema:
+            type: string
+          example: River Plate
+      responses:
+        '200':
+          description: List of upcoming events matching filter
+          headers:
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventResponse'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/v1/events/highlights:
+    get:
+      tags: [Event Catalog]
+      summary: Get homepage curated highlights (Recently added & upcoming)
+      operationId: getHomeHighlights
+      parameters:
+        - name: referenceDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Cached highlight collections
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=300, stale-while-revalidate=600
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HomeHighlightsResponse'
+
+  /api/v1/events/meta:
+    get:
+      tags: [Event Catalog]
+      summary: Get catalog metadata including venues and furthest event date
+      operationId: getCatalogMetadata
+      responses:
+        '200':
+          description: Global catalog metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogMetadataResponse'
+
+  /api/v1/events/search:
+    get:
+      tags: [Event Catalog]
+      summary: Full-text semantic search on events and venues
+      operationId: searchEvents
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: venue
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Filtered event list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventResponse'
+
+  /api/v1/events/{id}:
+    get:
+      tags: [Event Catalog]
+      summary: Fetch single event details by UUID or URL slug
+      operationId: getEventById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          example: ado-hibana-world-tour-2026
+      responses:
+        '200':
+          description: Detailed event entity with sectors and pricing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==========================================
+  # 3. TICKETING & INVENTORY (Inventory Service)
+  # ==========================================
+  /api/v1/events/{eventId}/seats:
+    get:
+      tags: [Inventory & Locking]
+      summary: Real-time seat inventory for an event
+      description: Returns seat occupancy statuses (AVAILABLE, HELD, SOLD) and interactive canvas layout.
+      operationId: getEventSeats
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: sectorId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Real-time seat map allocation matrix
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventSeatsResponse'
+
+  /api/v1/reservations:
+    post:
+      tags: [Inventory & Locking]
+      summary: Hold a seat atomically using Redlock (Requires Waiting Room Token)
+      description: |
+        Protected by Gateway `CheckoutToken` filter. Validates `X-Checkout-Token` JWT.
+        Acquires Redis lock `lock:event:{eventId}:seat:{seatId}` with a strict 10-minute TTL.
+      operationId: holdSeat
+      security:
+        - CheckoutToken: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HoldSeatRequest'
+      responses:
+        '201':
+          description: Seat locked successfully for 10 minutes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldSeatResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Invalid or expired X-Checkout-Token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Seat already locked or sold by another user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /api/v1/reservations/{reservationId}/confirm:
+    post:
+      tags: [Inventory & Locking]
+      summary: Confirm reservation upon successful order payment
+      operationId: confirmReservation
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmReservationRequest'
+      responses:
+        '200':
+          description: Reservation converted to sold ticket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfirmReservationResponse'
+
+  /api/v1/reservations/{reservationId}:
+    delete:
+      tags: [Inventory & Locking]
+      summary: Release seat lock actively (Saga compensation or user drop)
+      operationId: releaseSeat
+      parameters:
+        - name: reservationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Lock released and seat made available again
+
+  # ==========================================
+  # 4. ORDER & FINANCIAL ENGINE (Orders Service)
+  # ==========================================
+  /api/v1/orders:
+    post:
+      tags: [Orders & Payments]
+      summary: Create order from active seat reservation
+      operationId: createOrder
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+        - $ref: '#/components/parameters/UserIdHeader'
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created with status PENDING_PAYMENT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/orders/{orderId}:
+    get:
+      tags: [Orders & Payments]
+      summary: Fetch order details and current Saga checkout status
+      operationId: getOrderById
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/UserIdHeader'
+      responses:
+        '200':
+          description: Detailed order state with line items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetailDto'
+
+  /api/v1/orders/me:
+    get:
+      tags: [Orders & Payments]
+      summary: Paginated list of current user's purchase history
+      operationId: getUserOrders
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - $ref: '#/components/parameters/UserIdHeader'
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderDetailDto'
+
+  /api/v1/orders/{orderId}/pay:
+    post:
+      tags: [Orders & Payments]
+      summary: Submit payment details for an order
+      operationId: processPayment
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/UserIdHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProcessPaymentRequest'
+      responses:
+        '200':
+          description: Payment authorization result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessPaymentResponse'
+
+  /api/v1/orders/{orderId}/cancel:
+    post:
+      tags: [Orders & Payments]
+      summary: Cancel pending order and trigger saga compensation
+      operationId: cancelOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/UserIdHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+                  example: Buyer changed mind
+      responses:
+        '200':
+          description: Order marked cancelled
+
+  /api/v1/orders/{orderId}/invoice:
+    get:
+      tags: [Orders & Payments]
+      summary: Download formal tax invoice PDF
+      operationId: getOrderInvoice
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/UserIdHeader'
+      responses:
+        '200':
+          description: Binary PDF invoice document
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+                example: inline; filename="Factura_Hibana_ORD-123.pdf"
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /api/v1/webhooks/mercadopago:
+    post:
+      tags: [Orders & Payments]
+      summary: Asynchronous payment gateway notification webhook
+      operationId: handleMercadoPagoWebhook
+      parameters:
+        - name: topic
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook acknowledged
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Microsoft Entra ID / Local JWT token containing user identity and RBAC roles.
+    CheckoutToken:
+      type: apiKey
+      in: header
+      name: X-Checkout-Token
+      description: Single-use, time-limited HMAC JWT issued by the Virtual Waiting Room allowing entry to reservation checkout.
+    TraceId:
+      type: apiKey
+      in: header
+      name: Trace-ID
+      description: W3C distributed trace correlation identifier propagated through Gateway to Service Bus.
+
+  parameters:
+    TraceIdHeader:
+      name: Trace-ID
+      in: header
+      required: false
+      schema:
+        type: string
+        example: 4bf92f3577b34da6a3ce929d0e0e4736
+    UserIdHeader:
+      name: X-User-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        example: usr-8849-ab2
+
+  responses:
+    BadRequest:
+      description: Validation or business contract failure
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    NotFound:
+      description: Requested entity does not exist
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+    TooManyRequests:
+      description: Gateway rate limit exceeded (100 req/min per IP)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
+
+  schemas:
+    ProblemDetail:
+      type: object
+      description: Standard RFC 7807 Problem Detail response
+      properties:
+        type:
+          type: string
+          format: uri
+          example: https://api.hibana.tk/errors/seat-already-locked
+        title:
+          type: string
+          example: Seat Conflict
+        status:
+          type: integer
+          example: 409
+        detail:
+          type: string
+          example: Seat SEC-A-12 has already been reserved by another customer.
+        instance:
+          type: string
+          example: /api/v1/reservations
+
+    QueueJoinRequest:
+      type: object
+      properties:
+        eventId:
+          type: string
+          example: ado-hibana-world-tour-2026
+        userId:
+          type: string
+          example: user-uuid-or-guest
+
+    QueueStatusResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+        userId:
+          type: string
+        position:
+          type: integer
+          example: 42
+        estimatedWaitSeconds:
+          type: integer
+          example: 120
+        status:
+          type: string
+          enum: [QUEUED, ADMITTED, EXPIRED]
+        checkoutToken:
+          type: string
+          nullable: true
+          description: Present only when status is ADMITTED
+
+    EventResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT, PUBLISHED, ON_SALE, SOLD_OUT, CANCELLED]
+        category:
+          type: string
+        genres:
+          type: array
+          items:
+            type: string
+        doorsOpenAt:
+          type: string
+          format: date-time
+        startsAt:
+          type: string
+          format: date-time
+        endsAt:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        venueName:
+          type: string
+        city:
+          type: string
+        address:
+          type: string
+        seatMapUrl:
+          type: string
+        imageUrl:
+          type: string
+        minPrice:
+          type: number
+        currency:
+          type: string
+        bannerUrl:
+          type: string
+        posterUrl:
+          type: string
+        description:
+          type: string
+        salesPolicyJson:
+          type: string
+        sectors:
+          type: array
+          items:
+            $ref: '#/components/schemas/SectorResponse'
+        serviceFeePercentage:
+          type: number
+
+    SectorResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        totalCapacity:
+          type: integer
+        availableCapacity:
+          type: integer
+        basePrice:
+          type: number
+        serviceFee:
+          type: number
+        currency:
+          type: string
+
+    HomeHighlightsResponse:
+      type: object
+      properties:
+        recentlyAdded:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventResponse'
+        upcoming:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventResponse'
+
+    CatalogMetadataResponse:
+      type: object
+      properties:
+        furthestEventDate:
+          type: string
+          format: date-time
+        venues:
+          type: array
+          items:
+            $ref: '#/components/schemas/VenueResponse'
+
+    VenueResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+        capacity:
+          type: integer
+
+    EventSeatsResponse:
+      type: object
+      properties:
+        eventId:
+          type: string
+        totalSeats:
+          type: integer
+        availableSeats:
+          type: integer
+        heldSeats:
+          type: integer
+        soldSeats:
+          type: integer
+        seats:
+          type: array
+          items:
+            $ref: '#/components/schemas/SeatItem'
+
+    SeatItem:
+      type: object
+      properties:
+        seatId:
+          type: string
+          example: A-101
+        sectorId:
+          type: string
+        sectorName:
+          type: string
+        row:
+          type: string
+        number:
+          type: integer
+        price:
+          type: number
+        status:
+          type: string
+          enum: [AVAILABLE, HELD, SOLD, RESERVED]
+        lockExpiresAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    HoldSeatRequest:
+      type: object
+      required: [eventId, seatId, userId]
+      properties:
+        eventId:
+          type: string
+          format: uuid
+        seatId:
+          type: string
+        userId:
+          type: string
+
+    HoldSeatResponse:
+      type: object
+      properties:
+        reservationId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+        seatId:
+          type: string
+        userId:
+          type: string
+        status:
+          type: string
+          enum: [HELD, EXPIRED, CONFIRMED]
+        expiresAt:
+          type: string
+          format: date-time
+        countdownSeconds:
+          type: integer
+          example: 600
+
+    ConfirmReservationRequest:
+      type: object
+      properties:
+        orderId:
+          type: string
+
+    ConfirmReservationResponse:
+      type: object
+      properties:
+        reservationId:
+          type: string
+        status:
+          type: string
+        confirmedAt:
+          type: string
+          format: date-time
+
+    CreateOrderRequest:
+      type: object
+      required: [reservationId, eventId, seatId, totalAmount, subtotalAmount, serviceFeeAmount]
+      properties:
+        reservationId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        seatId:
+          type: string
+        totalAmount:
+          type: number
+          example: 12500.00
+        subtotalAmount:
+          type: number
+          example: 10000.00
+        serviceFeeAmount:
+          type: number
+          example: 2500.00
+
+    CreateOrderResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        userId:
+          type: string
+        reservationId:
+          type: string
+        eventId:
+          type: string
+        seatId:
+          type: string
+        totalAmount:
+          type: number
+        status:
+          type: string
+          enum: [PENDING_PAYMENT, PAID, CANCELLED, EXPIRED]
+        createdAt:
+          type: string
+          format: date-time
+
+    OrderDetailDto:
+      type: object
+      properties:
+        orderId:
+          type: string
+        userId:
+          type: string
+        reservationId:
+          type: string
+        eventId:
+          type: string
+        seatId:
+          type: string
+        totalAmount:
+          type: number
+        subtotalAmount:
+          type: number
+        serviceFeeAmount:
+          type: number
+        status:
+          type: string
+        paymentMethod:
+          type: string
+        paidAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    ProcessPaymentRequest:
+      type: object
+      properties:
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, DEBIT_CARD, MERCADO_PAGO, VIRTUAL_WALLET]
+        buyerEmail:
+          type: string
+          format: email
+        buyerName:
+          type: string
+        buyerTaxId:
+          type: string
+        installments:
+          type: integer
+          default: 1
+        issuingBank:
+          type: string
+
+    ProcessPaymentResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+        status:
+          type: string
+          enum: [PAID, REJECTED, PROCESSING]
+        paymentMethod:
+          type: string
+        totalAmount:
+          type: number
+        paidAt:
+          type: string
+          format: date-time

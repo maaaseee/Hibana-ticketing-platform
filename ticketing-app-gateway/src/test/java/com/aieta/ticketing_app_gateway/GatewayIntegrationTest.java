@@ -81,7 +81,7 @@ class GatewayIntegrationTest {
         registry.add("IAM_SERVICE_URL", () -> "http://localhost:" + wireMockServer.port());
         registry.add("waiting-room.jwt.secret", () -> TEST_SECRET);
         registry.add("waiting-room.jwt.issuer", () -> TEST_ISSUER);
-        registry.add("resilience4j.timelimiter.instances.catalogCircuitBreaker.timeout-duration", () -> "500ms");
+        registry.add("resilience4j.timelimiter.instances.catalogCircuitBreaker.timeout-duration", () -> "1200ms");
     }
 
     @BeforeEach
@@ -266,7 +266,7 @@ class GatewayIntegrationTest {
         wireMockServer.stubFor(get(urlEqualTo("/api/v1/venues/1"))
                 .willReturn(aResponse()
                         .withStatus(500)
-                        .withFixedDelay(1500)));
+                        .withFixedDelay(1800)));
 
         webTestClient.get()
                 .uri("/api/v1/venues/1")
