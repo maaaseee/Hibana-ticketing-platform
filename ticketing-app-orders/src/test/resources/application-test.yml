@@ -34,3 +34,12 @@ ticketing:
       ticket-reservation: ticket.reservation.v1
   inventory:
     service-url: http://localhost:8082
+
+payment:
+  methods:
+    debit-card:
+      enabled: true
+    credit-card:
+      enabled: true
+    mercado-pago:
+      enabled: true

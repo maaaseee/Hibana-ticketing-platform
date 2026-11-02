@@ -1,5 +1,6 @@
 package com.aieta.ticketing_app_orders.infrastructure.web;
 
+import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.PaymentStrategyRegistry;
 import com.aieta.ticketing_app_orders.application.commands.cancel_order.CancelOrderCommand;
 import com.aieta.ticketing_app_orders.application.commands.create_order.CreateOrderCommand;
 import com.aieta.ticketing_app_orders.application.commands.create_order.CreateOrderResult;
@@ -41,13 +42,21 @@ public class OrderController {
     private final Mediator mediator;
     private final InvoicePdfPort invoicePdfPort;
     private final SpringMailNotificationAdapter mailAdapter;
+    private final PaymentStrategyRegistry paymentStrategyRegistry;
 
     public OrderController(Mediator mediator,
                            InvoicePdfPort invoicePdfPort,
-                           SpringMailNotificationAdapter mailAdapter) {
+                           SpringMailNotificationAdapter mailAdapter,
+                           PaymentStrategyRegistry paymentStrategyRegistry) {
         this.mediator = mediator;
         this.invoicePdfPort = invoicePdfPort;
         this.mailAdapter = mailAdapter;
+        this.paymentStrategyRegistry = paymentStrategyRegistry;
+    }
+
+    @GetMapping("/payment-methods")
+    public List<PaymentStrategyRegistry.PaymentMethodStatusDto> getPaymentMethods() {
+        return paymentStrategyRegistry.getAvailableMethods();
     }
 
     @PostMapping

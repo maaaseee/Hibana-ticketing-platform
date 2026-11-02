@@ -9,18 +9,24 @@ import DebitCardForm from './DebitCardForm.vue'
 import CreditCardForm from './CreditCardForm.vue'
 import MercadoPagoTab from './MercadoPagoTab.vue'
 
-defineProps<{
-  selectedPaymentTab: string
-  cardNumber: string
-  cardHolder: string
-  cardExpiry: string
-  cardCvc: string
-  saveCard: boolean
-  issuingBank: string
-  installments: number
-  grandTotal: number
-  isProcessing: boolean
-}>()
+withDefaults(
+  defineProps<{
+    selectedPaymentTab: string
+    cardNumber: string
+    cardHolder: string
+    cardExpiry: string
+    cardCvc: string
+    saveCard: boolean
+    issuingBank: string
+    installments: number
+    grandTotal: number
+    isProcessing: boolean
+    mercadoPagoEnabled?: boolean
+  }>(),
+  {
+    mercadoPagoEnabled: false,
+  }
+)
 
 const emit = defineEmits<{
   (e: 'update:selectedPaymentTab', val: string): void
@@ -70,13 +76,19 @@ const emit = defineEmits<{
             <span>Tarjeta de Crédito</span>
           </TabsTrigger>
 
-          <!-- Tab 3: Mercado Pago -->
+          <!-- Tab 3: Mercado Pago (Feature-Flagged) -->
           <TabsTrigger
             value="mercado_pago"
-            class="flex items-center gap-2 border rounded-xl px-4 py-2.5 font-mono text-xs sm:text-sm font-semibold transition-all whitespace-nowrap cursor-pointer data-[state=active]:bg-[#009ee3] data-[state=active]:text-white data-[state=active]:border-[#009ee3] data-[state=inactive]:bg-[#141c27] data-[state=inactive]:text-[#94a3b8] data-[state=inactive]:border-[#23354d] hover:border-[#009ee3]/50 shadow-xs"
+            class="flex items-center gap-2 border rounded-xl px-4 py-2.5 font-mono text-xs sm:text-sm font-semibold transition-all whitespace-nowrap shadow-xs cursor-pointer data-[state=active]:bg-[#009ee3] data-[state=active]:text-white data-[state=active]:border-[#009ee3] data-[state=inactive]:bg-[#141c27] data-[state=inactive]:text-[#94a3b8] data-[state=inactive]:border-[#23354d] hover:border-[#009ee3]/50"
           >
             <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
             <span>Mercado Pago</span>
+            <span
+              v-if="!mercadoPagoEnabled"
+              class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30"
+            >
+              Próximamente
+            </span>
           </TabsTrigger>
         </TabsList>
 
@@ -127,6 +139,7 @@ const emit = defineEmits<{
         <TabsContent value="mercado_pago" class="focus:outline-none">
           <MercadoPagoTab
             :grand-total="grandTotal"
+            :enabled="mercadoPagoEnabled"
           />
         </TabsContent>
       </TabsRoot>
@@ -137,10 +150,10 @@ const emit = defineEmits<{
           type="button"
           id="btn-pay"
           @click="emit('completeOrder')"
-          :disabled="isProcessing"
+          :disabled="isProcessing || (selectedPaymentTab === 'mercado_pago' && !mercadoPagoEnabled)"
           :class="[
             'w-full text-white font-mono text-sm sm:text-base font-bold py-4 rounded-xl transition-all active:scale-[0.99] flex justify-center items-center gap-2 cursor-pointer shadow-lg disabled:opacity-50 disabled:cursor-not-allowed',
-            selectedPaymentTab === 'mercado_pago'
+            selectedPaymentTab === 'mercado_pago' && mercadoPagoEnabled
               ? 'bg-[#009ee3] hover:bg-[#0087c2] shadow-[#009ee3]/25'
               : 'bg-[#00688f] hover:bg-[#005a7d] shadow-[#00688f]/20'
           ]"
@@ -152,16 +165,15 @@ const emit = defineEmits<{
                 ? `Pagar con Débito ($${grandTotal.toFixed(2)})`
                 : selectedPaymentTab === 'credit_card'
                 ? `Pagar con Crédito en ${installments} cuota${installments > 1 ? 's' : ''}`
-                : `Pagar con Mercado Pago ($${grandTotal.toFixed(2)})`
+                : mercadoPagoEnabled
+                ? `Pagar con Mercado Pago ($${grandTotal.toFixed(2)})`
+                : 'Mercado Pago No Disponible (Selecciona Débito/Crédito)'
             }}
           </span>
         </button>
 
-        <p class="text-center text-xs text-[#94a3b8] leading-relaxed">
-          Al presionar "Pagar", aceptas nuestros
-          <a href="#" class="text-[#86cffb] hover:underline">Términos del Servicio</a>
-          y
-          <a href="#" class="text-[#86cffb] hover:underline">Política de Privacidad</a>.
+        <p class="text-center font-mono text-[11px] text-[#94a3b8]">
+          Transacción encriptada con TLS 1.3 • Certificado PCI-DSS Nivel 1
         </p>
       </div>
     </div>

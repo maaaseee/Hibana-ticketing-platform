@@ -201,4 +201,36 @@ class ProcessPaymentCommandHandlerTest {
         verify(invoicePdfPort, never()).generateInvoicePdf(any());
         verify(emailNotificationPort, never()).sendOrderConfirmation(any());
     }
+
+    @Test
+    @DisplayName("Should reject payment when payment method is disabled via feature flag")
+    void shouldRejectPaymentWhenMethodIsDisabled() {
+        PaymentStrategyRegistry disabledRegistry = new PaymentStrategyRegistry(
+                List.of(new MercadoPagoPaymentStrategy(mercadoPagoClient)),
+                true,
+                true,
+                false
+        );
+        ProcessPaymentCommandHandler handlerWithDisabledMP = new ProcessPaymentCommandHandler(
+                orderRepository,
+                disabledRegistry,
+                ledgerRepository,
+                outboxRepository,
+                objectMapper,
+                invoicePdfPort,
+                emailNotificationPort
+        );
+
+        Order order = Order.create("user-1", new ReservationId("res-1"), "evt-1", "seat-1", Money.of(new BigDecimal("100.00")));
+        when(orderRepository.findById(order.getId())).thenReturn(Optional.of(order));
+
+        ProcessPaymentCommand cmd = new ProcessPaymentCommand(
+                order.getId().toString(),
+                "user-1",
+                PaymentMethod.MERCADO_PAGO
+        );
+
+        DomainException ex = assertThrows(DomainException.class, () -> handlerWithDisabledMP.handle(cmd));
+        assertTrue(ex.getMessage().contains("temporalmente deshabilitado"));
+    }
 }

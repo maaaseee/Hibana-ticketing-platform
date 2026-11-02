@@ -1,7 +1,13 @@
 <script setup lang="ts">
-defineProps<{
-  grandTotal: number
-}>()
+withDefaults(
+  defineProps<{
+    grandTotal: number
+    enabled?: boolean
+  }>(),
+  {
+    enabled: false,
+  }
+)
 </script>
 
 <template>
@@ -15,16 +21,36 @@ defineProps<{
         <div>
           <div class="flex items-center gap-2">
             <h3 class="font-display font-bold text-[#f1f5f9] text-base">Mercado Pago</h3>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#009ee3]/20 text-[#009ee3] border border-[#009ee3]/40">
+            <span
+              v-if="enabled"
+              class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#009ee3]/20 text-[#009ee3] border border-[#009ee3]/40"
+            >
               OFICIAL
+            </span>
+            <span
+              v-else
+              class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40"
+            >
+              PRÓXIMAMENTE
             </span>
           </div>
           <p class="font-mono text-xs text-[#94a3b8]">Billetera Digital • Checkout Transparente</p>
         </div>
       </div>
       <span class="px-2.5 py-1 rounded-md bg-[#101825] border border-[#23354d] font-mono text-xs text-[#86cffb] font-semibold">
-        Acreditación Inmediata
+        {{ enabled ? 'Acreditación Inmediata' : 'En Integración' }}
       </span>
+    </div>
+
+    <!-- Disabled Notice for MVP -->
+    <div v-if="!enabled" class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3">
+      <span class="material-symbols-outlined text-amber-400 text-xl shrink-0 mt-0.5">info</span>
+      <div class="text-xs text-amber-200/90 leading-relaxed space-y-1">
+        <p class="font-bold text-amber-300">Medio de pago no disponible para el MVP</p>
+        <p>
+          La pasarela de Mercado Pago se encuentra en fase de homologación de webhooks y se habilitará en la siguiente versión. Por favor selecciona <strong>Tarjeta de Débito</strong> o <strong>Tarjeta de Crédito</strong> para abonar tus entradas.
+        </p>
+      </div>
     </div>
 
     <!-- Amount to pay -->
@@ -36,7 +62,7 @@ defineProps<{
     </div>
 
     <!-- Payment options via Mercado Pago -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs opacity-70">
       <div class="p-3 rounded-xl bg-[#0c141f] border border-[#23354d] flex items-center gap-2 text-[#f1f5f9]">
         <span class="material-symbols-outlined text-[#009ee3] text-lg">paid</span>
         <span class="font-medium">Dinero en cuenta</span>

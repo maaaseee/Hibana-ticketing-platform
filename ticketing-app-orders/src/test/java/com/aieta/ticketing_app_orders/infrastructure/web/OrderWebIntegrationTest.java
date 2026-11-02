@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -116,6 +117,19 @@ class OrderWebIntegrationTest {
                 .andExpect(content().contentType("text/html;charset=UTF-8"))
                 .andExpect(content().string(containsString("HIBANA.TK")))
                 .andExpect(content().string(containsString("Confirmación de Compra")));
+    }
+
+    @Test
+    @DisplayName("Should return available payment methods and their enabled statuses")
+    void shouldReturnAvailablePaymentMethods() throws Exception {
+        mockMvc.perform(get("/api/v1/orders/payment-methods"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(3)))
+                .andExpect(jsonPath("$[0].id", is("DEBIT_CARD")))
+                .andExpect(jsonPath("$[0].enabled", is(true)))
+                .andExpect(jsonPath("$[1].id", is("CREDIT_CARD")))
+                .andExpect(jsonPath("$[1].enabled", is(true)))
+                .andExpect(jsonPath("$[2].id", is("MERCADO_PAGO")));
     }
 
     @Test

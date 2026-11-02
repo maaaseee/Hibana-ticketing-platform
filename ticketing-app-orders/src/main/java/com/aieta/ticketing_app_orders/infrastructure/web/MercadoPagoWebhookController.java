@@ -1,8 +1,6 @@
 package com.aieta.ticketing_app_orders.infrastructure.web;
 
-import com.aieta.ticketing_app_orders.application.commands.process_payment.ProcessPaymentCommand;
 import com.aieta.ticketing_app_orders.application.common.mediator.Mediator;
-import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
 import com.aieta.ticketing_app_orders.infrastructure.mercadopago.MercadoPagoClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;

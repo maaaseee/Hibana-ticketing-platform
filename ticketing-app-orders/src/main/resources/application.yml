@@ -106,6 +106,15 @@ hibana:
     communication:
       endpoint: ${AZURE_COMMUNICATION_ENDPOINT:}
 
+payment:
+  methods:
+    debit-card:
+      enabled: ${PAYMENT_DEBIT_ENABLED:true}
+    credit-card:
+      enabled: ${PAYMENT_CREDIT_ENABLED:true}
+    mercado-pago:
+      enabled: ${PAYMENT_MERCADOPAGO_ENABLED:false}
+
 mercadopago:
   access-token: ${MERCADO_PAGO_ACCESS_TOKEN:TEST-sample-access-token}
   public-key: ${MERCADO_PAGO_PUBLIC_KEY:TEST-sample-public-key}
