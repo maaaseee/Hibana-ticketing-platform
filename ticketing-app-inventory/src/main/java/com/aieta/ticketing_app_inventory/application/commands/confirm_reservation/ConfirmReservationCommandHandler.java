@@ -36,6 +36,18 @@ public class ConfirmReservationCommandHandler implements RequestHandler<ConfirmR
         TicketReservation reservation = reservationRepositoryPort.findById(ReservationId.of(command.reservationId()))
                 .orElseThrow(() -> new ReservationNotFoundException(command.reservationId()));
 
+        if (reservation.getStatus() == com.aieta.ticketing_app_inventory.domain.enums.ReservationStatus.CONFIRMED) {
+            log.info("Idempotent hit: Reservation {} is already CONFIRMED for order {}", command.reservationId(), reservation.getOrderId());
+            return new ConfirmationResult(
+                    reservation.getId().value(),
+                    reservation.getEventId(),
+                    reservation.getSeatId().value(),
+                    reservation.getStatus(),
+                    reservation.getOrderId(),
+                    reservation.getConfirmedAt()
+            );
+        }
+
         if (reservation.isExpired()) {
             reservation.expire();
             reservationRepositoryPort.save(reservation);

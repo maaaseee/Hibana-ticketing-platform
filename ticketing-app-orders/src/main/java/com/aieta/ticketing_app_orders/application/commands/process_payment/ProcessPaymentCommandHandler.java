@@ -9,6 +9,7 @@ import com.aieta.ticketing_app_orders.application.common.mediator.RequestHandler
 import com.aieta.ticketing_app_orders.application.dto.InvoiceData;
 import com.aieta.ticketing_app_orders.application.dto.OrderConfirmationEmail;
 import com.aieta.ticketing_app_orders.application.ports.EmailNotificationPort;
+import com.aieta.ticketing_app_orders.application.ports.InventoryReservationPort;
 import com.aieta.ticketing_app_orders.application.ports.InvoicePdfPort;
 import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
@@ -47,6 +48,7 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
     private final ObjectMapper objectMapper;
     private final InvoicePdfPort invoicePdfPort;
     private final EmailNotificationPort emailNotificationPort;
+    private final InventoryReservationPort inventoryReservationPort;
 
     public ProcessPaymentCommandHandler(OrderRepositoryPort orderRepository,
                                         PaymentStrategyRegistry paymentStrategyRegistry,
@@ -54,7 +56,8 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
                                         SpringDataOutboxRepository outboxRepository,
                                         ObjectMapper objectMapper,
                                         InvoicePdfPort invoicePdfPort,
-                                        EmailNotificationPort emailNotificationPort) {
+                                        EmailNotificationPort emailNotificationPort,
+                                        @org.springframework.beans.factory.annotation.Autowired(required = false) InventoryReservationPort inventoryReservationPort) {
         this.orderRepository = orderRepository;
         this.paymentStrategyRegistry = paymentStrategyRegistry;
         this.ledgerRepository = ledgerRepository;
@@ -62,6 +65,7 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
         this.objectMapper = objectMapper;
         this.invoicePdfPort = invoicePdfPort;
         this.emailNotificationPort = emailNotificationPort;
+        this.inventoryReservationPort = inventoryReservationPort;
     }
 
     @Override
@@ -154,6 +158,14 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
         }
 
         log.info("Order {} successfully PAID via {}", savedOrder.getId(), method);
+
+        // Saga Step: Confirm seat hold in inventory microservice
+        if (inventoryReservationPort != null) {
+            inventoryReservationPort.confirmReservation(
+                    savedOrder.getReservationId().value(),
+                    savedOrder.getId().toString()
+            );
+        }
 
         // Post-checkout: Generate Official PDF Invoice & Trigger Transactional Email
         dispatchInvoiceAndEmail(savedOrder, request);

@@ -99,4 +99,33 @@ class ConfirmReservationCommandHandlerTest {
         assertThrows(ReservationExpiredException.class, () -> handler.handle(command));
         verify(reservationRepositoryPort, times(1)).save(expiredRes);
     }
+
+    @Test
+    @DisplayName("Should return existing result idempotently when reservation is already CONFIRMED")
+    void shouldReturnExistingResultWhenAlreadyConfirmed() {
+        String resId = "res_already_confirmed";
+        Instant confirmedTime = Instant.now().minusSeconds(30);
+        TicketReservation confirmedRes = TicketReservation.reconstitute(
+                ReservationId.of(resId),
+                "evt_001",
+                SeatId.of("seat_001"),
+                "user_1",
+                ReservationStatus.CONFIRMED,
+                Instant.now().plusSeconds(300),
+                Instant.now().minusSeconds(300),
+                confirmedTime,
+                "ord_existing"
+        );
+
+        when(reservationRepositoryPort.findById(ReservationId.of(resId))).thenReturn(Optional.of(confirmedRes));
+
+        ConfirmReservationCommand command = new ConfirmReservationCommand(resId, "ord_existing");
+        ConfirmationResult result = handler.handle(command);
+
+        assertNotNull(result);
+        assertEquals(ReservationStatus.CONFIRMED, result.status());
+        assertEquals("ord_existing", result.orderId());
+        assertEquals(confirmedTime, result.confirmedAt());
+        verify(reservationRepositoryPort, never()).saveWithOutbox(any(), any(), any());
+    }
 }

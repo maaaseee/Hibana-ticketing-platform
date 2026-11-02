@@ -76,7 +76,7 @@ flowchart TD
   3. Redirigir a la pantalla de éxito con el `orderId` real y descargar la factura PDF generada por el backend.
 
 ### Fase 3: Confirmación de Saga (Orders ➔ Inventory)
-- [ ] Al recibir confirmación de pago en `ProcessPaymentCommandHandler`:
+- [x] Al recibir confirmación de pago en `ProcessPaymentCommandHandler`:
   - Disparar la confirmación del asiento en Inventario (`POST /api/v1/reservations/{reservationId}/confirm`).
   - Garantizar idempotencia si la reserva ya estaba confirmada.
 

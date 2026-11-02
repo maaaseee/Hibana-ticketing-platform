@@ -8,6 +8,7 @@ import com.aieta.ticketing_app_orders.application.commands.process_payment.strat
 import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.MercadoPagoPaymentStrategy;
 import com.aieta.ticketing_app_orders.application.commands.process_payment.strategy.PaymentStrategyRegistry;
 import com.aieta.ticketing_app_orders.application.ports.EmailNotificationPort;
+import com.aieta.ticketing_app_orders.application.ports.InventoryReservationPort;
 import com.aieta.ticketing_app_orders.application.ports.InvoicePdfPort;
 import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
 import com.aieta.ticketing_app_orders.domain.exceptions.DomainException;
@@ -61,6 +62,9 @@ class ProcessPaymentCommandHandlerTest {
     @Mock
     private MercadoPagoClient mercadoPagoClient;
 
+    @Mock
+    private InventoryReservationPort inventoryReservationPort;
+
     private PaymentStrategyRegistry strategyRegistry;
     private ObjectMapper objectMapper;
     private ProcessPaymentCommandHandler handler;
@@ -83,7 +87,8 @@ class ProcessPaymentCommandHandlerTest {
                 outboxRepository,
                 objectMapper,
                 invoicePdfPort,
-                emailNotificationPort
+                emailNotificationPort,
+                inventoryReservationPort
         );
     }
 
@@ -115,6 +120,7 @@ class ProcessPaymentCommandHandlerTest {
 
         verify(ledgerRepository).recordEntries(anyList());
         verify(outboxRepository).save(any());
+        verify(inventoryReservationPort).confirmReservation(eq("res-1"), eq(order.getId().toString()));
         verify(invoicePdfPort).generateInvoicePdf(any());
         verify(emailNotificationPort).sendOrderConfirmation(any());
     }
@@ -218,7 +224,8 @@ class ProcessPaymentCommandHandlerTest {
                 outboxRepository,
                 objectMapper,
                 invoicePdfPort,
-                emailNotificationPort
+                emailNotificationPort,
+                inventoryReservationPort
         );
 
         Order order = Order.create("user-1", new ReservationId("res-1"), "evt-1", "seat-1", Money.of(new BigDecimal("100.00")));
