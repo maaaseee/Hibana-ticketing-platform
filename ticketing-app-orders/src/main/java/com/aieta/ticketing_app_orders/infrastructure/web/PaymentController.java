@@ -36,8 +36,8 @@ public class PaymentController {
         String buyerEmail = request != null ? request.buyerEmail() : null;
         String buyerName = request != null ? request.buyerName() : null;
         String buyerTaxId = request != null ? request.buyerTaxId() : null;
-        Integer installments = request != null ? request.installments() : 1;
-        String issuingBank = request != null ? request.issuingBank() : "OTHER";
+        Integer installments = (request != null && request.installments() != null) ? request.installments() : 1;
+        String issuingBank = (request != null && request.issuingBank() != null && !request.issuingBank().isBlank()) ? request.issuingBank() : "OTHER";
 
         PaymentResult result = mediator.dispatch(new ProcessPaymentCommand(
                 orderId,
