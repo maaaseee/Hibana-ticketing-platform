@@ -103,6 +103,14 @@ azure:
   servicebus:
     enabled: ${AZURE_SERVICEBUS_ENABLED:false}
     connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING:}
+  storage:
+    blob:
+      enabled: ${AZURE_BLOB_ENABLED:false}
+      connection-string: ${AZURE_BLOB_CONNECTION_STRING:}
+      container-name: ${AZURE_BLOB_CONTAINER_NAME:hibana-invoices}
+  keyvault:
+    enabled: ${AZURE_KEYVAULT_ENABLED:false}
+    endpoint: ${AZURE_KEYVAULT_ENDPOINT:}
 
 hibana:
   mailing:

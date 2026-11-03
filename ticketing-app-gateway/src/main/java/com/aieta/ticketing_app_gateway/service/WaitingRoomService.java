@@ -35,8 +35,24 @@ public class WaitingRoomService {
     @Value("${waiting-room.jwt.issuer:${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}}")
     private String jwtIssuer;
 
+    private final AzureKeyVaultSecretService keyVaultSecretService;
+
     public WaitingRoomService(ReactiveStringRedisTemplate redisTemplate) {
+        this(redisTemplate, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public WaitingRoomService(
+            ReactiveStringRedisTemplate redisTemplate,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) AzureKeyVaultSecretService keyVaultSecretService) {
         this.redisTemplate = redisTemplate;
+        this.keyVaultSecretService = keyVaultSecretService;
+    }
+
+    private String getEffectiveSecret() {
+        return (keyVaultSecretService != null)
+                ? keyVaultSecretService.getSecret("waiting-room-jwt-secret", jwtSecret)
+                : jwtSecret;
     }
 
     private String queueKey(String eventId) {
@@ -155,7 +171,7 @@ public class WaitingRoomService {
     }
 
     public String mintToken(String eventId, String userId, Instant issuedAt, Instant expiresAt) {
-        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        SecretKey key = Keys.hmacShaKeyFor(getEffectiveSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
                 .issuer(jwtIssuer)
                 .subject(userId != null ? userId : "guest-" + System.currentTimeMillis())

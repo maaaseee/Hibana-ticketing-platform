@@ -1,7 +1,7 @@
 # Plan de Refactorización y Adopción Nativa de Azure con Floci-AZ
 
 Fecha de Inicio: 2026-11-02
-Estado: Paso 1 y Paso 2 Completados (Listo para Paso 3)
+Estado: Pasos 1, 2, 3 y 4 Completados (Listo para Paso 5: Autenticación Entra ID & Panel Admin)
 Objetivo: Adaptar todos los microservicios de Hibana.tk para utilizar los componentes y SDKs nativos de Microsoft Azure, asegurando compatibilidad 100% en local mediante Floci-AZ a costo cero y en producción en Azure PaaS/AKS.
 
 ---
@@ -49,13 +49,19 @@ flowchart TD
 - [x] Verificar funcionamiento con test suites de cada microservicio y script E2E de extremo a extremo.
 
 ### Paso 3: Persistencia de Facturas en Azure Blob Storage
-- [ ] Crear puerto `InvoiceStoragePort` en `orders`.
-- [ ] Implementar `AzureBlobInvoiceStorageAdapter` con `com.azure:azure-storage-blob` apuntando a `http://floci-az:4577/hibana-storage`.
-- [ ] Guardar PDF al confirmar pago y servir desde blob en descargas posteriores.
+- [x] Agregar dependencia `com.azure:azure-storage-blob` en `ticketing-app-orders`.
+- [x] Crear puerto desacoplado `InvoiceStoragePort` en `ticketing-app-orders/application/ports`.
+- [x] Implementar `AzureBlobInvoiceStorageAdapter` con fallback de cache en memoria, auto-creación del container `hibana-invoices` y subida a `invoices/{orderId}.pdf`.
+- [x] Integrar persistencia en `ProcessPaymentCommandHandler` y lectura pre-renderizada en `GetOrderInvoicePdfQueryHandler`.
+- [x] Crear suite de tests unitarios `AzureBlobInvoiceStorageAdapterTest` (100% pasando).
+- [x] Verificar en Docker Compose contra el emulador Blob Storage de Floci-AZ en `http://floci-az:4577/devstoreaccount1`.
 
 ### Paso 4: Centralización en Azure Key Vault
-- [ ] Integrar `com.azure:azure-security-keyvault-secrets` en `gateway` y `orders`.
-- [ ] Resolver secret de JWT y llaves de firma desde el Key Vault emulado.
+- [x] Agregar dependencias `com.azure:azure-security-keyvault-secrets` y `azure-identity` en `ticketing-app-gateway` y `orders`.
+- [x] Implementar servicio dual-mode `AzureKeyVaultSecretService` en `gateway` con soporte para HTTPS en Azure (Managed Identity) y HTTP REST con auto-seed en Floci-AZ.
+- [x] Conectar resolución de `waiting-room-jwt-secret` en `WaitingRoomService` y validación en `CheckoutTokenFilterFactory`.
+- [x] Crear suite de tests unitarios `AzureKeyVaultSecretServiceTest` (100% pasando).
+- [x] Verificar resolución y validación de tokens en Docker Compose end-to-end con Floci-AZ.
 
 ### Paso 5: Autenticación Entra ID & Panel Admin
 - [ ] Configurar Spring Security OAuth2 Resource Server para validar tokens Entra ID con `ROLE_ADMIN`.

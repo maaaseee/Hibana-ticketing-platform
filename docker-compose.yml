@@ -111,6 +111,9 @@ services:
       REDIS_PORT: 6379
       AZURE_SERVICEBUS_ENABLED: "true"
       AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
+      AZURE_BLOB_ENABLED: "true"
+      AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
+      AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,6 +146,9 @@ services:
       REDIS_PORT: 6379
       AZURE_SERVICEBUS_ENABLED: "true"
       AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
+      AZURE_BLOB_ENABLED: "true"
+      AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
+      AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
     depends_on:
       postgres:
         condition: service_healthy
@@ -177,6 +183,9 @@ services:
       MAIL_PORT: 1025
       AZURE_SERVICEBUS_ENABLED: "true"
       AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
+      AZURE_BLOB_ENABLED: "true"
+      AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
+      AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
     depends_on:
       postgres:
         condition: service_healthy
@@ -206,6 +215,8 @@ services:
       CATALOG_SERVICE_URL: http://catalog:8081
       INVENTORY_SERVICE_URL: http://inventory:8082
       ORDERS_SERVICE_URL: http://orders:8083
+      AZURE_KEYVAULT_ENABLED: "true"
+      AZURE_KEYVAULT_ENDPOINT: "http://floci-az:4577/devstoreaccount1-keyvault/" 
     depends_on:
       redis:
         condition: service_healthy

@@ -222,6 +222,9 @@ waiting-room:
   url: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
 
 azure:
+  keyvault:
+    enabled: ${AZURE_KEYVAULT_ENABLED:false}
+    endpoint: ${AZURE_KEYVAULT_ENDPOINT:}
   entra:
     jwks-url: ${AZURE_ENTRA_JWKS_URL:http://localhost:4577/common/discovery/v2.0/keys}
     issuer: ${AZURE_ENTRA_ISSUER:http://localhost:4577/00000000-0000-0000-0000-000000000002/v2.0}

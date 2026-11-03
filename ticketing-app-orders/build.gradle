@@ -46,8 +46,11 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
-    // 6. AMQP Messaging Backbone for Azure Service Bus / Floci-AZ
+    // 6. Azure Cloud Ecosystem & Messaging (Service Bus, Blob Storage, Key Vault)
     implementation 'com.azure:azure-messaging-servicebus:7.17.7'
+    implementation 'com.azure:azure-storage-blob:12.28.1'
+    implementation 'com.azure:azure-security-keyvault-secrets:4.9.1'
+    implementation 'com.azure:azure-identity:1.14.1'
 
     // 7. Transactional Emailing (Mailpit / SMTP / Azure ACS ready)
     implementation 'org.springframework.boot:spring-boot-starter-mail'

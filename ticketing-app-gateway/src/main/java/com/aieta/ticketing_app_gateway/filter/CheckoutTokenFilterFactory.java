@@ -38,6 +38,7 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
     public static final String HEADER_GATEWAY_STAMP = "X-Gateway-Stamp";
 
     private final ObjectMapper objectMapper;
+    private final com.aieta.ticketing_app_gateway.service.AzureKeyVaultSecretService keyVaultSecretService;
 
     @Value("${waiting-room.jwt.secret:${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}}")
     private String defaultSecret;
@@ -49,8 +50,16 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
     private String defaultWaitingRoomUrl;
 
     public CheckoutTokenFilterFactory(ObjectMapper objectMapper) {
+        this(objectMapper, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public CheckoutTokenFilterFactory(
+            ObjectMapper objectMapper,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) com.aieta.ticketing_app_gateway.service.AzureKeyVaultSecretService keyVaultSecretService) {
         super(Config.class);
         this.objectMapper = objectMapper;
+        this.keyVaultSecretService = keyVaultSecretService;
     }
 
     @Override
@@ -65,9 +74,12 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
 
     @Override
     public GatewayFilter apply(Config config) {
-        String secret = (config.getSecretKey() != null && !config.getSecretKey().isBlank())
+        String baseSecret = (config.getSecretKey() != null && !config.getSecretKey().isBlank())
                 ? config.getSecretKey()
                 : defaultSecret;
+        String secret = (keyVaultSecretService != null)
+                ? keyVaultSecretService.getSecret("waiting-room-jwt-secret", baseSecret)
+                : baseSecret;
         String issuer = (config.getIssuer() != null && !config.getIssuer().isBlank())
                 ? config.getIssuer()
                 : defaultIssuer;

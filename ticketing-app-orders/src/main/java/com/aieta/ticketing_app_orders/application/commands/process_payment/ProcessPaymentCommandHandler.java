@@ -11,6 +11,7 @@ import com.aieta.ticketing_app_orders.application.dto.OrderConfirmationEmail;
 import com.aieta.ticketing_app_orders.application.ports.EmailNotificationPort;
 import com.aieta.ticketing_app_orders.application.ports.InventoryReservationPort;
 import com.aieta.ticketing_app_orders.application.ports.InvoicePdfPort;
+import com.aieta.ticketing_app_orders.application.ports.InvoiceStoragePort;
 import com.aieta.ticketing_app_orders.domain.enums.OrderStatus;
 import com.aieta.ticketing_app_orders.domain.enums.PaymentMethod;
 import com.aieta.ticketing_app_orders.domain.events.OrderPaidEvent;
@@ -49,6 +50,7 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
     private final InvoicePdfPort invoicePdfPort;
     private final EmailNotificationPort emailNotificationPort;
     private final InventoryReservationPort inventoryReservationPort;
+    private final InvoiceStoragePort invoiceStoragePort;
 
     public ProcessPaymentCommandHandler(OrderRepositoryPort orderRepository,
                                         PaymentStrategyRegistry paymentStrategyRegistry,
@@ -57,7 +59,20 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
                                         ObjectMapper objectMapper,
                                         InvoicePdfPort invoicePdfPort,
                                         EmailNotificationPort emailNotificationPort,
-                                        @org.springframework.beans.factory.annotation.Autowired(required = false) InventoryReservationPort inventoryReservationPort) {
+                                        InventoryReservationPort inventoryReservationPort) {
+        this(orderRepository, paymentStrategyRegistry, ledgerRepository, outboxRepository, objectMapper, invoicePdfPort, emailNotificationPort, inventoryReservationPort, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public ProcessPaymentCommandHandler(OrderRepositoryPort orderRepository,
+                                        PaymentStrategyRegistry paymentStrategyRegistry,
+                                        LedgerRepositoryPort ledgerRepository,
+                                        SpringDataOutboxRepository outboxRepository,
+                                        ObjectMapper objectMapper,
+                                        InvoicePdfPort invoicePdfPort,
+                                        EmailNotificationPort emailNotificationPort,
+                                        @org.springframework.beans.factory.annotation.Autowired(required = false) InventoryReservationPort inventoryReservationPort,
+                                        @org.springframework.beans.factory.annotation.Autowired(required = false) InvoiceStoragePort invoiceStoragePort) {
         this.orderRepository = orderRepository;
         this.paymentStrategyRegistry = paymentStrategyRegistry;
         this.ledgerRepository = ledgerRepository;
@@ -66,6 +81,7 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
         this.invoicePdfPort = invoicePdfPort;
         this.emailNotificationPort = emailNotificationPort;
         this.inventoryReservationPort = inventoryReservationPort;
+        this.invoiceStoragePort = invoiceStoragePort;
     }
 
     @Override
@@ -191,6 +207,9 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
             byte[] pdfBytes = null;
             if (invoicePdfPort != null) {
                 pdfBytes = invoicePdfPort.generateInvoicePdf(invoiceData);
+                if (pdfBytes != null && invoiceStoragePort != null) {
+                    invoiceStoragePort.storeInvoicePdf(order.getId().toString(), pdfBytes);
+                }
             }
 
             if (emailNotificationPort != null) {
