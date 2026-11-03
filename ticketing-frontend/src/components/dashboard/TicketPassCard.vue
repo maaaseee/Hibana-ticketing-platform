@@ -121,37 +121,25 @@ async function handleDownloadInvoice() {
       </div>
     </div>
 
-    <!-- Right Side: Rotating Dynamic QR Code (Perforated ticket stub with Holographic Sheen) -->
+    <!-- Right Side: Generic QR Code stub -->
     <div class="p-6 sm:p-8 md:w-72 bg-surface-container-deep flex flex-col items-center justify-center space-y-4 text-center relative overflow-hidden select-none">
-      <!-- Holographic Iridescent Shimmer Overlay -->
-      <div
-        class="absolute inset-0 pointer-events-none opacity-25 group-hover:opacity-40 transition-opacity duration-700 mix-blend-overlay"
-        style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.25) 0%, rgba(244, 63, 94, 0.2) 35%, rgba(79, 219, 200, 0.28) 70%, rgba(134, 207, 251, 0.3) 100%);"
-      ></div>
-
-      <!-- Holographic Watermark Badge -->
       <div class="relative z-10 flex flex-col items-center">
         <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-card border border-border-subtle font-mono text-[9px] font-bold text-secondary uppercase tracking-widest shadow-sm">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span>Ed25519 Verified</span>
+          <span>Acceso Oficial</span>
         </span>
         <div class="text-[11px] font-mono uppercase tracking-widest text-primary font-bold mt-1.5">
           Molinete de Acceso
         </div>
-        <p class="text-[11px] text-muted-light">Acercar al lector óptico</p>
+        <p class="text-[11px] text-muted-light">Presentar en puerta de entrada</p>
       </div>
 
-      <!-- Dynamic QR Canvas Wrapper with subtle frame -->
+      <!-- Generic QR Wrapper with subtle frame -->
       <div class="relative z-10 p-2 rounded-2xl bg-white shadow-lg border border-white/20">
         <DynamicQrCode
           :ticket-id="ticket.id"
           :payload="ticket.qrPayload"
         />
-      </div>
-
-      <div class="relative z-10 text-[10px] font-mono text-muted-light text-center leading-tight">
-        Cifrado con firma biométrica<br/>
-        Capturas de pantalla quedan anuladas
       </div>
     </div>
   </div>

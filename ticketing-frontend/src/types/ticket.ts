@@ -10,6 +10,9 @@ export interface Ticket {
   seatNumber: number | string
   customerName: string
   customerEmail: string
+  customerDocument?: string
+  documentNumber?: string
+  dni?: string
   status: 'ISSUED' | 'REDEEMED' | 'REFUNDED' | 'TRANSFERRED'
   qrPayload: {
     tid: string
@@ -20,4 +23,10 @@ export interface Ticket {
   }
   totpRemainingSeconds: number
   barcode: string
+  price?: number
+  serviceCharge?: number
+  doorsOpen?: string
+  showTime?: string
+  imageUrl?: string
+  redeemedDate?: string
 }
