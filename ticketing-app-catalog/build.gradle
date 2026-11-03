@@ -38,6 +38,7 @@ dependencies {
 
 	// Redis Cache
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'com.azure:azure-messaging-servicebus:7.17.7'
 
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 

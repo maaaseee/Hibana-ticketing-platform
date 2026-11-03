@@ -14,6 +14,9 @@ services:
       FLOCI_AZ_STORAGE_HYBRID_FLUSH_INTERVAL_MS: 5000
       FLOCI_AZ_STORAGE_WAL_COMPACTION_INTERVAL_MS: 30000
       FLOCI_AZ_SERVICES_REDIS_MOCKED: false
+      FLOCI_AZ_SERVICES_SERVICE_BUS_MOCKED: false
+      FLOCI_AZ_SERVICES_SERVICE_BUS_START_ON_BOOT: true
+      FLOCI_AZ_SERVICES_SERVICEBUS_MOCKED: false
       FLOCI_AZ_HOSTNAME: localhost
       FLOCI_AZ_BASE_URL: http://localhost:4577
       FLOCI_AZ_SERVICES_ENTRA_SEED_FILE: /app/config/entra-seed.json
@@ -106,11 +109,15 @@ services:
       SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      AZURE_SERVICEBUS_ENABLED: "true"
+      AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      floci-az:
+        condition: service_started
     restart: unless-stopped
     networks:
       - ticketing-net
@@ -134,11 +141,15 @@ services:
       SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      AZURE_SERVICEBUS_ENABLED: "true"
+      AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      floci-az:
+        condition: service_started
     restart: unless-stopped
     networks:
       - ticketing-net
@@ -164,12 +175,16 @@ services:
       REDIS_PORT: 6379
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
+      AZURE_SERVICEBUS_ENABLED: "true"
+      AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
       mailpit:
+        condition: service_started
+      floci-az:
         condition: service_started
     restart: unless-stopped
     networks:

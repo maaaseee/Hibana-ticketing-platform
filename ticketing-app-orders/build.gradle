@@ -47,7 +47,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
     // 6. AMQP Messaging Backbone for Azure Service Bus / Floci-AZ
-    implementation 'org.springframework.boot:spring-boot-starter-amqp'
+    implementation 'com.azure:azure-messaging-servicebus:7.17.7'
 
     // 7. Transactional Emailing (Mailpit / SMTP / Azure ACS ready)
     implementation 'org.springframework.boot:spring-boot-starter-mail'

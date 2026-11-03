@@ -12,7 +12,7 @@ spring:
     virtual:
       enabled: true
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ticketing_db}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ticketing_db}?sslmode=${DB_SSL_MODE:disable}
     username: ${DB_USER:ticketing_admin}
     password: ${DB_PASSWORD:dev_password_123}
     hikari:
@@ -55,6 +55,8 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      ssl:
+        enabled: ${REDIS_SSL:false}
       timeout: 2000ms
       repositories:
         enabled: false
@@ -96,6 +98,11 @@ logging:
     root: INFO
     com.aieta.ticketing_app_orders: DEBUG
     org.flywaydb: INFO
+
+azure:
+  servicebus:
+    enabled: ${AZURE_SERVICEBUS_ENABLED:false}
+    connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING:}
 
 hibana:
   mailing:
