@@ -51,6 +51,11 @@ spring:
           starttls:
             enable: false
             required: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AZURE_ENTRA_JWKS_URL:http://localhost:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
   data:
     redis:
       host: ${REDIS_HOST:localhost}

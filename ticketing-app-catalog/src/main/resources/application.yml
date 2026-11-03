@@ -34,6 +34,12 @@ spring:
           order_inserts: true
           order_updates: true
 
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AZURE_ENTRA_JWKS_URL:http://localhost:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -77,6 +83,12 @@ catalog:
         endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:http://localhost:4577/devstoreaccount1}
         container: ${AZURE_STORAGE_VENUES_CONTAINER:venues}
         connection-string: ${AZURE_STORAGE_CONNECTION_STRING:DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:4577/devstoreaccount1;}
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${AZURE_ENTRA_JWKS_URL:http://localhost:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
   data:
     redis:
       host: ${REDIS_HOST:localhost}

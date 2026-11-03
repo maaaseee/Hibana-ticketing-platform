@@ -12,12 +12,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/v1/orders/{orderId}/pay")
 public class PaymentController {
 
     private final Mediator mediator;
+
+
+    private String resolveUserId(String headerUserId, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            return authentication.getName();
+        }
+        if (headerUserId != null && !headerUserId.isBlank()) {
+            return headerUserId;
+        }
+        return "anonymous-user";
+    }
 
     public PaymentController(Mediator mediator) {
         this.mediator = mediator;
@@ -26,9 +38,10 @@ public class PaymentController {
     @PostMapping
     public ProcessPaymentResponse processPayment(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @PathVariable("orderId") String orderId,
             @Valid @RequestBody(required = false) ProcessPaymentRequest request) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
         var paymentMethod = (request != null && request.paymentMethod() != null)
                 ? request.paymentMethod()
                 : com.aieta.ticketing_app_orders.domain.enums.PaymentMethod.CREDIT_CARD;

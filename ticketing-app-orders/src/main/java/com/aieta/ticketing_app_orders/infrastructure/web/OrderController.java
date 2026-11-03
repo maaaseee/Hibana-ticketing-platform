@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,17 @@ public class OrderController {
     private final InvoicePdfPort invoicePdfPort;
     private final SpringMailNotificationAdapter mailAdapter;
     private final PaymentStrategyRegistry paymentStrategyRegistry;
+
+
+    private String resolveUserId(String headerUserId, Authentication authentication) {
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            return authentication.getName();
+        }
+        if (headerUserId != null && !headerUserId.isBlank()) {
+            return headerUserId;
+        }
+        return "anonymous-user";
+    }
 
     public OrderController(Mediator mediator,
                            InvoicePdfPort invoicePdfPort,
@@ -63,8 +75,9 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     public CreateOrderResponse createOrder(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @Valid @RequestBody CreateOrderRequest request) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
 
         CreateOrderResult result = mediator.dispatch(new CreateOrderCommand(
                 effectiveUserId,
@@ -91,26 +104,29 @@ public class OrderController {
     @GetMapping("/{orderId}")
     public OrderDetailDto getOrder(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @PathVariable("orderId") String orderId) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
         return mediator.dispatch(new GetOrderByIdQuery(orderId, effectiveUserId));
     }
 
     @GetMapping("/me")
     public List<OrderDetailDto> getUserOrders(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
         return mediator.dispatch(new GetUserOrdersQuery(effectiveUserId, page, size));
     }
 
     @PostMapping("/{orderId}/cancel")
     public Map<String, Object> cancelOrder(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @PathVariable("orderId") String orderId,
             @RequestBody(required = false) Map<String, String> body) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
         String reason = (body != null && body.containsKey("reason")) ? body.get("reason") : "User requested cancellation";
 
         mediator.dispatch(new CancelOrderCommand(orderId, effectiveUserId, reason));
@@ -120,8 +136,9 @@ public class OrderController {
     @GetMapping(value = "/{orderId}/invoice", produces = MediaType.APPLICATION_PDF_VALUE)
     public ResponseEntity<byte[]> getOrderInvoice(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @PathVariable("orderId") String orderId) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
         byte[] pdf = mediator.dispatch(new GetOrderInvoicePdfQuery(orderId, effectiveUserId));
 
         return ResponseEntity.ok()
@@ -165,9 +182,10 @@ public class OrderController {
     @PostMapping("/{orderId}/resend-confirmation")
     public Map<String, Object> resendConfirmation(
             @RequestHeader(value = "X-User-Id", required = false) String headerUserId,
+            Authentication authentication,
             @PathVariable("orderId") String orderId,
             @RequestBody(required = false) Map<String, String> body) {
-        String effectiveUserId = (headerUserId != null && !headerUserId.isBlank()) ? headerUserId : "anonymous-user";
+        String effectiveUserId = resolveUserId(headerUserId, authentication);
         String customEmail = (body != null) ? body.get("email") : null;
 
         mediator.dispatch(new ResendOrderConfirmationCommand(orderId, effectiveUserId, customEmail));

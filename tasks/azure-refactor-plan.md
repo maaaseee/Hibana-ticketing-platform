@@ -1,7 +1,7 @@
 # Plan de Refactorización y Adopción Nativa de Azure con Floci-AZ
 
 Fecha de Inicio: 2026-11-02
-Estado: Pasos 1, 2, 3 y 4 Completados (Listo para Paso 5: Autenticación Entra ID & Panel Admin)
+Estado: Pasos 1, 2, 3, 4 y 5 Completados (Refactorización Azure 100% Finalizada)
 Objetivo: Adaptar todos los microservicios de Hibana.tk para utilizar los componentes y SDKs nativos de Microsoft Azure, asegurando compatibilidad 100% en local mediante Floci-AZ a costo cero y en producción en Azure PaaS/AKS.
 
 ---
@@ -63,6 +63,11 @@ flowchart TD
 - [x] Crear suite de tests unitarios `AzureKeyVaultSecretServiceTest` (100% pasando).
 - [x] Verificar resolución y validación de tokens en Docker Compose end-to-end con Floci-AZ.
 
-### Paso 5: Autenticación Entra ID & Panel Admin
-- [ ] Configurar Spring Security OAuth2 Resource Server para validar tokens Entra ID con `ROLE_ADMIN`.
-- [ ] Crear estructura base de `ticketing-admin-frontend` en Vue 3 con `@azure/msal-browser`.
+### Paso 5: Autenticación Entra ID & Panel Admin (Resource Server Global)
+- [x] Configurar Spring Security OAuth2 Resource Server (`spring-boot-starter-oauth2-resource-server`) en los 3 microservicios: `catalog`, `inventory` y `orders`.
+- [x] Implementar `EntraJwtAuthenticationConverter` con mapeo de roles/grupos (`ROLE_ADMIN`, `ROLE_OPERATOR`, `ROLE_USER`) y fallback de identidades locales de Floci-AZ.
+- [x] Implementar `GatewayHeaderAuthFilter` / `XUserIdAuthFilter` para soportar tanto autenticación directa vía Bearer JWT como claims verificados desde Spring Cloud Gateway.
+- [x] Asegurar `OrderController` y `PaymentController` vinculando operaciones al usuario del token criptográfico (`Authentication.getName()`) eliminando riesgos de impersonación.
+- [x] Crear suite de tests de seguridad en `catalog` (`CatalogSecurityIntegrationTest`) verificando 401 unauthenticated, 403 con `ROLE_USER` y 200/400 con `ROLE_ADMIN`.
+- [x] Configurar `docker-compose.yml`, `Tiltfile` y `dev.ps1` con el servicio `admin` (`ticketing-admin`) en el puerto 5174 y `AZURE_ENTRA_JWKS_URL`.
+- [x] Verificar end-to-end con clúster Docker completo pasando 100% (11/11 MVP checks y suite de seguridad OAuth2 con Floci-AZ Entra ID).

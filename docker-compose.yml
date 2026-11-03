@@ -114,6 +114,7 @@ services:
       AZURE_BLOB_ENABLED: "true"
       AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
       AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
+      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
     depends_on:
       postgres:
         condition: service_healthy
@@ -149,6 +150,7 @@ services:
       AZURE_BLOB_ENABLED: "true"
       AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
       AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
+      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
     depends_on:
       postgres:
         condition: service_healthy
@@ -186,6 +188,7 @@ services:
       AZURE_BLOB_ENABLED: "true"
       AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
       AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
+      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
     depends_on:
       postgres:
         condition: service_healthy
@@ -217,6 +220,7 @@ services:
       ORDERS_SERVICE_URL: http://orders:8083
       AZURE_KEYVAULT_ENABLED: "true"
       AZURE_KEYVAULT_ENDPOINT: "http://floci-az:4577/devstoreaccount1-keyvault/" 
+      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
     depends_on:
       redis:
         condition: service_healthy
@@ -251,6 +255,7 @@ services:
     restart: unless-stopped
     networks:
       - ticketing-net
+
 
 volumes:
   postgres-data:
