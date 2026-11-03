@@ -12,6 +12,7 @@ import SupportChatView from '../views/SupportChatView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import { useAuthStore } from '../stores/auth'
+import { useLoadingBarStore } from '../stores/loadingBar'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -135,6 +136,9 @@ const router = createRouter({
 
 // Control de Acceso: Bloquear acceso a Queue, Mapa de Asientos y Checkout sin autenticación
 router.beforeEach((to) => {
+  const loadingBar = useLoadingBarStore()
+  loadingBar.start()
+
   const authStore = useAuthStore()
 
   // Si intenta ir a login o register estando ya autenticado, redirigir al inicio o redirect
@@ -155,6 +159,16 @@ router.beforeEach((to) => {
       }
     }
   }
+})
+
+router.afterEach(() => {
+  const loadingBar = useLoadingBarStore()
+  loadingBar.finish()
+})
+
+router.onError(() => {
+  const loadingBar = useLoadingBarStore()
+  loadingBar.fail()
 })
 
 export default router
