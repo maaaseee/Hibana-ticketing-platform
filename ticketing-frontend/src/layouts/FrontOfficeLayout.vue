@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { RouterView, useRoute } from 'vue-router'
 import AppNavbar from '../components/ui/AppNavbar.vue'
+import AppLogo from '../components/ui/AppLogo.vue'
 
 const route = useRoute()
 </script>
@@ -36,16 +37,7 @@ const route = useRoute()
           
           <!-- Column 1: Brand & Purpose -->
           <div class="flex flex-col gap-4">
-            <RouterLink to="/" class="flex items-center gap-2.5 group shrink-0">
-              <img
-                src="/logo.png"
-                alt="Hibana.tk Logo"
-                class="w-8 h-8 object-contain drop-shadow-[0_0_10px_rgba(134,207,251,0.4)]"
-              />
-              <span class="font-display font-black text-2xl text-primary tracking-tight group-hover:text-on-primary-container transition-colors">
-                Hibana.tk
-              </span>
-            </RouterLink>
+            <AppLogo size="md" />
             <p class="text-muted-light text-xs leading-relaxed max-w-xs">
               Plataforma oficial de venta de entradas para los mayores recitales, festivales en vivo y espectáculos teatrales de Buenos Aires. Entradas 100% oficiales y transferencias seguras.
             </p>

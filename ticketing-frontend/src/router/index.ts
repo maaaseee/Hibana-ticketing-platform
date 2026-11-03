@@ -9,6 +9,9 @@ import CheckoutView from '../views/CheckoutView.vue'
 import DashboardTicketsView from '../views/DashboardTicketsView.vue'
 import HelpCenterView from '../views/HelpCenterView.vue'
 import SupportChatView from '../views/SupportChatView.vue'
+import LoginView from '../views/LoginView.vue'
+import RegisterView from '../views/RegisterView.vue'
+import { useAuthStore } from '../stores/auth'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,7 +42,8 @@ const router = createRouter({
           meta: {
             hideNavbar: true,
             hideFooter: true,
-            fullscreen: true
+            fullscreen: true,
+            requiresAuth: true
           }
         },
         {
@@ -49,7 +53,8 @@ const router = createRouter({
           meta: {
             hideNavbar: true,
             hideFooter: true,
-            fullscreen: true
+            fullscreen: true,
+            requiresAuth: true
           }
         },
         {
@@ -58,18 +63,40 @@ const router = createRouter({
           component: CheckoutView,
           meta: {
             hideNavbar: true,
-            hideFooter: true
+            hideFooter: true,
+            requiresAuth: true
           }
         },
         {
           path: 'tickets',
           name: 'tickets',
-          component: DashboardTicketsView
+          component: DashboardTicketsView,
+          meta: {
+            requiresAuth: true
+          }
         },
         {
           path: 'help',
           name: 'help',
           component: HelpCenterView
+        },
+        {
+          path: 'login',
+          name: 'login',
+          component: LoginView,
+          meta: {
+            hideNavbar: true,
+            hideFooter: true
+          }
+        },
+        {
+          path: 'register',
+          name: 'register',
+          component: RegisterView,
+          meta: {
+            hideNavbar: true,
+            hideFooter: true
+          }
         },
         {
           path: 'support',
@@ -103,6 +130,30 @@ const router = createRouter({
   ],
   scrollBehavior() {
     return { top: 0 }
+  }
+})
+
+// Control de Acceso: Bloquear acceso a Queue, Mapa de Asientos y Checkout sin autenticación
+router.beforeEach((to) => {
+  const authStore = useAuthStore()
+
+  // Si intenta ir a login o register estando ya autenticado, redirigir al inicio o redirect
+  if ((to.name === 'login' || to.name === 'register') && authStore.isAuthenticated) {
+    const redirect = (to.query.redirect as string) || '/'
+    return { path: redirect }
+  }
+
+  if (to.meta.requiresAuth) {
+    if (!authStore.isAuthenticated) {
+      authStore.redirectPathAfterLogin = to.fullPath
+      return {
+        name: 'login',
+        query: {
+          redirect: to.fullPath,
+          notice: 'Debes iniciar sesión para acceder a la sala de espera y selección de asientos.'
+        }
+      }
+    }
   }
 })
 

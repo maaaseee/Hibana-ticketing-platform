@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
+import AppLogo from '../ui/AppLogo.vue'
 
 defineProps<{
   isTimeCritical: boolean
@@ -25,10 +25,8 @@ const emit = defineEmits<{
         <span class="font-mono text-sm text-[#94a3b8] group-hover:text-[#86cffb] transition-colors font-medium">Volver</span>
       </button>
 
-      <!-- Brand Name -->
-      <RouterLink to="/" class="font-display text-2xl font-bold text-[#86cffb] tracking-tight hover:opacity-90 transition-opacity">
-        Hibana.tk
-      </RouterLink>
+      <!-- Brand Name con componente unificado AppLogo -->
+      <AppLogo size="md" />
 
       <!-- Atomic Redlock Timer Chip -->
       <div
