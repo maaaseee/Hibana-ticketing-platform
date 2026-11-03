@@ -120,6 +120,17 @@ class GatewayIntegrationTest {
                 .jsonPath("$.status").isEqualTo("UP");
     }
 
+    @Test
+    @Order(2)
+    @DisplayName("Actuator Hardening: /actuator/gateway must NOT be exposed publicly (returns 404)")
+    void testActuatorGatewayEndpointDisabled() {
+        webTestClient.get()
+                .uri("/actuator/gateway")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+
     // =========================================================================
     // 2. Routing & Trace-ID Propagation
     // =========================================================================
@@ -394,6 +405,38 @@ class GatewayIntegrationTest {
                 .bodyValue("{\"username\":\"attacker\",\"password\":\"bruteforce\"}")
                 .exchange()
                 .expectStatus().isEqualTo(429);
+    }
+
+    @Test
+    @Order(14)
+    @DisplayName("Security Header Stripping: Inbound X-User-Id, X-User-Roles, X-Gateway-Auth-Stamp are stripped before reaching downstream")
+    void testInboundSecurityHeadersAreStripped() {
+        wireMockServer.stubFor(get(urlEqualTo("/api/v1/events/public-check"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("[]")));
+
+        webTestClient.get()
+                .uri("/api/v1/events/public-check")
+                .header("X-User-Id", "injected-user-admin")
+                .header("X-User-Roles", "ROLE_ADMIN")
+                .header("X-Roles", "ROLE_ADMIN")
+                .header("X-User-Email", "admin@fake.com")
+                .header("X-Gateway-Auth-Stamp", "fake-stamp")
+                .header("X-Gateway-Signature", "fake-signature")
+                .header("X-Gateway-Stamp", "fake-stamp-2")
+                .exchange()
+                .expectStatus().isOk();
+
+        wireMockServer.verify(getRequestedFor(urlEqualTo("/api/v1/events/public-check"))
+                .withoutHeader("X-User-Id")
+                .withoutHeader("X-User-Roles")
+                .withoutHeader("X-Roles")
+                .withoutHeader("X-User-Email")
+                .withoutHeader("X-Gateway-Auth-Stamp")
+                .withoutHeader("X-Gateway-Signature")
+                .withoutHeader("X-Gateway-Stamp"));
     }
 
     // =========================================================================

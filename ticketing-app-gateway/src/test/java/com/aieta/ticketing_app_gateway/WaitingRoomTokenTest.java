@@ -53,4 +53,71 @@ class WaitingRoomTokenTest {
         assertThat(claims.getIssuer()).isEqualTo(ISSUER);
         assertThat(claims.getExpiration()).isAfter(claims.getIssuedAt());
     }
+
+    @Test
+    @DisplayName("mintQueueSessionToken creates valid verifiable session token for ownership checks")
+    void shouldMintAndValidateQueueSessionTokenSuccessfully() {
+        ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
+        WaitingRoomService service = new WaitingRoomService(redisTemplate);
+        ReflectionTestUtils.setField(service, "jwtSecret", SECRET);
+        ReflectionTestUtils.setField(service, "jwtIssuer", ISSUER);
+
+        String eventId = "chronos-fest-2026";
+        String userId = "usr-queue-session-123";
+
+        String sessionToken = service.mintQueueSessionToken(eventId, userId);
+        assertThat(sessionToken).isNotBlank();
+
+        boolean isValid = service.validateQueueSessionToken(eventId, userId, sessionToken);
+        assertThat(isValid).isTrue();
+    }
+
+    @Test
+    @DisplayName("validateQueueSessionToken rejects token when userId does not match")
+    void shouldFailQueueSessionTokenValidationWhenUserIdMismatched() {
+        ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
+        WaitingRoomService service = new WaitingRoomService(redisTemplate);
+        ReflectionTestUtils.setField(service, "jwtSecret", SECRET);
+        ReflectionTestUtils.setField(service, "jwtIssuer", ISSUER);
+
+        String eventId = "chronos-fest-2026";
+        String userId = "usr-queue-alice";
+        String attackerId = "usr-queue-bob";
+
+        String sessionToken = service.mintQueueSessionToken(eventId, userId);
+        boolean isValid = service.validateQueueSessionToken(eventId, attackerId, sessionToken);
+
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
+    @DisplayName("validateQueueSessionToken rejects token when eventId does not match")
+    void shouldFailQueueSessionTokenValidationWhenEventIdMismatched() {
+        ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
+        WaitingRoomService service = new WaitingRoomService(redisTemplate);
+        ReflectionTestUtils.setField(service, "jwtSecret", SECRET);
+        ReflectionTestUtils.setField(service, "jwtIssuer", ISSUER);
+
+        String eventId = "chronos-fest-2026";
+        String otherEventId = "other-concert-2026";
+        String userId = "usr-queue-alice";
+
+        String sessionToken = service.mintQueueSessionToken(eventId, userId);
+        boolean isValid = service.validateQueueSessionToken(otherEventId, userId, sessionToken);
+
+        assertThat(isValid).isFalse();
+    }
+
+    @Test
+    @DisplayName("validateQueueSessionToken rejects forged or tampered token")
+    void shouldFailQueueSessionTokenValidationWhenTokenTampered() {
+        ReactiveStringRedisTemplate redisTemplate = mock(ReactiveStringRedisTemplate.class);
+        WaitingRoomService service = new WaitingRoomService(redisTemplate);
+        ReflectionTestUtils.setField(service, "jwtSecret", SECRET);
+        ReflectionTestUtils.setField(service, "jwtIssuer", ISSUER);
+
+        assertThat(service.validateQueueSessionToken("evt", "usr", "invalid.jwt.token")).isFalse();
+        assertThat(service.validateQueueSessionToken("evt", "usr", null)).isFalse();
+        assertThat(service.validateQueueSessionToken("evt", "usr", "")).isFalse();
+    }
 }

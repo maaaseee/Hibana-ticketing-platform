@@ -1,6 +1,7 @@
 package com.aieta.ticketing_app_gateway.service;
 
 import com.aieta.ticketing_app_gateway.dto.QueueStatusResponse;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
@@ -170,6 +171,8 @@ public class WaitingRoomService {
                 });
     }
 
+    public static final Duration QUEUE_SESSION_TTL = Duration.ofHours(2);
+
     public String mintToken(String eventId, String userId, Instant issuedAt, Instant expiresAt) {
         SecretKey key = Keys.hmacShaKeyFor(getEffectiveSecret().getBytes(StandardCharsets.UTF_8));
         return Jwts.builder()
@@ -181,4 +184,43 @@ public class WaitingRoomService {
                 .signWith(key)
                 .compact();
     }
+
+    public String mintQueueSessionToken(String eventId, String userId) {
+        SecretKey key = Keys.hmacShaKeyFor(getEffectiveSecret().getBytes(StandardCharsets.UTF_8));
+        Instant now = Instant.now();
+        Instant exp = now.plus(QUEUE_SESSION_TTL);
+        return Jwts.builder()
+                .issuer(jwtIssuer)
+                .subject(userId != null ? userId : "guest-" + System.currentTimeMillis())
+                .claim("eventId", eventId)
+                .claim("type", "queue-session")
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .signWith(key)
+                .compact();
+    }
+
+    public boolean validateQueueSessionToken(String eventId, String userId, String token) {
+        if (token == null || token.isBlank() || eventId == null || userId == null) {
+            return false;
+        }
+        try {
+            SecretKey key = Keys.hmacShaKeyFor(getEffectiveSecret().getBytes(StandardCharsets.UTF_8));
+            Claims claims = Jwts.parser()
+                    .verifyWith(key)
+                    .requireIssuer(jwtIssuer)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+
+            String tokenSubject = claims.getSubject();
+            String tokenEventId = claims.get("eventId", String.class);
+
+            return userId.equalsIgnoreCase(tokenSubject) && eventId.equalsIgnoreCase(tokenEventId);
+        } catch (Exception e) {
+            log.debug("[WAITING-ROOM] Invalid queue session token: {}", e.getMessage());
+            return false;
+        }
+    }
 }
+

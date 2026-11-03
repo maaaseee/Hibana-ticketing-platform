@@ -13,13 +13,12 @@ import java.security.KeyPairGenerator;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("Unit Test: FlociEntraJwksProvider Key Parsing & Role Resolution")
+@DisplayName("Unit Test: FlociEntraJwksProvider Key Parsing & Strict Role Resolution")
 class FlociEntraJwksProviderTest {
 
     private FlociEntraJwksProvider provider;
@@ -28,7 +27,7 @@ class FlociEntraJwksProviderTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        provider = new FlociEntraJwksProvider("http://localhost:4577/common/discovery/v2.0/keys", objectMapper);
+        provider = new FlociEntraJwksProvider(FlociEntraJwksProvider.DEFAULT_JWKS_URL, objectMapper);
     }
 
     @Test
@@ -66,6 +65,32 @@ class FlociEntraJwksProviderTest {
         PublicKey resolvedKey = provider.getPublicKey("test-key-id-1");
         assertThat(resolvedKey).isNotNull();
         assertThat(resolvedKey.getAlgorithm()).isEqualTo("RSA");
+    }
+
+    @Test
+    @DisplayName("Strict JWKS: getPublicKey throws IllegalStateException when kid is missing and eliminates permissive fallback")
+    void shouldThrowWhenKidNotFoundAndEliminateFallback() {
+        KeyPairGenerator generator;
+        try {
+            generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(2048);
+            KeyPair pair = generator.generateKeyPair();
+            provider.registerKey("known-key-id", pair.getPublic());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        // Even though cache contains exactly one key ("known-key-id"), querying for an unknown kid
+        // MUST NOT fall back to that key (C4 vulnerability fix)
+        assertThatThrownBy(() -> provider.getPublicKey("unknown-key-id"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("unknown-key-id");
+
+        assertThatThrownBy(() -> provider.getPublicKey(null))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> provider.getPublicKey("  "))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

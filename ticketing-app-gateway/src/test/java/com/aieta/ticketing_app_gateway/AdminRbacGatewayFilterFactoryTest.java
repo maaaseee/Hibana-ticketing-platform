@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DisplayName("Unit Test: AdminRbacGatewayFilterFactory Security & Role Enforcement")
+@DisplayName("Unit Test: AdminRbacGatewayFilterFactory Security & Strict Role Enforcement")
 class AdminRbacGatewayFilterFactoryTest {
 
     private AdminRbacGatewayFilterFactory filterFactory;
@@ -47,21 +47,31 @@ class AdminRbacGatewayFilterFactoryTest {
         this.publicKey = (RSAPublicKey) pair.getPublic();
 
         ObjectMapper objectMapper = new ObjectMapper();
-        this.jwksProvider = new FlociEntraJwksProvider("http://localhost:4577/common/discovery/v2.0/keys", objectMapper);
+        this.jwksProvider = new FlociEntraJwksProvider(FlociEntraJwksProvider.DEFAULT_JWKS_URL, objectMapper);
         this.jwksProvider.registerKey(TEST_KID, this.publicKey);
 
         this.filterFactory = new AdminRbacGatewayFilterFactory(jwksProvider, objectMapper);
     }
 
     private String createToken(String sub, String email, List<String> roles, Instant expiry) {
-        return Jwts.builder()
+        return createToken(sub, email, roles, expiry, AdminRbacGatewayFilterFactory.DEFAULT_ISSUER, AdminRbacGatewayFilterFactory.DEFAULT_AUDIENCE);
+    }
+
+    private String createToken(String sub, String email, List<String> roles, Instant expiry, String issuer, String audience) {
+        var builder = Jwts.builder()
                 .header().keyId(TEST_KID).and()
                 .subject(sub)
                 .claim("preferred_username", email)
                 .claim("roles", roles)
+                .issuer(issuer)
                 .issuedAt(Date.from(Instant.now()))
-                .expiration(Date.from(expiry))
-                .signWith(privateKey, Jwts.SIG.RS256)
+                .expiration(Date.from(expiry));
+
+        if (audience != null) {
+            builder.audience().add(audience).and();
+        }
+
+        return builder.signWith(privateKey, Jwts.SIG.RS256)
                 .compact();
     }
 
@@ -119,6 +129,87 @@ class AdminRbacGatewayFilterFactoryTest {
     }
 
     @Test
+    @DisplayName("Rejects request with 401 when token issuer is invalid / untrusted")
+    void shouldRejectWhenIssuerDoesNotMatch() {
+        AdminRbacGatewayFilterFactory.Config config = new AdminRbacGatewayFilterFactory.Config();
+        GatewayFilter filter = filterFactory.apply(config);
+
+        String untrustedIssuerToken = createToken(
+                "usr-admin",
+                "admin@hibana.tk",
+                List.of("ROLE_ADMIN"),
+                Instant.now().plus(1, ChronoUnit.HOURS),
+                "https://rogue-tenant.microsoftonline.com/v2.0",
+                AdminRbacGatewayFilterFactory.DEFAULT_AUDIENCE
+        );
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/events")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + untrustedIssuerToken)
+                .build();
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(filter.filter(exchange, ex -> Mono.empty()))
+                .verifyComplete();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Rejects request with 401 when token audience does not match expected client")
+    void shouldRejectWhenAudienceDoesNotMatch() {
+        AdminRbacGatewayFilterFactory.Config config = new AdminRbacGatewayFilterFactory.Config();
+        GatewayFilter filter = filterFactory.apply(config);
+
+        String wrongAudienceToken = createToken(
+                "usr-admin",
+                "admin@hibana.tk",
+                List.of("ROLE_ADMIN"),
+                Instant.now().plus(1, ChronoUnit.HOURS),
+                AdminRbacGatewayFilterFactory.DEFAULT_ISSUER,
+                "api://rogue-application"
+        );
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/events")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + wrongAudienceToken)
+                .build();
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(filter.filter(exchange, ex -> Mono.empty()))
+                .verifyComplete();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    @DisplayName("Rejects request with 401 when token kid is unknown and cannot be resolved")
+    void shouldRejectWhenKeyIdIsUnknown() {
+        AdminRbacGatewayFilterFactory.Config config = new AdminRbacGatewayFilterFactory.Config();
+        GatewayFilter filter = filterFactory.apply(config);
+
+        String unknownKidToken = Jwts.builder()
+                .header().keyId("unknown-unregistered-kid").and()
+                .subject("usr-admin")
+                .claim("preferred_username", "admin@hibana.tk")
+                .claim("roles", List.of("ROLE_ADMIN"))
+                .issuer(AdminRbacGatewayFilterFactory.DEFAULT_ISSUER)
+                .audience().add(AdminRbacGatewayFilterFactory.DEFAULT_AUDIENCE).and()
+                .issuedAt(Date.from(Instant.now()))
+                .expiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))
+                .signWith(privateKey, Jwts.SIG.RS256)
+                .compact();
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/events")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + unknownKidToken)
+                .build();
+        ServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        StepVerifier.create(filter.filter(exchange, ex -> Mono.empty()))
+                .verifyComplete();
+
+        assertThat(exchange.getResponse().getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
     @DisplayName("Rejects request with 403 Forbidden when user has valid token but lacks ROLE_ADMIN / ROLE_OPERATOR")
     void shouldRejectWith403WhenUserHasInsufficientRole() {
         AdminRbacGatewayFilterFactory.Config config = new AdminRbacGatewayFilterFactory.Config();
@@ -138,7 +229,7 @@ class AdminRbacGatewayFilterFactoryTest {
     }
 
     @Test
-    @DisplayName("Allows request with 200 and injects downstream headers when user has ROLE_ADMIN")
+    @DisplayName("Allows request with 200 and injects downstream headers when user has valid token with ROLE_ADMIN")
     void shouldAllowWhenUserHasRoleAdmin() {
         AdminRbacGatewayFilterFactory.Config config = new AdminRbacGatewayFilterFactory.Config();
         GatewayFilter filter = filterFactory.apply(config);
@@ -174,10 +265,12 @@ class AdminRbacGatewayFilterFactoryTest {
         AdminRbacGatewayFilterFactory.Config config = new AdminRbacGatewayFilterFactory.Config();
         GatewayFilter filter = filterFactory.apply(config);
 
-        // Token with no roles claim, but subject matches seeded Alex Thorne
+        // Token with no roles claim, but subject matches seeded Alex Thorne and has valid issuer/audience
         String seededToken = Jwts.builder()
                 .header().keyId(TEST_KID).and()
                 .subject(FlociEntraJwksProvider.SEED_ADMIN_SUB)
+                .issuer(AdminRbacGatewayFilterFactory.DEFAULT_ISSUER)
+                .audience().add(AdminRbacGatewayFilterFactory.DEFAULT_AUDIENCE).and()
                 .claim("preferred_username", "alex.thorne@hibana.tk")
                 .issuedAt(Date.from(Instant.now()))
                 .expiration(Date.from(Instant.now().plus(1, ChronoUnit.HOURS)))

@@ -38,8 +38,14 @@ public class FlociEntraJwksProvider {
     public static final String SEED_ADMIN_SUB = "1c5ca4ea-7651-3d75-b981-cd6e66a12a68"; // alex.thorne@hibana.tk
     public static final String SEED_OPERATOR_SUB = "usr-operator-01";
 
+    public static final String DEFAULT_TENANT_ID = "00000000-0000-0000-0000-000000000002";
+    public static final String DEFAULT_JWKS_URL = "http://localhost:4577/" + DEFAULT_TENANT_ID + "/discovery/v2.0/keys";
+
+    @Value("${spring.profiles.active:}")
+    private String activeProfiles;
+
     public FlociEntraJwksProvider(
-            @Value("${azure.entra.jwks-url:${AZURE_ENTRA_JWKS_URL:http://localhost:4577/common/discovery/v2.0/keys}}") String jwksUrl,
+            @Value("${azure.entra.jwks-url:${AZURE_ENTRA_JWKS_URL:" + DEFAULT_JWKS_URL + "}}") String jwksUrl,
             ObjectMapper objectMapper) {
         this.jwksUrl = jwksUrl;
         this.objectMapper = objectMapper;
@@ -50,21 +56,21 @@ public class FlociEntraJwksProvider {
 
     /**
      * Resolves an RSA PublicKey by its Key ID (kid) from cache, refreshing from the JWKS endpoint if missing.
+     * Enforces strict key ID resolution with NO permissive fallback to arbitrary cached keys.
      */
     public PublicKey getPublicKey(String kid) {
-        if (kid != null && keyCache.containsKey(kid)) {
+        if (kid == null || kid.isBlank()) {
+            throw new IllegalArgumentException("Key ID (kid) must not be null or blank");
+        }
+
+        if (keyCache.containsKey(kid)) {
             return keyCache.get(kid);
         }
 
         refreshKeys();
 
-        if (kid != null && keyCache.containsKey(kid)) {
+        if (keyCache.containsKey(kid)) {
             return keyCache.get(kid);
-        }
-
-        // If kid is not found, but we have exactly one key in cache, use it as fallback
-        if (!keyCache.isEmpty()) {
-            return keyCache.values().iterator().next();
         }
 
         throw new IllegalStateException("Unable to resolve RSA public key for kid: " + kid + " from JWKS: " + jwksUrl);
@@ -155,22 +161,28 @@ public class FlociEntraJwksProvider {
             list.forEach(g -> roles.add(g.toString()));
         }
 
-        // 3. Fallback to seeded directory users for local Floci-AZ emulation
-        String sub = claims.getSubject();
-        String preferredUsername = claims.get("preferred_username", String.class);
-        String upn = claims.get("upn", String.class);
+        // 3. Fallback to seeded directory users for local Floci-AZ emulation (disabled in production)
+        if (!isProductionProfile()) {
+            String sub = claims.getSubject();
+            String preferredUsername = claims.get("preferred_username", String.class);
+            String upn = claims.get("upn", String.class);
 
-        if (SEED_ADMIN_SUB.equals(sub)
-                || "alex.thorne@hibana.tk".equalsIgnoreCase(preferredUsername)
-                || "alex.thorne@hibana.tk".equalsIgnoreCase(upn)) {
-            roles.add("ROLE_ADMIN");
-            roles.add("ROLE_OPERATOR");
-        } else if (SEED_OPERATOR_SUB.equals(sub)
-                || "operator@hibana.tk".equalsIgnoreCase(preferredUsername)
-                || "operator@hibana.tk".equalsIgnoreCase(upn)) {
-            roles.add("ROLE_OPERATOR");
+            if (SEED_ADMIN_SUB.equals(sub)
+                    || "alex.thorne@hibana.tk".equalsIgnoreCase(preferredUsername)
+                    || "alex.thorne@hibana.tk".equalsIgnoreCase(upn)) {
+                roles.add("ROLE_ADMIN");
+                roles.add("ROLE_OPERATOR");
+            } else if (SEED_OPERATOR_SUB.equals(sub)
+                    || "operator@hibana.tk".equalsIgnoreCase(preferredUsername)
+                    || "operator@hibana.tk".equalsIgnoreCase(upn)) {
+                roles.add("ROLE_OPERATOR");
+            }
         }
 
         return new ArrayList<>(roles);
+    }
+
+    private boolean isProductionProfile() {
+        return activeProfiles != null && (activeProfiles.contains("prod") || activeProfiles.contains("production"));
     }
 }

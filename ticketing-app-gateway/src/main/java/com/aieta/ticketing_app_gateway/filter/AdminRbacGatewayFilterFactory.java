@@ -42,10 +42,30 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
     private final FlociEntraJwksProvider jwksProvider;
     private final ObjectMapper objectMapper;
 
+    public static final String DEFAULT_ISSUER = "http://localhost:4577/00000000-0000-0000-0000-000000000002/v2.0";
+    public static final String DEFAULT_AUDIENCE = "api://hibana-api";
+
+    @org.springframework.beans.factory.annotation.Value("${azure.entra.issuer:${AZURE_ENTRA_ISSUER:" + DEFAULT_ISSUER + "}}")
+    private String defaultIssuer = DEFAULT_ISSUER;
+
+    @org.springframework.beans.factory.annotation.Value("${azure.entra.audience:${AZURE_ENTRA_AUDIENCE:" + DEFAULT_AUDIENCE + "}}")
+    private String defaultAudience = DEFAULT_AUDIENCE;
+
+    @org.springframework.beans.factory.annotation.Autowired
     public AdminRbacGatewayFilterFactory(FlociEntraJwksProvider jwksProvider, ObjectMapper objectMapper) {
+        this(jwksProvider, objectMapper, DEFAULT_ISSUER, DEFAULT_AUDIENCE);
+    }
+
+    public AdminRbacGatewayFilterFactory(
+            FlociEntraJwksProvider jwksProvider,
+            ObjectMapper objectMapper,
+            String defaultIssuer,
+            String defaultAudience) {
         super(Config.class);
         this.jwksProvider = jwksProvider;
         this.objectMapper = objectMapper;
+        this.defaultIssuer = defaultIssuer != null ? defaultIssuer : DEFAULT_ISSUER;
+        this.defaultAudience = defaultAudience != null ? defaultAudience : DEFAULT_AUDIENCE;
     }
 
     @Override
@@ -55,7 +75,7 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
 
     @Override
     public List<String> shortcutFieldOrder() {
-        return List.of("requiredRoles");
+        return List.of("requiredRoles", "issuer", "audience");
     }
 
     @Override
@@ -63,6 +83,13 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
         List<String> effectiveRequiredRoles = (config.getRequiredRoles() != null && !config.getRequiredRoles().isEmpty())
                 ? config.getRequiredRoles()
                 : List.of("ROLE_ADMIN", "ROLE_OPERATOR");
+
+        String effectiveIssuer = (config.getIssuer() != null && !config.getIssuer().isBlank())
+                ? config.getIssuer()
+                : defaultIssuer;
+        String effectiveAudience = (config.getAudience() != null && !config.getAudience().isBlank())
+                ? config.getAudience()
+                : defaultAudience;
 
         return (exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
@@ -98,9 +125,17 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
 
             Claims claims;
             try {
-                claims = Jwts.parser()
-                        .verifyWith(publicKey)
-                        .build()
+                var parser = Jwts.parser()
+                        .verifyWith(publicKey);
+
+                if (effectiveIssuer != null && !effectiveIssuer.isBlank()) {
+                    parser.requireIssuer(effectiveIssuer);
+                }
+                if (effectiveAudience != null && !effectiveAudience.isBlank()) {
+                    parser.requireAudience(effectiveAudience);
+                }
+
+                claims = parser.build()
                         .parseSignedClaims(token)
                         .getPayload();
             } catch (ExpiredJwtException e) {
@@ -111,6 +146,24 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
                         "https://hibana.tk/errors/token-expired",
                         "Token Expired",
                         "The supplied Entra ID authorization token has expired."
+                );
+            } catch (io.jsonwebtoken.IncorrectClaimException e) {
+                log.warn("Admin RBAC rejection: Incorrect claim on {}: {}", request.getPath(), e.getMessage());
+                return rejectWithProblemDetail(
+                        exchange,
+                        HttpStatus.UNAUTHORIZED,
+                        "https://hibana.tk/errors/invalid-token",
+                        "Invalid Token Claim",
+                        "Token claim validation failed: " + e.getMessage()
+                );
+            } catch (io.jsonwebtoken.MissingClaimException e) {
+                log.warn("Admin RBAC rejection: Missing claim on {}: {}", request.getPath(), e.getMessage());
+                return rejectWithProblemDetail(
+                        exchange,
+                        HttpStatus.UNAUTHORIZED,
+                        "https://hibana.tk/errors/invalid-token",
+                        "Missing Required Claim",
+                        "Token claim validation failed: " + e.getMessage()
                 );
             } catch (JwtException e) {
                 log.warn("Admin RBAC rejection: Signature verification failed on {}: {}", request.getPath(), e.getMessage());
@@ -202,6 +255,8 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
 
     public static class Config {
         private List<String> requiredRoles = new ArrayList<>(List.of("ROLE_ADMIN", "ROLE_OPERATOR"));
+        private String issuer;
+        private String audience;
 
         public List<String> getRequiredRoles() {
             return requiredRoles;
@@ -209,6 +264,22 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
 
         public void setRequiredRoles(List<String> requiredRoles) {
             this.requiredRoles = requiredRoles;
+        }
+
+        public String getIssuer() {
+            return issuer;
+        }
+
+        public void setIssuer(String issuer) {
+            this.issuer = issuer;
+        }
+
+        public String getAudience() {
+            return audience;
+        }
+
+        public void setAudience(String audience) {
+            this.audience = audience;
         }
     }
 }
