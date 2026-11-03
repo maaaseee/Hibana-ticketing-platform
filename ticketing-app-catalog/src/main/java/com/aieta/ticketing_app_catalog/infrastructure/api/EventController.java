@@ -1,5 +1,6 @@
 package com.aieta.ticketing_app_catalog.infrastructure.api;
 
+import com.aieta.ticketing_app_catalog.application.query.get_all_events.GetAllEventsQuery;
 import com.aieta.ticketing_app_catalog.application.query.get_catalog_metadata.GetCatalogMetadataQuery;
 import com.aieta.ticketing_app_catalog.application.query.get_event_by_id.GetEventByIdQuery;
 import com.aieta.ticketing_app_catalog.application.query.get_home_highlights.GetHomeHighlightsQuery;
@@ -47,9 +48,12 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getUpcomingEvents(
             @RequestParam(name = "category", required = false) String category,
             @RequestParam(name = "q", required = false) String query,
-            @RequestParam(name = "venue", required = false) String venue) {
+            @RequestParam(name = "venue", required = false) String venue,
+            @RequestParam(name = "status", required = false) String status) {
         List<EventSummary> events;
-        if ((query != null && !query.isBlank()) || (venue != null && !venue.isBlank())) {
+        if (status != null && !status.isBlank()) {
+            events = mediator.dispatch(new GetAllEventsQuery(status));
+        } else if ((query != null && !query.isBlank()) || (venue != null && !venue.isBlank())) {
             events = mediator.dispatch(new SearchEventsQuery(query, venue));
         } else {
             events = mediator.dispatch(new GetUpcomingEventsQuery(category));

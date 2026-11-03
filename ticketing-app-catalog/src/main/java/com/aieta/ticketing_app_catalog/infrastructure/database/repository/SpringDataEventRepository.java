@@ -48,4 +48,10 @@ public interface SpringDataEventRepository extends JpaRepository<EventJpaEntity,
     List<EventJpaEntity> searchEventsFuzzy(@Param("query") String query, @Param("venue") String venue);
 
     Optional<EventJpaEntity> findBySlug(String slug);
+
+    @Query("SELECT e FROM EventJpaEntity e ORDER BY e.createdAt DESC")
+    List<EventJpaEntity> findAllOrderByCreatedAtDesc();
+
+    @Query("SELECT e FROM EventJpaEntity e WHERE e.status = :status ORDER BY e.createdAt DESC")
+    List<EventJpaEntity> findByStatusOrderByCreatedAtDesc(@Param("status") String status);
 }

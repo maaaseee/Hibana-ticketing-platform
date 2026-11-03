@@ -76,4 +76,20 @@ public class JpaEventRepositoryAdapter implements EventRepositoryPort {
     public Optional<EventSummary> findBySlug(String slug) {
         return eventRepository.findBySlug(slug).map(e -> eventMapper.toDomain(e));
     }
+
+    @Override
+    public List<EventSummary> findAllEvents() {
+        return eventRepository.findAllOrderByCreatedAtDesc()
+                .stream()
+                .map(e -> eventMapper.toDomain(e))
+                .toList();
+    }
+
+    @Override
+    public List<EventSummary> findByStatus(String status) {
+        return eventRepository.findByStatusOrderByCreatedAtDesc(status)
+                .stream()
+                .map(e -> eventMapper.toDomain(e))
+                .toList();
+    }
 }

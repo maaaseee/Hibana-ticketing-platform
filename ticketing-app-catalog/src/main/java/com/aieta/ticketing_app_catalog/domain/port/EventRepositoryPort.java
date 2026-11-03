@@ -15,4 +15,6 @@ public interface EventRepositoryPort {
     List<EventSummary> searchEventsFuzzy(String query, String venue);
     Optional<EventSummary> findById(String id);
     Optional<EventSummary> findBySlug(String slug);
+    List<EventSummary> findAllEvents();
+    List<EventSummary> findByStatus(String status);
 }
