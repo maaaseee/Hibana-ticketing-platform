@@ -37,6 +37,13 @@ export async function request<T>(
   options: RequestInit = {},
   timeoutMs = 6000
 ): Promise<T> {
+  const resolvedUrl =
+    typeof window !== 'undefined' && window.location?.origin && window.location.origin !== 'null'
+      ? `${window.location.origin}${url}`
+      : url.startsWith('/')
+        ? `http://localhost${url}`
+        : url
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
@@ -60,7 +67,7 @@ export async function request<T>(
   }
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(resolvedUrl, {
       ...options,
       headers,
       signal: controller.signal,

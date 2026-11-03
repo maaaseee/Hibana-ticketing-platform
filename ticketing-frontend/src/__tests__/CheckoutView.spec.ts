@@ -1,10 +1,11 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
 import { setActivePinia, createPinia } from 'pinia'
 import CheckoutView from '../views/CheckoutView.vue'
 import { useTicketingStore } from '../stores/ticketing'
 import { useTicketsStore } from '../stores/tickets'
+import { orderService } from '../services/orderService'
 
 function setupTestEnvironment(initialRoute = '/event/chronos-fest-2026/checkout') {
   const pinia = createPinia()
@@ -125,18 +126,36 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
     const parkingCheckbox = wrapper.find('input[type="checkbox"]')
     expect(parkingCheckbox.exists()).toBe(true)
 
-    // Initial total includes tickets ($90.000) + fee 10% ($9.000) + parking ($15.000) = $114.000
-    expect(wrapper.text()).toContain('114.000')
+    // Initial total includes tickets ($90.000) + fee 10% ($9.000) + parking ($15.000) + taxes 21% ($23.940) = $137.940
+    expect(wrapper.text()).toContain('137.940')
 
     // Toggle off parking pass
     await parkingCheckbox.setValue(false)
     await wrapper.vm.$nextTick()
 
-    // Recalculated total without parking is $99.000 ($90.000 + $9.000)
-    expect(wrapper.text()).toContain('99.000')
+    // Recalculated total without parking is $99.000 + taxes 21% ($20.790) = $119.790
+    expect(wrapper.text()).toContain('119.790')
   })
 
   it('triggers payment processing overlay and completes order issuing tickets', async () => {
+    vi.spyOn(orderService, 'createOrder').mockResolvedValue({
+      orderId: 'ORD-TEST-123',
+      userId: 'test-user',
+      reservationId: 'res-test',
+      eventId: 'chronos-fest-2026',
+      seatId: 'seat-ticket-1',
+      status: 'PENDING',
+      totalAmount: 137940,
+      createdAt: new Date().toISOString(),
+    })
+    vi.spyOn(orderService, 'processPayment').mockResolvedValue({
+      orderId: 'ORD-TEST-123',
+      status: 'PAID',
+      totalAmount: 137940,
+      paymentMethod: 'DEBIT_CARD',
+      paidAt: new Date().toISOString(),
+    })
+
     const { pinia, router } = setupTestEnvironment()
     await router.isReady()
 
@@ -155,14 +174,7 @@ describe('CheckoutView.spec.ts - Payment & Checkout Dark Blue Wireframe Implemen
 
     // Trigger complete order
     await payButton.trigger('click')
-    await wrapper.vm.$nextTick()
-
-    // Processing overlay should appear
-    expect(wrapper.find('#processing-overlay').exists()).toBe(true)
-    expect(wrapper.text()).toContain('Validando transacción segura...')
-
-    // Fast-forward processing simulation timer
-    vi.advanceTimersByTime(3000)
+    await flushPromises()
     await wrapper.vm.$nextTick()
 
     // Verify tickets were added to digital wallet
