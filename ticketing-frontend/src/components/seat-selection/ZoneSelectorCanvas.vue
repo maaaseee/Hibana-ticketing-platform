@@ -39,9 +39,9 @@ const hoveredZoneId = ref<string | null>(null)
 
 <template>
   <section class="flex-1 relative bg-[#0c141f] p-4 sm:p-6 flex flex-col items-center justify-between overflow-hidden border-r border-[#23354d]">
-    <!-- Barra Prominente Superior con Flechas y Acimut Dinámico -->
-    <div class="w-full max-w-4xl bg-[#141c27] border border-[#23354d] py-2.5 px-4 rounded-lg text-center font-mono text-xs text-[#86cffb] font-bold tracking-wider z-20 shrink-0">
-      {{ selectedSector.stageBanner }}
+    <!-- Barra Prominente Superior: Indicador Claro de Escenario -->
+    <div class="w-full max-w-md bg-[#141c27] border border-[#23354d] border-t-2 border-t-[#38bdf8] py-2 px-6 rounded-t-lg text-center font-display text-xs text-[#86cffb] font-bold tracking-widest uppercase z-20 shrink-0 shadow-lg">
+      ESCENARIO
     </div>
 
     <!-- Contenedor de Preview Cuadrado y Grande (.JSON del Estadio) -->
@@ -164,7 +164,7 @@ const hoveredZoneId = ref<string | null>(null)
         />
 
         <!-- Zonas A1, A2, A3 with EXACT SAME HEIGHT (height: 310, y: 145) -->
-        <!-- ZONA A1 (Esquina Lateral Oeste - Precio Mínimo del Sector) -->
+        <!-- ZONA A1 (Esquina Lateral Oeste) -->
         <g
           class="cursor-pointer transition-colors"
           @click="emit('selectZone', sectorZones[0]!)"
@@ -182,21 +182,21 @@ const hoveredZoneId = ref<string | null>(null)
             :stroke="selectedZone.id === 'zone-a1' ? '#ffffff' : sectorZones[0]!.colorStroke"
             :stroke-width="selectedZone.id === 'zone-a1' ? 3 : 1.5"
           />
-          <text x="215" y="275" text-anchor="middle" fill="#ffffff" font-family="Space Grotesk, sans-serif" font-weight="bold" font-size="20">
+          <text x="215" y="240" text-anchor="middle" fill="#ffffff" font-family="Space Grotesk, sans-serif" font-weight="bold" font-size="22">
             ZONA A1
           </text>
-          <text x="215" y="300" text-anchor="middle" fill="#86cffb" font-family="JetBrains Mono, monospace" font-size="12">
-            Esquina Oeste • {{ formatMoney(getZonePrice(sectorZones[0]!)) }}
+          <text x="215" y="270" text-anchor="middle" fill="#94a3b8" font-family="Space Grotesk, sans-serif" font-size="13">
+            Esquina Oeste
           </text>
-          <text x="215" y="322" text-anchor="middle" fill="#94a3b8" font-family="JetBrains Mono, monospace" font-size="11">
-            {{ getZoneStats(sectorZones[0]!).available }} / {{ getZoneStats(sectorZones[0]!).total }} disponibles
+          <text x="215" y="330" text-anchor="middle" fill="#38bdf8" font-family="JetBrains Mono, monospace" font-weight="800" font-size="28">
+            {{ formatMoney(getZonePrice(sectorZones[0]!)) }}
           </text>
-          <text x="215" y="342" text-anchor="middle" fill="#64748b" font-family="JetBrains Mono, monospace" font-size="10">
-            (Tarifa mínima de esquina)
+          <text x="215" y="355" text-anchor="middle" fill="#64748b" font-family="JetBrains Mono, monospace" font-size="11">
+            por entrada
           </text>
         </g>
 
-        <!-- ZONA A2 (Central Amplia - Frontal - Precio Máximo del Sector por Cercanía) -->
+        <!-- ZONA A2 (Central Amplia - Frontal) -->
         <g
           class="cursor-pointer transition-colors"
           @click="emit('selectZone', sectorZones[1]!)"
@@ -214,21 +214,21 @@ const hoveredZoneId = ref<string | null>(null)
             :stroke="selectedZone.id === 'zone-a2' ? '#ffffff' : sectorZones[1]!.colorStroke"
             :stroke-width="selectedZone.id === 'zone-a2' ? 3 : 1.5"
           />
-          <text x="500" y="270" text-anchor="middle" fill="#ffffff" font-family="Space Grotesk, sans-serif" font-weight="bold" font-size="24">
+          <text x="500" y="235" text-anchor="middle" fill="#ffffff" font-family="Space Grotesk, sans-serif" font-weight="bold" font-size="26">
             ZONA A2
           </text>
-          <text x="500" y="300" text-anchor="middle" fill="#d8b4fe" font-family="JetBrains Mono, monospace" font-size="13" font-weight="bold">
-            Central Frontal • {{ formatMoney(getZonePrice(sectorZones[1]!)) }}
+          <text x="500" y="268" text-anchor="middle" fill="#cbd5e1" font-family="Space Grotesk, sans-serif" font-size="14">
+            Central Frontal
           </text>
-          <text x="500" y="325" text-anchor="middle" fill="#4fdbc8" font-family="JetBrains Mono, monospace" font-size="12">
-            {{ getZoneStats(sectorZones[1]!).available }} / {{ getZoneStats(sectorZones[1]!).total }} libres (Visión Directa)
+          <text x="500" y="330" text-anchor="middle" fill="#c084fc" font-family="JetBrains Mono, monospace" font-weight="800" font-size="34">
+            {{ formatMoney(getZonePrice(sectorZones[1]!)) }}
           </text>
-          <text x="500" y="345" text-anchor="middle" fill="#cbd5e1" font-family="JetBrains Mono, monospace" font-size="10">
-            (Mayor cercanía y visión centrada)
+          <text x="500" y="358" text-anchor="middle" fill="#94a3b8" font-family="JetBrains Mono, monospace" font-size="12">
+            por entrada
           </text>
         </g>
 
-        <!-- ZONA A3 (Esquina Lateral Este - Precio Mínimo del Sector) -->
+        <!-- ZONA A3 (Esquina Lateral Este) -->
         <g
           class="cursor-pointer transition-colors"
           @click="emit('selectZone', sectorZones[2]!)"
@@ -246,17 +246,17 @@ const hoveredZoneId = ref<string | null>(null)
             :stroke="selectedZone.id === 'zone-a3' ? '#ffffff' : sectorZones[2]!.colorStroke"
             :stroke-width="selectedZone.id === 'zone-a3' ? 3 : 1.5"
           />
-          <text x="785" y="275" text-anchor="middle" fill="#ffffff" font-family="Space Grotesk, sans-serif" font-weight="bold" font-size="20">
+          <text x="785" y="240" text-anchor="middle" fill="#ffffff" font-family="Space Grotesk, sans-serif" font-weight="bold" font-size="22">
             ZONA A3
           </text>
-          <text x="785" y="300" text-anchor="middle" fill="#86cffb" font-family="JetBrains Mono, monospace" font-size="12">
-            Esquina Este • {{ formatMoney(getZonePrice(sectorZones[2]!)) }}
+          <text x="785" y="270" text-anchor="middle" fill="#94a3b8" font-family="Space Grotesk, sans-serif" font-size="13">
+            Esquina Este
           </text>
-          <text x="785" y="322" text-anchor="middle" fill="#94a3b8" font-family="JetBrains Mono, monospace" font-size="11">
-            {{ getZoneStats(sectorZones[2]!).available }} / {{ getZoneStats(sectorZones[2]!).total }} disponibles
+          <text x="785" y="330" text-anchor="middle" fill="#38bdf8" font-family="JetBrains Mono, monospace" font-weight="800" font-size="28">
+            {{ formatMoney(getZonePrice(sectorZones[2]!)) }}
           </text>
-          <text x="785" y="342" text-anchor="middle" fill="#64748b" font-family="JetBrains Mono, monospace" font-size="10">
-            (Tarifa mínima de esquina)
+          <text x="785" y="355" text-anchor="middle" fill="#64748b" font-family="JetBrains Mono, monospace" font-size="11">
+            por entrada
           </text>
         </g>
 

@@ -30,8 +30,7 @@ const emit = defineEmits<{
 <template>
   <aside class="w-full lg:w-96 bg-[#141c27] flex flex-col h-full border-l border-[#23354d] z-20 shrink-0">
     <div class="p-4 border-b border-[#23354d]">
-      <h2 class="font-display text-xl font-bold text-[#f1f5f9] mb-1">Tu Selección</h2>
-      <p class="font-mono text-xs text-[#94a3b8]">Elige hasta {{ maxTicketsAllowed }} asientos por compra (política oficial).</p>
+      <h2 class="font-display text-xl font-bold text-[#f1f5f9]">Tu Selección</h2>
     </div>
 
     <!-- Tier Breakdown -->
@@ -89,11 +88,7 @@ const emit = defineEmits<{
         </div>
       </div>
 
-      <!-- Aviso de Retención Redlock de 10 minutos -->
-      <div v-if="selectedSeatsCount > 0" class="p-3 bg-[#101825] border border-[#23354d] rounded-xl text-[11px] font-mono text-[#94a3b8] flex items-start gap-2">
-        <span class="material-symbols-outlined text-[16px] text-[#86cffb] shrink-0 mt-0.5">lock_clock</span>
-        <span>Temporizador Redlock: Asientos retenidos por 10 minutos para completar el pago de forma segura.</span>
-      </div>
+
     </div>
 
     <!-- Checkout Summary Sticky Bottom -->

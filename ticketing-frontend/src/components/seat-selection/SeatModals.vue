@@ -72,7 +72,7 @@ const emit = defineEmits<{
         </DialogTitle>
         
         <DialogDescription class="text-xs text-[#94a3b8] font-mono leading-relaxed">
-          Tus 10 minutos para concretar la compra han expirado. Por concurrencia y la política Redlock de alta demanda, los asientos reservados han sido liberados para otros usuarios.
+          Tus 10 minutos para concretar la compra han expirado. Por concurrencia y la política de alta demanda, los asientos reservados han sido liberados para otros usuarios.
         </DialogDescription>
 
         <div class="flex items-center justify-end gap-3 pt-2 font-mono text-xs">

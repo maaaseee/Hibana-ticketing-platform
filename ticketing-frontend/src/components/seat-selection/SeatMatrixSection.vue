@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { GeneralSector, SectorPricingInfo } from './MacroVenueMap.vue'
 import type { SectorZone } from './ZoneSelectorCanvas.vue'
 import type { VenueSeatMapLayout } from '../../types'
@@ -16,7 +17,7 @@ export interface SeatRow {
   seats: SeatItem[]
 }
 
-defineProps<{
+const props = defineProps<{
   selectedSector: GeneralSector
   selectedSectorBackend: SectorPricingInfo
   selectedZone: SectorZone
@@ -26,6 +27,11 @@ defineProps<{
   zoomLevel: number
   isSectorActive: (secId: string, secName?: string) => boolean
 }>()
+
+const columnNumbers = computed(() => {
+  if (!props.seatRows.length || !props.seatRows[0]?.seats.length) return []
+  return props.seatRows[0].seats.map(s => s.seatNum)
+})
 
 const emit = defineEmits<{
   (e: 'changeZone'): void
@@ -201,15 +207,37 @@ const emit = defineEmits<{
       class="flex flex-col items-center justify-center w-full max-w-5xl py-6 px-2 transition-transform duration-150 origin-center"
       :style="{ transform: `scale(${zoomLevel})` }"
     >
-      <!-- Orientation Bar Towards Stage -->
-      <div class="w-full max-w-2xl mb-5 text-center">
-        <div class="py-2 px-5 bg-[#141c27] border border-[#23354d] rounded-lg text-[#86cffb] font-mono text-xs tracking-wider font-bold shadow-md">
-          {{ selectedSector.stageBanner }}
+      <!-- Elemento de Escenario (Orientación Clara) -->
+      <div class="w-full max-w-md mb-6 flex flex-col items-center select-none">
+        <div class="w-full h-8 bg-gradient-to-b from-[#00688f]/60 to-[#101825] border-t-2 border-[#38bdf8] rounded-t-lg flex items-center justify-center shadow-lg">
+          <span class="font-display font-bold text-xs uppercase tracking-widest text-[#86cffb]">ESCENARIO</span>
         </div>
       </div>
 
       <!-- Seat Rows Container -->
       <div class="flex flex-col gap-1.5 p-4 bg-[#101825]/90 border border-[#23354d] rounded-xl shadow-2xl">
+        <!-- Fila Superior con Números de Cada Columna de Butacas -->
+        <div class="flex items-center gap-2 pb-1.5 border-b border-[#23354d]/70 mb-1">
+          <!-- Espaciador izquierdo alineado con la letra de fila -->
+          <div class="w-5 h-5 shrink-0 flex items-center justify-center font-mono text-[9px] text-[#64748b]">
+            #
+          </div>
+
+          <!-- Números de columnas alineados con cada columna de asientos -->
+          <div class="flex items-center gap-1.5">
+            <div
+              v-for="colNum in columnNumbers"
+              :key="colNum"
+              class="w-4 sm:w-4.5 flex items-center justify-center font-mono text-[10px] text-[#86cffb] font-bold select-none shrink-0"
+            >
+              {{ colNum }}
+            </div>
+          </div>
+
+          <!-- Espaciador derecho alineado con la letra de fila -->
+          <div class="w-5 h-5 shrink-0"></div>
+        </div>
+
         <div
           v-for="row in seatRows"
           :key="row.letter"
@@ -276,11 +304,9 @@ const emit = defineEmits<{
         </div>
       </div>
 
-      <!-- Bottom Sector & Pricing Metadata -->
-      <div class="mt-4 flex items-center gap-4 font-mono text-xs text-[#94a3b8]">
-        <span>Sector: <strong class="text-white">{{ selectedSector.name }}</strong> (Rango: {{ selectedSectorBackend.priceRangeFormatted }})</span>
-        <span>•</span>
-        <span>Zona: <strong class="text-[#86cffb]">{{ selectedZone.name }}</strong></span>
+      <!-- Bottom Metadata: Unified Zona Label without Range Price -->
+      <div class="mt-4 flex items-center gap-3 font-mono text-xs text-[#94a3b8]">
+        <span>Zona: <strong class="text-[#86cffb]">{{ selectedSector.name }} • {{ selectedZone.name }}</strong></span>
         <span>•</span>
         <span>Tarifa: <strong class="text-white">{{ currentZonePriceFormatted }} c/u</strong></span>
       </div>

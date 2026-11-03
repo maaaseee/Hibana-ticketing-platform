@@ -70,11 +70,12 @@ describe('SeatSelectionView.vue (3-Step Hierarchical Purchase Flow)', () => {
 
     // Verify Step 2 indicators
     expect(wrapper.text()).toContain('Paso 2: Selección de Zona')
-    expect(wrapper.text()).toContain('DIRECCIÓN HACIA EL ESCENARIO PRINCIPAL')
+    expect(wrapper.text()).toContain('ESCENARIO')
     expect(wrapper.text()).toContain('Radar Estadio')
     expect(wrapper.text()).toContain('ZONA A1')
     expect(wrapper.text()).toContain('ZONA A2')
     expect(wrapper.text()).toContain('ZONA A3')
+    expect(wrapper.text()).not.toContain('Mayor cercanía y visión centrada')
     expect(wrapper.text()).toContain('Puerta Sur 3')
     expect(wrapper.text()).toContain('Continuar a Selección de Butacas')
     // Radar preview marks the selected sector in bright cyan
@@ -98,9 +99,21 @@ describe('SeatSelectionView.vue (3-Step Hierarchical Purchase Flow)', () => {
 
     // Verify Step 3 layout and cart
     expect(wrapper.text()).toContain('Tu Selección')
-    expect(wrapper.text()).toContain('DIRECCIÓN HACIA EL ESCENARIO PRINCIPAL')
+    expect(wrapper.text()).toContain('ESCENARIO')
+    expect(wrapper.text()).not.toContain('DIRECCIÓN HACIA EL ESCENARIO PRINCIPAL')
+    expect(wrapper.text()).not.toContain('Temporizador Redlock')
+    expect(wrapper.text()).not.toContain('Elige hasta 4 asientos por compra (política oficial).')
+    expect(wrapper.text()).toContain('Zona: Platea Alta Sur • Zona A2 (Central Amplia - Frontal)')
+    expect(wrapper.text()).not.toContain('Sector: Platea Alta Sur')
+    expect(wrapper.text()).not.toContain('Rango:')
     expect(wrapper.text()).toContain('No hay asientos seleccionados')
     expect(wrapper.text()).toContain('Confirmar Asientos y Proceder al Pago')
+
+    // Verify Column Numbers Header row (1 to 20 for Zone A2) exists above seats
+    const columnNumbers = Array.from({ length: 20 }, (_, i) => (i + 1).toString())
+    columnNumbers.forEach(num => {
+      expect(wrapper.text()).toContain(num)
+    })
 
     const ticketingStore = useTicketingStore()
     // Invariants: ZERO pre-selected seats on initial mount
