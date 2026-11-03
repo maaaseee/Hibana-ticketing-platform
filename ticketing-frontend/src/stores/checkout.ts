@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { useAuthStore } from './auth'
 
 export const useCheckoutStore = defineStore('checkout', () => {
-  const buyerName = ref<string>('Carlos Mendoza')
-  const buyerEmail = ref<string>('carlos.mendoza@hibana.tk')
-  const buyerDni = ref<string>('38.291.849')
+  const authStore = useAuthStore()
+  const buyerName = ref<string>(authStore.user?.name || 'Carlos Mendoza')
+  const buyerEmail = ref<string>(authStore.user?.email || 'carlos.mendoza@hibana.tk')
+  const buyerDni = ref<string>(authStore.user?.documentNumber || '38.291.849')
   const buyerPhone = ref<string>('+54 9 11 4829-1920')
   const paymentMethod = ref<'debit_card' | 'credit_card' | 'mercado_pago'>('debit_card')
   const issuingBank = ref<string>('GALICIA')

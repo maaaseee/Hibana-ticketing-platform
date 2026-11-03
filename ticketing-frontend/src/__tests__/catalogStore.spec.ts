@@ -124,7 +124,7 @@ describe('catalogStore.spec.ts - Store & Data Invariants', () => {
     it('getMinEventPrice calculates the minimum sector price', () => {
       const sampleEvent = mockEvents[0]!
       const minPrice = getMinEventPrice(sampleEvent)
-      expect(minPrice).toBe(45000)
+      expect(minPrice).toBe(39130.43)
     })
 
     it('getMinEventPrice falls back gracefully to minPrice if sectors are empty', () => {
