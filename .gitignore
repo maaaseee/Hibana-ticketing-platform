@@ -15,10 +15,22 @@ TEST_READY.md
 PROJECT.md
 
 # Session Temporary Documentation (outside of repository scope)
+# Environment secrets
+.env
+*.env
+*.env.local
+.env.*.local
+
 .vscode/
 .github
 infra/*
+infra/local-dev/*
 !infra/local-dev/entra-seed.json
+!infra/bicep/
+!infra/bicep/*
+!infra/k8s/
+!infra/k8s/*
+!infra/README.md
 
 .gemini
 .worktrees/

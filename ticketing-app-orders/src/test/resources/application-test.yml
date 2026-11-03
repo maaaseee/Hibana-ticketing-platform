@@ -43,3 +43,11 @@ payment:
       enabled: true
     mercado-pago:
       enabled: true
+
+mercadopago:
+  webhook:
+    secret: test-mercadopago-webhook-secret-key-32bytes!
+
+gateway:
+  hmac:
+    secret: test-gateway-hmac-secret-for-orders-unit-test!

@@ -7,7 +7,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ticketing_db}?sslmode=${DB_SSL_MODE:disable}
     username: ${DB_USER:ticketing_admin}
-    password: ${DB_PASSWORD:dev_password_123}
+    password: ${DB_PASSWORD:}
     hikari:
       maximum-pool-size: 30
       minimum-idle: 10
@@ -39,6 +39,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL:false}
       timeout: 2000ms
@@ -83,3 +84,7 @@ ticketing:
       event-lifecycle: event.lifecycle.v1
     subscriptions:
       seat-generator: ticketing-seat-generator
+
+gateway:
+  hmac:
+    secret: ${GATEWAY_HMAC_SECRET:}

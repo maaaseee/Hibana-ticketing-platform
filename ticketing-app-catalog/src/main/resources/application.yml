@@ -10,7 +10,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ticketing_db}?sslmode=${DB_SSL_MODE:disable}
     username: ${DB_USER:ticketing_admin}
-    password: ${DB_PASSWORD:dev_password_123}
+    password: ${DB_PASSWORD:}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -34,7 +34,6 @@ spring:
           order_inserts: true
           order_updates: true
 
-
   security:
     oauth2:
       resourceserver:
@@ -44,6 +43,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL:false}
       repositories:
@@ -82,16 +82,10 @@ catalog:
       blob:
         endpoint: ${AZURE_STORAGE_BLOB_ENDPOINT:http://localhost:4577/devstoreaccount1}
         container: ${AZURE_STORAGE_VENUES_CONTAINER:venues}
-        connection-string: ${AZURE_STORAGE_CONNECTION_STRING:DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://localhost:4577/devstoreaccount1;}
+        connection-string: ${AZURE_STORAGE_CONNECTION_STRING:}
 
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          jwk-set-uri: ${AZURE_ENTRA_JWKS_URL:http://localhost:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
+gateway:
+  hmac:
+    secret: ${GATEWAY_HMAC_SECRET:}
 
 

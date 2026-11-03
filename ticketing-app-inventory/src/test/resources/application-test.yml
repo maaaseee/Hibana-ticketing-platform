@@ -39,3 +39,7 @@ ticketing:
     topics:
       ticket-reservation: ticket.reservation.v1
       event-lifecycle: event.lifecycle.v1
+
+gateway:
+  hmac:
+    secret: test-gateway-hmac-secret-for-inventory-unit-test!

@@ -14,7 +14,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:ticketing_db}?sslmode=${DB_SSL_MODE:disable}
     username: ${DB_USER:ticketing_admin}
-    password: ${DB_PASSWORD:dev_password_123}
+    password: ${DB_PASSWORD:}
     hikari:
       schema: orders
       maximum-pool-size: 20
@@ -60,6 +60,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL:false}
       timeout: 2000ms
@@ -96,6 +97,8 @@ management:
     redis:
       enabled: true
     rabbit:
+      enabled: false
+    mail:
       enabled: false
 
 logging:
@@ -136,11 +139,15 @@ payment:
       enabled: ${PAYMENT_MERCADOPAGO_ENABLED:false}
 
 mercadopago:
-  access-token: ${MERCADO_PAGO_ACCESS_TOKEN:TEST-sample-access-token}
-  public-key: ${MERCADO_PAGO_PUBLIC_KEY:TEST-sample-public-key}
+  access-token: ${MERCADO_PAGO_ACCESS_TOKEN:}
+  public-key: ${MERCADO_PAGO_PUBLIC_KEY:}
   webhook:
-    secret: ${MERCADO_PAGO_WEBHOOK_SECRET:mercadopago-webhook-secret-key-prod-minimum-256-bits!}
+    secret: ${MERCADO_PAGO_WEBHOOK_SECRET:}
   back-url-success: ${MERCADO_PAGO_BACK_URL_SUCCESS:http://localhost:5173/checkout/success}
   back-url-failure: ${MERCADO_PAGO_BACK_URL_FAILURE:http://localhost:5173/checkout/failure}
   back-url-pending: ${MERCADO_PAGO_BACK_URL_PENDING:http://localhost:5173/checkout/pending}
   notification-url: ${MERCADO_PAGO_NOTIFICATION_URL:http://localhost:8080/api/v1/payments/mercadopago/webhook}
+
+gateway:
+  hmac:
+    secret: ${GATEWAY_HMAC_SECRET:}

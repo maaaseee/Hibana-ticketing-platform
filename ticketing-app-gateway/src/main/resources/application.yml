@@ -16,6 +16,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       ssl:
         enabled: ${REDIS_SSL:false}
       timeout: 2000ms
@@ -27,12 +28,29 @@ spring:
       server:
         webflux:
           routes:
-            # 0. Catalog Admin & Management Mutations (Order 30 - Gated by Entra ID RBAC Filter)
+            # 0. Catalog Admin Queries & Operations (Order 25 - Gated by Entra ID RBAC Filter)
+            - id: catalog-admin-all
+              uri: ${CATALOG_SERVICE_URL:http://localhost:8081}
+              order: 25
+              predicates:
+                - Path=/api/v1/admin/**
+              filters:
+                - name: AdminRbac
+                  args:
+                    requiredRoles:
+                      - ROLE_ADMIN
+                      - ROLE_OPERATOR
+                - name: CircuitBreaker
+                  args:
+                    name: catalogCircuitBreaker
+                    fallbackUri: forward:/fallback/catalog
+
+            # 0b. Catalog Management Mutations (Order 30 - Gated by Entra ID RBAC Filter)
             - id: catalog-admin-mutations
               uri: ${CATALOG_SERVICE_URL:http://localhost:8081}
               order: 30
               predicates:
-                - Path=/api/v1/events/**, /api/v1/venues/**, /api/v1/admin/**
+                - Path=/api/v1/events/**, /api/v1/venues/**
                 - Method=POST,PUT,PATCH,DELETE
               filters:
                 - name: AdminRbac
@@ -73,7 +91,7 @@ spring:
               filters:
                 - name: CheckoutToken
                   args:
-                    secretKey: ${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}
+                    secretKey: ${WAITING_ROOM_JWT_SECRET:}
                     issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
                     waitingRoomUrl: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
                 - name: RequestRateLimiter
@@ -217,9 +235,13 @@ resilience4j:
 
 waiting-room:
   jwt:
-    secret: ${WAITING_ROOM_JWT_SECRET:virtual-waiting-room-hmac-key-2026-minimum-256-bits!}
+    secret: ${WAITING_ROOM_JWT_SECRET:}
     issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
   url: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
+
+gateway:
+  hmac:
+    secret: ${GATEWAY_HMAC_SECRET:}
 
 azure:
   keyvault:

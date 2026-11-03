@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hibana-prod
+  labels:
+    environment: prod
+    app.kubernetes.io/part-of: hibana-platform
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: hibana-backend-sa
+  namespace: hibana-prod
+  annotations:
+    # Managed Identity Client ID output from Bicep
+    azure.workload.identity/client-id: "${AZURE_WORKLOAD_IDENTITY_CLIENT_ID}"
+    azure.workload.identity/tenant-id: "${AZURE_TENANT_ID}"
+  labels:
+    azure.workload.identity/use: "true"

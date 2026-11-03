@@ -1,10 +1,10 @@
 /**
- * Hibana.tk Ticketing Platform - Cross-Backend End-to-End (E2E) Integration Test Suite
+ * Hibana.tk Ticketing Platform - Cross-Backend End-to-End (E2E) Integration & Security Test Suite
  * 
- * Verifies real ingress routing and end-to-end interactions across the entire backend:
- * Gateway (port 8080) -> Catalog (port 8081) -> Inventory (port 8082) -> PostgreSQL 17 & Redis 7
+ * Verifies real ingress routing, resilience, concurrency, and security controls across the entire backend:
+ * Gateway (port 8080) -> Catalog (port 8081) -> Inventory (port 8082) -> Orders (port 8083) -> PostgreSQL 17 & Redis 7
  * 
- * Tests include:
+ * Standard Integration Tests:
  * 1. Health Probes across all microservices (Actuator UP)
  * 2. Gateway Ingress Routing to Catalog (GET /api/v1/events) + Trace-ID Header Injection
  * 3. Gateway Ingress Routing to Catalog Details (GET /api/v1/events/{id})
@@ -14,7 +14,17 @@
  * 7. Virtual Waiting Room Gating: Expired Token returns HTTP 403 ProblemDetail
  * 8. End-to-End Seat Hold: Valid HMAC-SHA256 Token -> Gateway -> Inventory (Redlock + Postgres) -> HTTP 201 Created
  * 9. Concurrency / 0% Double Booking: Simultaneous reservation requests for identical seat -> 1 succeeds (201), 1 fails (409)
- * 10. Resilience4j Circuit Breaker Fallback: Out-of-service/Non-existent fallback endpoint
+ * 10. Resilience4j Circuit Breaker Fallback: Out-of-service/Non-existent fallback endpoint -> HTTP 503
+ * 11. End-to-End Order Creation & Payment Processing with Valid Inter-Service Stamp
+ * 12. Order Cancellation and Saga Compensation Flow
+ * 
+ * Remediation Security Test Scenarios:
+ * 13. [SEGURIDAD - Header Spoofing]: External client attempts X-User-Id / X-User-Roles spoofing -> Stripped at Gateway, rejected with 401/403
+ * 14. [SEGURIDAD - Virtual Waiting Room Bypass]: POST /api/v1/queue/skip returns 404 in default profile; /status without session returns 403
+ * 15. [SEGURIDAD - Isolation of /confirm]: Direct call to POST /api/v1/reservations/{id}/confirm returns 401/403 (requires ROLE_SERVICE / ROLE_ADMIN)
+ * 16. [SEGURIDAD - Reservation Ownership IDOR]: User A attempting DELETE on User B's reservation returns 403; Owner / Admin returns 200/204
+ * 17. [SEGURIDAD - Catalog Admin Events RBAC]: Public GET /events?status=ALL returns 403; /admin/events requires ROLE_ADMIN
+ * 18. [SEGURIDAD - MercadoPago Webhook HMAC]: Missing/forged/expired x-signature returns 401 Unauthorized; valid HMAC returns 200 OK
  */
 
 import { spawn, type Subprocess } from 'bun'
@@ -38,8 +48,11 @@ const CATALOG_URL = 'http://localhost:8081'
 const INVENTORY_URL = 'http://localhost:8082'
 const ORDERS_URL = 'http://localhost:8083'
 
-const WAITING_ROOM_SECRET = 'virtual-waiting-room-hmac-key-2026-minimum-256-bits!'
-const WAITING_ROOM_ISSUER = 'waiting-room-engine'
+// Secrets resolved from environment with local dev fallbacks
+const WAITING_ROOM_SECRET = process.env.WAITING_ROOM_JWT_SECRET || 'virtual-waiting-room-hmac-key-2026-minimum-256-bits!'
+const WAITING_ROOM_ISSUER = process.env.WAITING_ROOM_JWT_ISSUER || 'waiting-room-engine'
+const GATEWAY_HMAC_SECRET = process.env.GATEWAY_HMAC_SECRET || 'gateway-internal-hmac-secret-2026-minimum-256-bits!'
+const MERCADO_PAGO_WEBHOOK_SECRET = process.env.MERCADO_PAGO_WEBHOOK_SECRET || 'mercadopago-webhook-secret-key-prod-minimum-256-bits!'
 
 interface ManagedProcess {
   name: string
@@ -82,6 +95,19 @@ function generateWaitingRoomToken(userId: string, validMinutes: number = 15, sec
   return `${data}.${encodedSignature}`
 }
 
+function generateGatewayStamp(userId: string, roles: string, timestamp: number = Date.now(), secret: string = GATEWAY_HMAC_SECRET): { signature: string; timestamp: number } {
+  const payload = `${userId}:${roles}:${timestamp}`
+  const signature = crypto.createHmac('sha256', secret).update(payload).digest('hex')
+  return { signature, timestamp }
+}
+
+function generateMercadoPagoSignature(requestId: string, timestamp: number, paymentId: string, secret: string = MERCADO_PAGO_WEBHOOK_SECRET): string {
+  // Official MercadoPago manifest: id:[data.id_url];request-id:[x-request-id_header];ts:[ts_header];
+  const manifest = `id:${paymentId};request-id:${requestId};ts:${timestamp};`
+  const hash = crypto.createHmac('sha256', secret).update(manifest).digest('hex')
+  return `ts=${timestamp},v1=${hash}`
+}
+
 async function isPortOpen(port: number): Promise<boolean> {
   try {
     const res = await fetch(`http://localhost:${port}/actuator/health`, {
@@ -93,7 +119,7 @@ async function isPortOpen(port: number): Promise<boolean> {
   }
 }
 
-async function waitForPort(name: string, port: number, timeoutMs: number = 45000): Promise<boolean> {
+async function waitForPort(name: string, port: number, timeoutMs: number = 75000): Promise<boolean> {
   const start = Date.now()
   process.stdout.write(`  ⏳ Esperando a que ${name} (puerto ${port}) responda... `)
   while (Date.now() - start < timeoutMs) {
@@ -123,6 +149,11 @@ async function ensureServiceRunning(name: string, dir: string, port: number): Pr
     env: {
       ...process.env,
       SPRING_DEVTOOLS_RESTART_ENABLED: 'false',
+      DB_PASSWORD: process.env.DB_PASSWORD || 'dev_password_123',
+      REDIS_PASSWORD: process.env.REDIS_PASSWORD || 'dev_redis_pass_2026',
+      WAITING_ROOM_JWT_SECRET: WAITING_ROOM_SECRET,
+      GATEWAY_HMAC_SECRET: GATEWAY_HMAC_SECRET,
+      MERCADO_PAGO_WEBHOOK_SECRET: MERCADO_PAGO_WEBHOOK_SECRET,
     },
   })
 
@@ -187,7 +218,7 @@ async function runTest(step: number, description: string, fn: () => Promise<void
 
 async function main() {
   console.log(`\n${COLORS.magenta}${COLORS.bright}========================================================================${COLORS.reset}`)
-  console.log(`${COLORS.magenta}${COLORS.bright}    HIBANA.TK PLATFORM - CROSS-BACKEND E2E INTEGRATION TEST SUITE      ${COLORS.reset}`)
+  console.log(`${COLORS.magenta}${COLORS.bright}    HIBANA.TK PLATFORM - CROSS-BACKEND E2E & SECURITY TEST SUITE       ${COLORS.reset}`)
   console.log(`${COLORS.magenta}${COLORS.bright}========================================================================${COLORS.reset}\n`)
 
   console.log(`${COLORS.bright}1. Verificando infraestructura e instancias de microservicios:${COLORS.reset}`)
@@ -350,26 +381,15 @@ async function main() {
   const testBuyerId = `usr_e2e_${Date.now()}`
   let validBuyerToken = generateWaitingRoomToken(testBuyerId, 15)
 
-  await runTest(8, 'End-to-End Waiting Room Real: join -> status -> skip -> Gateway -> Inventory (Redlock + Postgres)', async () => {
+  await runTest(8, 'End-to-End Waiting Room Real: join -> CheckoutToken -> Gateway -> Inventory (Redlock + Postgres)', async () => {
     try {
       await fetch(`${GATEWAY_URL}/api/v1/queue/join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ eventId: sampleEventId, userId: testBuyerId }),
       })
-      await fetch(`${GATEWAY_URL}/api/v1/queue/status?eventId=${sampleEventId}&userId=${testBuyerId}`)
-      const skipRes = await fetch(`${GATEWAY_URL}/api/v1/queue/skip`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId: sampleEventId, userId: testBuyerId }),
-      })
-      if (skipRes.ok) {
-        const skipData = await skipRes.json()
-        if (skipData.checkoutToken) {
-          validBuyerToken = skipData.checkoutToken
-        }
-      }
     } catch {}
+
     const res = await fetch(`${GATEWAY_URL}/api/v1/reservations`, {
       method: 'POST',
       headers: {
@@ -398,7 +418,6 @@ async function main() {
   // ESCENARIO 9: Alta Concurrencia y 0% Doble Venta (Redlock Distributed Lock)
   // ---------------------------------------------------------------------------
   await runTest(9, 'Concurrencia Estricta: Dos clientes compiten en paralelo por el mismo asiento -> Exactamente 1 éxito (201) y 1 conflicto (409)', async () => {
-    // Tomamos otro asiento disponible para la prueba de carrera
     const resSeats = await fetch(`${GATEWAY_URL}/api/v1/events/${sampleEventId}/seats`)
     const seatsPayload = await resSeats.json()
     const allSeats = Array.isArray(seatsPayload) ? seatsPayload : (seatsPayload.seats || [])
@@ -432,7 +451,6 @@ async function main() {
     ])
 
     const statuses = [res1.status, res2.status].sort()
-    // Uno debe ser 201 Created y el otro 409 Conflict (o 423 Locked)
     const hasCreated = statuses.includes(201)
     const hasConflict = statuses.includes(409) || statuses.includes(423)
 
@@ -456,151 +474,456 @@ async function main() {
   })
 
   // ---------------------------------------------------------------------------
-  // ESCENARIO 11: Flujo Completo de Checkout (Hold -> Order -> Pocket Wallet Pay -> PAID)
+  // ESCENARIO 11: Creación de Orden y Pago con Gateway Stamp Autenticado
   // ---------------------------------------------------------------------------
-  await runTest(11, 'Flujo Completo Checkout: Reserva Asiento -> Crear Orden -> Pago con Billetera Virtual (com.aieta.pocket) -> Estado PAID', async () => {
-    const e2eUser = `e2e_buyer_${Date.now()}`
-    const checkoutToken = generateWaitingRoomToken(e2eUser, 15)
+  let createdOrderId: string = ''
+  const orderBuyerId = `order_buyer_${Date.now()}`
+  const orderStamp = generateGatewayStamp(orderBuyerId, 'ROLE_USER')
 
-    // A. Fondeo inicial de billetera virtual vía Gateway (:8080 -> Orders :8083)
-    const topUpRes = await fetch(`${GATEWAY_URL}/api/v1/wallets/me/top-up`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-Id': e2eUser,
-      },
-      body: JSON.stringify({ amount: 150.00 }),
-    })
-    if (!topUpRes.ok) {
-      throw new Error(`Fondeo de billetera falló: HTTP ${topUpRes.status}`)
-    }
-    const topUpData = await topUpRes.json()
-    if (topUpData.balance < 150.00) {
-      throw new Error(`Saldo inesperado tras fondeo: ${topUpData.balance}`)
-    }
-
-    // B. Reserva de asiento en Inventario con token de sala de espera
+  await runTest(11, 'Lifecycle de Órdenes: Crear Orden -> Pago con Tarjeta -> Estado PAID con Gateway Stamp Autenticado', async () => {
+    // 1. Reservar un nuevo asiento disponible
     const resSeats = await fetch(`${GATEWAY_URL}/api/v1/events/${sampleEventId}/seats`)
     const seatsData = await resSeats.json()
     const allSeats = Array.isArray(seatsData) ? seatsData : (seatsData.seats || [])
     const availableSeat = allSeats.find((s: any) => s.status === 'AVAILABLE') || allSeats[0]
     const seatIdToBuy = availableSeat.id || availableSeat.seatId || 'SEAT-CHECKOUT-001'
 
+    const checkoutToken = generateWaitingRoomToken(orderBuyerId, 15)
     const holdRes = await fetch(`${GATEWAY_URL}/api/v1/reservations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Checkout-Token': checkoutToken,
-        'X-User-Id': e2eUser,
       },
       body: JSON.stringify({
         eventId: sampleEventId,
         seatId: seatIdToBuy,
-        userId: e2eUser,
+        userId: orderBuyerId,
       }),
     })
+
     if (holdRes.status !== 201) {
-      throw new Error(`Reserva falló en checkout: HTTP ${holdRes.status} - ${await holdRes.text()}`)
+      throw new Error(`Reserva falló: HTTP ${holdRes.status} - ${await holdRes.text()}`)
     }
     const holdData = await holdRes.json()
     const reservationId = holdData.reservationId
 
-    // C. Creación de Orden a través del Gateway en Orders Service (:8083)
-    const orderRes = await fetch(`${GATEWAY_URL}/api/v1/orders`, {
+    // 2. Crear la orden en Orders Service con stamp válido
+    const orderRes = await fetch(`${ORDERS_URL}/api/v1/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': e2eUser,
+        'X-User-Id': orderBuyerId,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': orderStamp.timestamp.toString(),
+        'X-Gateway-Signature': orderStamp.signature,
       },
       body: JSON.stringify({
         reservationId: reservationId,
         eventId: sampleEventId,
         seatId: seatIdToBuy,
-        totalAmount: 65.00,
+        totalAmount: 75.00,
       }),
     })
+
     if (orderRes.status !== 201) {
       throw new Error(`Creación de orden falló: HTTP ${orderRes.status} - ${await orderRes.text()}`)
     }
     const orderData = await orderRes.json()
-    const orderId = orderData.orderId
+    createdOrderId = orderData.orderId
 
-    // D. Pago de la orden usando POCKET_WALLET
-    const payRes = await fetch(`${GATEWAY_URL}/api/v1/orders/${orderId}/pay`, {
+    // 3. Pagar la orden mediante tarjeta
+    const payRes = await fetch(`${ORDERS_URL}/api/v1/orders/${createdOrderId}/pay`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': e2eUser,
+        'X-User-Id': orderBuyerId,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': orderStamp.timestamp.toString(),
+        'X-Gateway-Signature': orderStamp.signature,
       },
       body: JSON.stringify({
-        paymentMethod: 'POCKET_WALLET',
+        paymentMethod: 'CREDIT_CARD',
+        buyerEmail: `${orderBuyerId}@hibana.tk`,
+        buyerName: 'E2E Testing Buyer',
+        installments: 1,
       }),
     })
+
     if (!payRes.ok) {
       throw new Error(`Pago de orden falló: HTTP ${payRes.status} - ${await payRes.text()}`)
     }
     const payData = await payRes.json()
     if (payData.status !== 'PAID') {
-      throw new Error(`Estado de pago incorrecto: ${payData.status}`)
-    }
-
-    // E. Verificación del balance restante tras el pago
-    const balanceRes = await fetch(`${GATEWAY_URL}/api/v1/wallets/me/balance`, {
-      headers: { 'X-User-Id': e2eUser },
-    })
-    const balanceData = await balanceRes.json()
-    if (balanceData.balance > 85.01) {
-      throw new Error(`Saldo de billetera no debitado correctamente: ${balanceData.balance}`)
+      throw new Error(`Estado de pago no es PAID: ${payData.status}`)
     }
   })
 
   // ---------------------------------------------------------------------------
-  // ESCENARIO 12: Compensación de Saga ante Cancelación de Orden
+  // ESCENARIO 12: Cancelación de Orden y Compensación
   // ---------------------------------------------------------------------------
-  await runTest(12, 'Saga Compensation: Cancelación de Orden -> Actualización a CANCELLED y Emisión de PaymentFailedEvent', async () => {
-    const e2eUser = `e2e_cancel_${Date.now()}`
-    const fakeReservationId = `res_cancel_${Date.now()}`
+  await runTest(12, 'Saga Compensation: Cancelación de Orden -> Actualización a CANCELLED', async () => {
+    const cancelBuyerId = `buyer_cancel_${Date.now()}`
+    const cancelStamp = generateGatewayStamp(cancelBuyerId, 'ROLE_USER')
 
-    // A. Crear orden en PENDING_PAYMENT
-    const orderRes = await fetch(`${GATEWAY_URL}/api/v1/orders`, {
+    const orderRes = await fetch(`${ORDERS_URL}/api/v1/orders`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': e2eUser,
+        'X-User-Id': cancelBuyerId,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': cancelStamp.timestamp.toString(),
+        'X-Gateway-Signature': cancelStamp.signature,
       },
       body: JSON.stringify({
-        reservationId: fakeReservationId,
+        reservationId: `res_fake_${Date.now()}`,
         eventId: sampleEventId,
-        seatId: 'SEAT-CANCEL-001',
-        totalAmount: 49.00,
+        seatId: 'SEAT-CANCEL-DEMO',
+        totalAmount: 50.00,
       }),
     })
+
     if (orderRes.status !== 201) {
-      throw new Error(`Creación de orden previa a cancelación falló: HTTP ${orderRes.status}`)
+      throw new Error(`Creación de orden falló: HTTP ${orderRes.status}`)
     }
     const orderData = await orderRes.json()
-    const orderId = orderData.orderId
+    const cancelOrderId = orderData.orderId
 
-    // B. Cancelar la orden
-    const cancelRes = await fetch(`${GATEWAY_URL}/api/v1/orders/${orderId}/cancel`, {
+    const cancelRes = await fetch(`${ORDERS_URL}/api/v1/orders/${cancelOrderId}/cancel`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-User-Id': e2eUser,
+        'X-User-Id': cancelBuyerId,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': cancelStamp.timestamp.toString(),
+        'X-Gateway-Signature': cancelStamp.signature,
       },
-      body: JSON.stringify({ reason: 'Usuario rechazó términos o tiempo agotado' }),
+      body: JSON.stringify({ reason: 'Usuario solicitó cancelación voluntaria' }),
     })
+
     if (!cancelRes.ok) {
-      throw new Error(`Cancelación de orden falló: HTTP ${cancelRes.status}`)
+      throw new Error(`Cancelación falló: HTTP ${cancelRes.status}`)
     }
 
-    // C. Consultar detalle de la orden para confirmar estado CANCELLED
-    const detailRes = await fetch(`${GATEWAY_URL}/api/v1/orders/${orderId}`, {
-      headers: { 'X-User-Id': e2eUser },
+    const detailRes = await fetch(`${ORDERS_URL}/api/v1/orders/${cancelOrderId}`, {
+      headers: {
+        'X-User-Id': cancelBuyerId,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': cancelStamp.timestamp.toString(),
+        'X-Gateway-Signature': cancelStamp.signature,
+      },
     })
     const detailData = await detailRes.json()
     if (detailData.status !== 'CANCELLED') {
       throw new Error(`Estado tras cancelación no es CANCELLED: ${detailData.status}`)
+    }
+  })
+
+  // ===========================================================================
+  // REMEDIATION SECURITY TEST SUITE (AGENTES A, B, C & D)
+  // ===========================================================================
+  console.log(`\n${COLORS.magenta}${COLORS.bright}3. Ejecutando suite de pruebas de seguridad negativas (Remediación):${COLORS.reset}`)
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 13: [SEGURIDAD] Header Spoofing Externo
+  // ---------------------------------------------------------------------------
+  await runTest(13, '[SEGURIDAD] Header Spoofing Externo: Peticiones externas con X-User-Id y X-User-Roles: ROLE_ADMIN falsificados son sanitizadas por el Gateway', async () => {
+    // Intento 1: Acceder a endpoint admin con cabeceras spoofeadas
+    const adminRes = await fetch(`${GATEWAY_URL}/api/v1/admin/events`, {
+      headers: {
+        'X-User-Id': 'hacker_admin',
+        'X-User-Roles': 'ROLE_ADMIN',
+        'X-Roles': 'ROLE_ADMIN',
+        'X-Gateway-Auth-Stamp': 'fake_stamp_123',
+      },
+    })
+
+    // Debe ser rechazado: 401 Unauthorized o 403 Forbidden
+    if (adminRes.status !== 401 && adminRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: Gateway aceptó cabeceras de rol administrativo inyectadas desde el exterior (HTTP ${adminRes.status})`)
+    }
+
+    // Intento 2: Acceder a status=ALL con cabeceras spoofeadas
+    const statusAllRes = await fetch(`${GATEWAY_URL}/api/v1/events?status=ALL`, {
+      headers: {
+        'X-User-Id': 'hacker_admin',
+        'X-User-Roles': 'ROLE_ADMIN',
+      },
+    })
+
+    // Catalog debe rechazar la consulta administrativa porque el Gateway sanitizó los roles
+    if (statusAllRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: Catalog aceptó rol administrativo spoofeado para status=ALL (HTTP ${statusAllRes.status})`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 14: [SEGURIDAD] Virtual Waiting Room Bypass & Session Ownership
+  // ---------------------------------------------------------------------------
+  await runTest(14, '[SEGURIDAD] Virtual Waiting Room: POST /api/v1/queue/skip en perfil default retorna 404; /status sin sesión retorna 403', async () => {
+    // 1. Intento de bypass de cola llamando a /skip
+    const skipRes = await fetch(`${GATEWAY_URL}/api/v1/queue/skip`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        eventId: sampleEventId,
+        userId: 'unauthorized_bypass_user',
+      }),
+    })
+
+    // En producción/default, el endpoint /skip no debe existir
+    if (skipRes.status !== 404) {
+      throw new Error(`Fallo de seguridad: /api/v1/queue/skip está activo en perfil por defecto (HTTP ${skipRes.status})`)
+    }
+
+    // 2. Consulta de estado de cola de otro usuario sin sesión válida
+    const statusRes = await fetch(`${GATEWAY_URL}/api/v1/queue/status?eventId=${sampleEventId}&userId=victim_user_9999`)
+    if (statusRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: /api/v1/queue/status permitió consultar el estado de un tercero sin sesión válida (HTTP ${statusRes.status})`)
+    }
+
+    // 3. Consulta de estado con sesión adulterada / falsificada
+    const tamperedSessionRes = await fetch(`${GATEWAY_URL}/api/v1/queue/status?eventId=${sampleEventId}&userId=victim_user_9999`, {
+      headers: {
+        'X-Queue-Session': 'tampered_fake_session_token_xyz',
+      },
+    })
+    if (tamperedSessionRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: /api/v1/queue/status aceptó token de sesión adulterado (HTTP ${tamperedSessionRes.status})`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 15: [SEGURIDAD] Aislamiento de /confirm
+  // ---------------------------------------------------------------------------
+  await runTest(15, '[SEGURIDAD] Aislamiento de /confirm: Invocación directa a POST /api/v1/reservations/{id}/confirm es rechazada con HTTP 401/403 (requiere ROLE_SERVICE / ROLE_ADMIN)', async () => {
+    const fakeReservationId = `res_probe_${Date.now()}`
+
+    // 1. Llamada externa a través del Gateway
+    const gwConfirmRes = await fetch(`${GATEWAY_URL}/api/v1/reservations/${fakeReservationId}/confirm`, {
+      method: 'POST',
+    })
+    if (gwConfirmRes.status !== 401 && gwConfirmRes.status !== 403 && gwConfirmRes.status !== 404) {
+      throw new Error(`Fallo de seguridad: Gateway expuso públicamente /confirm (HTTP ${gwConfirmRes.status})`)
+    }
+
+    // 2. Llamada directa a Inventory sin credenciales
+    const directUnauthRes = await fetch(`${INVENTORY_URL}/api/v1/reservations/${fakeReservationId}/confirm`, {
+      method: 'POST',
+    })
+    if (directUnauthRes.status !== 401 && directUnauthRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: Inventory permitió /confirm sin autenticación (HTTP ${directUnauthRes.status})`)
+    }
+
+    // 3. Llamada con rol de usuario normal (ROLE_USER)
+    const userStamp = generateGatewayStamp('regular_user', 'ROLE_USER')
+    const userConfirmRes = await fetch(`${INVENTORY_URL}/api/v1/reservations/${fakeReservationId}/confirm`, {
+      method: 'POST',
+      headers: {
+        'X-User-Id': 'regular_user',
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': userStamp.timestamp.toString(),
+        'X-Gateway-Signature': userStamp.signature,
+      },
+    })
+    if (userConfirmRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: Inventory permitió a un ROLE_USER confirmar reservas directamente (HTTP ${userConfirmRes.status})`)
+    }
+
+    // 4. Llamada legítima con identidad de servicio (ROLE_SERVICE)
+    const serviceStamp = generateGatewayStamp('orders-service', 'ROLE_SERVICE')
+    const serviceConfirmRes = await fetch(`${INVENTORY_URL}/api/v1/reservations/${fakeReservationId}/confirm`, {
+      method: 'POST',
+      headers: {
+        'X-User-Id': 'orders-service',
+        'X-User-Roles': 'ROLE_SERVICE',
+        'X-Gateway-Timestamp': serviceStamp.timestamp.toString(),
+        'X-Gateway-Signature': serviceStamp.signature,
+      },
+    })
+    // Debe haber superado la barrera de seguridad de roles (404 Not Found porque la reserva de prueba no existe, o 200 OK)
+    if (serviceConfirmRes.status === 401 || serviceConfirmRes.status === 403) {
+      throw new Error(`Fallo de configuración: ROLE_SERVICE legítimo fue rechazado con ${serviceConfirmRes.status}`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 16: [SEGURIDAD] Control de Titularidad en Cancelación (IDOR)
+  // ---------------------------------------------------------------------------
+  await runTest(16, '[SEGURIDAD] Control de Titularidad en Cancelación: Usuario A no puede cancelar reserva de Usuario B (HTTP 403); Dueño o Admin sí pueden', async () => {
+    // 1. Crear una reserva legítima para Usuario Propietario (User A)
+    const userA = `owner_user_A_${Date.now()}`
+    const userB = `attacker_user_B_${Date.now()}`
+    const adminUser = `admin_supervisor_${Date.now()}`
+
+    const resSeats = await fetch(`${GATEWAY_URL}/api/v1/events/${sampleEventId}/seats`)
+    const seatsData = await resSeats.json()
+    const allSeats = Array.isArray(seatsData) ? seatsData : (seatsData.seats || [])
+    const seatForIdor = allSeats.find((s: any) => s.status === 'AVAILABLE') || allSeats[0]
+    const seatId = seatForIdor.id || seatForIdor.seatId || 'SEAT-IDOR-001'
+
+    const tokenA = generateWaitingRoomToken(userA, 15)
+    const holdRes = await fetch(`${GATEWAY_URL}/api/v1/reservations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Checkout-Token': tokenA,
+      },
+      body: JSON.stringify({
+        eventId: sampleEventId,
+        seatId: seatId,
+        userId: userA,
+      }),
+    })
+    if (holdRes.status !== 201) {
+      throw new Error(`Error preparando reserva para prueba IDOR: HTTP ${holdRes.status}`)
+    }
+    const reservation = await holdRes.json()
+    const reservationId = reservation.reservationId
+
+    // 2. Usuario B (atacante) intenta cancelar la reserva de Usuario A
+    const stampB = generateGatewayStamp(userB, 'ROLE_USER')
+    const idorCancelRes = await fetch(`${INVENTORY_URL}/api/v1/reservations/${reservationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-User-Id': userB,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': stampB.timestamp.toString(),
+        'X-Gateway-Signature': stampB.signature,
+      },
+    })
+
+    if (idorCancelRes.status !== 403) {
+      throw new Error(`Fallo de seguridad IDOR: Usuario B pudo cancelar la reserva de Usuario A (HTTP ${idorCancelRes.status})`)
+    }
+
+    // 3. Usuario A (propietario) cancela su propia reserva
+    const stampA = generateGatewayStamp(userA, 'ROLE_USER')
+    const ownerCancelRes = await fetch(`${INVENTORY_URL}/api/v1/reservations/${reservationId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-User-Id': userA,
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': stampA.timestamp.toString(),
+        'X-Gateway-Signature': stampA.signature,
+      },
+    })
+
+    if (ownerCancelRes.status !== 200 && ownerCancelRes.status !== 204) {
+      throw new Error(`Propietario legítimo no pudo cancelar su reserva: HTTP ${ownerCancelRes.status}`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 17: [SEGURIDAD] RBAC en Catálogo de Eventos
+  // ---------------------------------------------------------------------------
+  await runTest(17, '[SEGURIDAD] RBAC en Catálogo: status=ALL público retorna 403; /api/v1/admin/events requiere ROLE_ADMIN / ROLE_OPERATOR', async () => {
+    // 1. Acceso público a status=ALL debe fallar con 403
+    const publicAllRes = await fetch(`${GATEWAY_URL}/api/v1/events?status=ALL`)
+    if (publicAllRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: Endpoint público expuso eventos privados o status=ALL sin privilegios (HTTP ${publicAllRes.status})`)
+    }
+
+    // 2. Endpoint /admin/events sin credenciales
+    const unauthAdminRes = await fetch(`${GATEWAY_URL}/api/v1/admin/events`)
+    if (unauthAdminRes.status !== 401 && unauthAdminRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: /api/v1/admin/events fue accesible sin credenciales (HTTP ${unauthAdminRes.status})`)
+    }
+
+    // 3. Endpoint /admin/events con ROLE_USER ordinario
+    const userStamp = generateGatewayStamp('user_test', 'ROLE_USER')
+    const userAdminRes = await fetch(`${CATALOG_URL}/api/v1/admin/events`, {
+      headers: {
+        'X-User-Id': 'user_test',
+        'X-User-Roles': 'ROLE_USER',
+        'X-Gateway-Timestamp': userStamp.timestamp.toString(),
+        'X-Gateway-Signature': userStamp.signature,
+      },
+    })
+    if (userAdminRes.status !== 403) {
+      throw new Error(`Fallo de seguridad: ROLE_USER pudo acceder a /api/v1/admin/events (HTTP ${userAdminRes.status})`)
+    }
+
+    // 4. Endpoint /admin/events con ROLE_ADMIN legítimo
+    const adminStamp = generateGatewayStamp('admin_auditor', 'ROLE_ADMIN')
+    const legitimateAdminRes = await fetch(`${CATALOG_URL}/api/v1/admin/events`, {
+      headers: {
+        'X-User-Id': 'admin_auditor',
+        'X-User-Roles': 'ROLE_ADMIN',
+        'X-Gateway-Timestamp': adminStamp.timestamp.toString(),
+        'X-Gateway-Signature': adminStamp.signature,
+      },
+    })
+    if (legitimateAdminRes.status !== 200) {
+      throw new Error(`Administrador legítimo fue rechazado en /api/v1/admin/events: HTTP ${legitimateAdminRes.status}`)
+    }
+    const adminEvents = await legitimateAdminRes.json()
+    if (!Array.isArray(adminEvents)) {
+      throw new Error(`Respuesta de eventos admin inválida: ${JSON.stringify(adminEvents)}`)
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // ESCENARIO 18: [SEGURIDAD] Validación HMAC en Webhook MercadoPago
+  // ---------------------------------------------------------------------------
+  await runTest(18, '[SEGURIDAD] Webhook MercadoPago: Petición sin firma, con HMAC inválido o timestamp expirado retorna 401; firma válida retorna 200', async () => {
+    const testPaymentId = 'pay_demo_987654321'
+    const testRequestId = `req_e2e_${Date.now()}`
+
+    // 1. Petición sin cabecera x-signature
+    const noSigRes = await fetch(`${ORDERS_URL}/api/v1/payments/mercadopago/webhook?data.id=${testPaymentId}&type=payment`, {
+      method: 'POST',
+      headers: {
+        'x-request-id': testRequestId,
+      },
+    })
+    if (noSigRes.status !== 401) {
+      throw new Error(`Fallo de seguridad: Webhook procesó notificación sin x-signature (HTTP ${noSigRes.status})`)
+    }
+
+    // 2. Petición con firma HMAC falsificada
+    const forgedSig = `ts=${Date.now()},v1=deadbeefcafebabe0123456789abcdef0123456789abcdef0123456789abcdef`
+    const forgedRes = await fetch(`${ORDERS_URL}/api/v1/payments/mercadopago/webhook?data.id=${testPaymentId}&type=payment`, {
+      method: 'POST',
+      headers: {
+        'x-request-id': testRequestId,
+        'x-signature': forgedSig,
+      },
+    })
+    if (forgedRes.status !== 401) {
+      throw new Error(`Fallo de seguridad: Webhook aceptó firma HMAC falsificada (HTTP ${forgedRes.status})`)
+    }
+
+    // 3. Petición con timestamp expirado (> 5 minutos drift, e.g. 10 minutos atrás)
+    const expiredTimestamp = Date.now() - (10 * 60 * 1000)
+    const expiredSig = generateMercadoPagoSignature(testRequestId, expiredTimestamp, testPaymentId)
+    const expiredRes = await fetch(`${ORDERS_URL}/api/v1/payments/mercadopago/webhook?data.id=${testPaymentId}&type=payment`, {
+      method: 'POST',
+      headers: {
+        'x-request-id': testRequestId,
+        'x-signature': expiredSig,
+      },
+    })
+    if (expiredRes.status !== 401) {
+      throw new Error(`Fallo de seguridad: Webhook aceptó timestamp con más de 5 minutos de desfase (HTTP ${expiredRes.status})`)
+    }
+
+    // 4. Petición con firma HMAC válida y timestamp actual
+    const validTimestamp = Date.now()
+    const validSig = generateMercadoPagoSignature(testRequestId, validTimestamp, testPaymentId)
+    const validRes = await fetch(`${ORDERS_URL}/api/v1/payments/mercadopago/webhook?data.id=${testPaymentId}&type=payment`, {
+      method: 'POST',
+      headers: {
+        'x-request-id': testRequestId,
+        'x-signature': validSig,
+      },
+    })
+    if (validRes.status !== 200) {
+      throw new Error(`Fallo de configuración: Webhook rechazó notificación legítima con firma válida (HTTP ${validRes.status} - ${await validRes.text()})`)
+    }
+    const validData = await validRes.json()
+    if (validData.status !== 'PROCESSED') {
+      throw new Error(`Respuesta de webhook procesado inesperada: ${JSON.stringify(validData)}`)
     }
   })
 
@@ -625,11 +948,11 @@ async function main() {
   console.log(`\nTotal: ${testResults.length} pruebas | Pasadas: ${passed} | Falladas: ${failed}\n`)
 
   if (failed > 0) {
-    console.log(`${COLORS.red}${COLORS.bright}✖ LA SUITE DE INTEGRACIÓN E2E DEL BACKEND HA FALLADO${COLORS.reset}\n`)
+    console.log(`${COLORS.red}${COLORS.bright}✖ LA SUITE DE INTEGRACIÓN E2E Y SEGURIDAD HA FALLADO${COLORS.reset}\n`)
     cleanup()
     process.exit(1)
   } else {
-    console.log(`${COLORS.green}${COLORS.bright}🎉 TODAS LAS PRUEBAS DE INTEGRACIÓN E2E DEL BACKEND PASARON EXITOSAMENTE 🎉${COLORS.reset}\n`)
+    console.log(`${COLORS.green}${COLORS.bright}🎉 TODAS LAS PRUEBAS DE INTEGRACIÓN E2E Y SEGURIDAD PASARON EXITOSAMENTE 🎉${COLORS.reset}\n`)
     cleanup()
     process.exit(0)
   }

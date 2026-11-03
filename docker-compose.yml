@@ -6,8 +6,8 @@ services:
     image: floci/floci-az:latest
     container_name: floci-az
     ports:
-      - "4577:4577"     # Unified Azure REST API & Cosmos DB Gateway
-      - "5673:5673"     # Service Bus AMQP (on-demand emulator)
+      - "127.0.0.1:4577:4577"     # Unified Azure REST API & Cosmos DB Gateway
+      - "127.0.0.1:5673:5673"     # Service Bus AMQP (on-demand emulator)
     environment:
       FLOCI_AZ_STORAGE_MODE: hybrid
       FLOCI_AZ_STORAGE_PERSISTENT_PATH: /app/data
@@ -23,7 +23,7 @@ services:
     volumes:
       - ${USERPROFILE:-~}/.floci-studio/data:/app/data
       - ./infra/local-dev/entra-seed.json:/app/config/entra-seed.json:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     restart: unless-stopped
     networks:
       - ticketing-net
@@ -35,11 +35,11 @@ services:
     image: pgvector/pgvector:pg17
     container_name: ticketing-postgres
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     environment:
-      POSTGRES_DB: ticketing_db
-      POSTGRES_USER: ticketing_admin
-      POSTGRES_PASSWORD: dev_password_123
+      POSTGRES_DB: ${POSTGRES_DB:-ticketing_db}
+      POSTGRES_USER: ${POSTGRES_USER:-ticketing_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password must be set via POSTGRES_PASSWORD}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infra/local-dev/postgres-init:/docker-entrypoint-initdb.d:ro
@@ -59,12 +59,12 @@ services:
     image: redis:7-alpine
     container_name: ticketing-redis
     ports:
-      - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-dev_redis_pass_2026}", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a \"$${REDIS_PASSWORD:-dev_redis_pass_2026}\" ping 2>/dev/null || redis-cli ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -79,8 +79,8 @@ services:
     image: axllent/mailpit:v1.20
     container_name: ticketing-mailpit
     ports:
-      - "1025:1025"   # SMTP server
-      - "8025:8025"   # Web UI for email & attachment inspection
+      - "127.0.0.1:1025:1025"   # SMTP server
+      - "127.0.0.1:8025:8025"   # Web UI for email & attachment inspection
     environment:
       MP_MAX_MESSAGES: 500
       MP_SMTP_AUTH_ACCEPT_ANY: 1
@@ -103,18 +103,20 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ticketing_admin
-      DB_PASSWORD: dev_password_123
-      DB_NAME: ticketing_db
+      DB_USER: ${DB_USER:-ticketing_admin}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable required}
+      DB_NAME: ${DB_NAME:-ticketing_db}
       SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      AZURE_SERVICEBUS_ENABLED: "true"
-      AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
-      AZURE_BLOB_ENABLED: "true"
-      AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
-      AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
-      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dev_redis_pass_2026}
+      AZURE_SERVICEBUS_ENABLED: ${AZURE_SERVICEBUS_ENABLED:-true}
+      AZURE_SERVICEBUS_CONNECTION_STRING: ${AZURE_SERVICEBUS_CONNECTION_STRING:-}
+      AZURE_BLOB_ENABLED: ${AZURE_BLOB_ENABLED:-true}
+      AZURE_BLOB_CONNECTION_STRING: ${AZURE_BLOB_CONNECTION_STRING:-}
+      AZURE_BLOB_CONTAINER_NAME: ${AZURE_BLOB_CONTAINER_NAME:-hibana-invoices}
+      AZURE_ENTRA_JWKS_URL: ${AZURE_ENTRA_JWKS_URL:-http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
+      GATEWAY_HMAC_SECRET: ${GATEWAY_HMAC_SECRET:?GATEWAY_HMAC_SECRET environment variable required}
     depends_on:
       postgres:
         condition: service_healthy
@@ -139,18 +141,20 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ticketing_admin
-      DB_PASSWORD: dev_password_123
-      DB_NAME: ticketing_db
+      DB_USER: ${DB_USER:-ticketing_admin}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable required}
+      DB_NAME: ${DB_NAME:-ticketing_db}
       SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      AZURE_SERVICEBUS_ENABLED: "true"
-      AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
-      AZURE_BLOB_ENABLED: "true"
-      AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
-      AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
-      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dev_redis_pass_2026}
+      AZURE_SERVICEBUS_ENABLED: ${AZURE_SERVICEBUS_ENABLED:-true}
+      AZURE_SERVICEBUS_CONNECTION_STRING: ${AZURE_SERVICEBUS_CONNECTION_STRING:-}
+      AZURE_BLOB_ENABLED: ${AZURE_BLOB_ENABLED:-true}
+      AZURE_BLOB_CONNECTION_STRING: ${AZURE_BLOB_CONNECTION_STRING:-}
+      AZURE_BLOB_CONTAINER_NAME: ${AZURE_BLOB_CONTAINER_NAME:-hibana-invoices}
+      AZURE_ENTRA_JWKS_URL: ${AZURE_ENTRA_JWKS_URL:-http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
+      GATEWAY_HMAC_SECRET: ${GATEWAY_HMAC_SECRET:?GATEWAY_HMAC_SECRET environment variable required}
     depends_on:
       postgres:
         condition: service_healthy
@@ -175,20 +179,23 @@ services:
     environment:
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_USER: ticketing_admin
-      DB_PASSWORD: dev_password_123
-      DB_NAME: ticketing_db
+      DB_USER: ${DB_USER:-ticketing_admin}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD environment variable required}
+      DB_NAME: ${DB_NAME:-ticketing_db}
       SPRING_FLYWAY_BASELINE_VERSION: "0"
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dev_redis_pass_2026}
       MAIL_HOST: mailpit
       MAIL_PORT: 1025
-      AZURE_SERVICEBUS_ENABLED: "true"
-      AZURE_SERVICEBUS_CONNECTION_STRING: Endpoint=sb://floci-az:5673;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=devkey;UseDevelopmentEmulator=true;
-      AZURE_BLOB_ENABLED: "true"
-      AZURE_BLOB_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://floci-az:4577/devstoreaccount1;"
-      AZURE_BLOB_CONTAINER_NAME: "hibana-invoices" 
-      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
+      AZURE_SERVICEBUS_ENABLED: ${AZURE_SERVICEBUS_ENABLED:-true}
+      AZURE_SERVICEBUS_CONNECTION_STRING: ${AZURE_SERVICEBUS_CONNECTION_STRING:-}
+      AZURE_BLOB_ENABLED: ${AZURE_BLOB_ENABLED:-true}
+      AZURE_BLOB_CONNECTION_STRING: ${AZURE_BLOB_CONNECTION_STRING:-}
+      AZURE_BLOB_CONTAINER_NAME: ${AZURE_BLOB_CONTAINER_NAME:-hibana-invoices}
+      AZURE_ENTRA_JWKS_URL: ${AZURE_ENTRA_JWKS_URL:-http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
+      GATEWAY_HMAC_SECRET: ${GATEWAY_HMAC_SECRET:?GATEWAY_HMAC_SECRET environment variable required}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:?MERCADO_PAGO_WEBHOOK_SECRET environment variable required}
     depends_on:
       postgres:
         condition: service_healthy
@@ -215,12 +222,15 @@ services:
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-dev_redis_pass_2026}
       CATALOG_SERVICE_URL: http://catalog:8081
       INVENTORY_SERVICE_URL: http://inventory:8082
       ORDERS_SERVICE_URL: http://orders:8083
-      AZURE_KEYVAULT_ENABLED: "true"
-      AZURE_KEYVAULT_ENDPOINT: "http://floci-az:4577/devstoreaccount1-keyvault/" 
-      AZURE_ENTRA_JWKS_URL: "http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys"
+      AZURE_KEYVAULT_ENABLED: ${AZURE_KEYVAULT_ENABLED:-true}
+      AZURE_KEYVAULT_ENDPOINT: ${AZURE_KEYVAULT_ENDPOINT:-http://floci-az:4577/devstoreaccount1-keyvault/}
+      AZURE_ENTRA_JWKS_URL: ${AZURE_ENTRA_JWKS_URL:-http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
+      WAITING_ROOM_JWT_SECRET: ${WAITING_ROOM_JWT_SECRET:?WAITING_ROOM_JWT_SECRET environment variable required}
+      GATEWAY_HMAC_SECRET: ${GATEWAY_HMAC_SECRET:?GATEWAY_HMAC_SECRET environment variable required}
     depends_on:
       redis:
         condition: service_healthy
