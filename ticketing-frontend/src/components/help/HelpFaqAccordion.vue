@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import DOMPurify from 'dompurify'
+
 export interface FaqItem {
   id: string
   question: string
@@ -16,6 +18,13 @@ const emit = defineEmits<{
   (e: 'toggle', id: string): void
   (e: 'clearSearch'): void
 }>()
+
+function sanitizeHtml(dirty: string): string {
+  return DOMPurify.sanitize(dirty, {
+    ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'a', 'p', 'span', 'code', 'ul', 'ol', 'li', 'br'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+  })
+}
 </script>
 
 <template>
@@ -93,7 +102,7 @@ const emit = defineEmits<{
         >
           <div class="overflow-hidden">
             <div class="font-body text-medium-emphasis text-sm sm:text-base leading-relaxed pt-2 pb-1 border-t border-border-subtle/50 mt-2">
-              <p v-html="faq.answer" class="text-medium-emphasis"></p>
+              <p v-html="sanitizeHtml(faq.answer)" class="text-medium-emphasis"></p>
             </div>
           </div>
         </div>

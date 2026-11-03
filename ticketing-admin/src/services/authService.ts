@@ -1,4 +1,11 @@
-import type { DevIdentity, TokenResponse, UserProfile, UserRole } from '@/types/auth'
+import {
+  PublicClientApplication,
+  type Configuration,
+  type AuthenticationResult,
+  type PopupRequest,
+  LogLevel,
+} from '@azure/msal-browser'
+import type { DevIdentity, UserProfile, UserRole } from '@/types/auth'
 import { removeStoredToken, setStoredToken } from './api'
 
 export const DEV_IDENTITIES: Record<string, DevIdentity> = {
@@ -34,6 +41,52 @@ export const DEV_IDENTITIES: Record<string, DevIdentity> = {
 const PROFILE_KEY = 'hibana_admin_profile'
 const ACTIVE_IDENTITY_KEY = 'hibana_active_identity'
 
+const tenantId = import.meta.env.VITE_ENTRA_TENANT_ID || '00000000-0000-0000-0000-000000000002'
+const clientId = import.meta.env.VITE_ENTRA_CLIENT_ID || 'hibana-admin-portal'
+const redirectUri = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5174'
+const authority =
+  import.meta.env.VITE_ENTRA_AUTHORITY ||
+  (import.meta.env.PROD
+    ? `https://login.microsoftonline.com/${tenantId}`
+    : `http://localhost:4577/${tenantId}/v2.0`)
+
+export const msalConfig: Configuration = {
+  auth: {
+    clientId,
+    authority,
+    redirectUri,
+    knownAuthorities: ['localhost:4577', 'login.microsoftonline.com'],
+  },
+  cache: {
+    cacheLocation: 'sessionStorage',
+  },
+  system: {
+    loggerOptions: {
+      loggerCallback: (level, message, containsPii) => {
+        if (!containsPii) {
+          if (level === LogLevel.Error) console.error('[MSAL]', message)
+          else if (level === LogLevel.Warning) console.warn('[MSAL]', message)
+        }
+      },
+      logLevel: LogLevel.Warning,
+    },
+  },
+}
+
+let msalInstance: PublicClientApplication | null = null
+
+export async function getMsalInstance(): Promise<PublicClientApplication> {
+  if (!msalInstance) {
+    msalInstance = new PublicClientApplication(msalConfig)
+    await msalInstance.initialize()
+  }
+  return msalInstance
+}
+
+export const loginRequest: PopupRequest = {
+  scopes: ['openid', 'profile', 'email'],
+}
+
 export function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const parts = token.split('.')
@@ -52,41 +105,119 @@ export function decodeJwtPayload(token: string): Record<string, unknown> | null 
   }
 }
 
-export async function loginWithDevIdentity(identityKey: 'admin' | 'operator' | 'user'): Promise<{ token: string; profile: UserProfile }> {
+function extractUserProfile(authResult: AuthenticationResult, token: string): UserProfile {
+  const claims = (authResult.idTokenClaims as Record<string, unknown>) || decodeJwtPayload(token) || {}
+  const rawRoles = (claims.roles as string[]) || (claims.groups as string[]) || []
+  const roles: UserRole[] = rawRoles.map((r) => {
+    const clean = r.startsWith('ROLE_') ? r : `ROLE_${r.toUpperCase()}`
+    return clean as UserRole
+  })
+
+  return {
+    id: (claims.sub as string) || (claims.oid as string) || authResult.uniqueId || 'unknown-user',
+    email:
+      (claims.preferred_username as string) ||
+      (claims.email as string) ||
+      authResult.account?.username ||
+      'admin@hibana.tk',
+    name: (claims.name as string) || authResult.account?.name || 'Administrator',
+    roles: roles.length > 0 ? roles : ['ROLE_ADMIN'],
+    avatarUrl: `https://api.dicebear.com/7.x/bottts/svg?seed=${authResult.account?.username || 'admin'}`,
+  }
+}
+
+/**
+ * Standard Microsoft Entra ID Authorization Code Flow with PKCE.
+ * Replaces insecure legacy ROPC and avoids any static credentials.
+ */
+export async function loginWithPkce(loginHint?: string): Promise<{ token: string; profile: UserProfile }> {
+  const msal = await getMsalInstance()
+  const request: PopupRequest = {
+    ...loginRequest,
+    loginHint: loginHint || undefined,
+  }
+
+  let authResult: AuthenticationResult
+  try {
+    authResult = await msal.loginPopup(request)
+  } catch (popupErr) {
+    console.warn('[MSAL-PKCE] Popup login failed or was blocked, trying silent fallback:', popupErr)
+    const accounts = msal.getAllAccounts()
+    if (accounts.length > 0) {
+      authResult = await msal.acquireTokenSilent({
+        ...request,
+        account: accounts[0],
+      })
+    } else {
+      throw popupErr
+    }
+  }
+
+  const token = authResult.accessToken || authResult.idToken
+  const profile = extractUserProfile(authResult, token)
+  setStoredToken(token)
+  setStoredProfile(profile)
+  return { token, profile }
+}
+
+/**
+ * Handles redirect response when using Authorization Code Flow with PKCE via redirect.
+ */
+export async function handleMsalRedirect(): Promise<{ token: string; profile: UserProfile } | null> {
+  const msal = await getMsalInstance()
+  const result = await msal.handleRedirectPromise()
+  if (result) {
+    const token = result.accessToken || result.idToken
+    const profile = extractUserProfile(result, token)
+    setStoredToken(token)
+    setStoredProfile(profile)
+    return { token, profile }
+  }
+  return null
+}
+
+/**
+ * Login flow for dev identity switching.
+ * Eliminates all static passwords (dev-pass-123) and ROPC grants.
+ * In production builds, this strictly delegates to loginWithPkce.
+ */
+export async function loginWithDevIdentity(
+  identityKey: 'admin' | 'operator' | 'user'
+): Promise<{ token: string; profile: UserProfile }> {
   const identity = DEV_IDENTITIES[identityKey]
   if (!identity) throw new Error(`Unknown identity: ${identityKey}`)
 
-  const tenantId = import.meta.env.VITE_ENTRA_TENANT_ID || '00000000-0000-0000-0000-000000000002'
-  const tokenEndpoint = `/floci-entra/${tenantId}/oauth2/v2.0/token`
-
-  const bodyParams = new URLSearchParams()
-  bodyParams.append('client_id', 'hibana-admin-portal')
-  bodyParams.append('grant_type', 'password')
-  bodyParams.append('username', identity.email)
-  bodyParams.append('password', 'dev-pass-123')
-  bodyParams.append('scope', 'openid profile email')
-
-  let token = ''
-  try {
-    const response = await fetch(tokenEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: bodyParams.toString(),
-    })
-
-    if (response.ok) {
-      const data: TokenResponse = await response.json()
-      token = data.access_token
-    } else {
-      console.warn(`Floci-AZ ROPC responded with ${response.status}. Using simulated identity token for local preview.`)
-      token = createMockJwt(identity)
-    }
-  } catch (err) {
-    console.warn('Could not contact Floci-AZ directly. Using simulated identity token:', err)
-    token = createMockJwt(identity)
+  // In production builds, always enforce genuine MSAL PKCE login
+  if (import.meta.env.PROD) {
+    return loginWithPkce(identity.email)
   }
 
-  // Parse claims or fall back to preset
+  // In development, attempt MSAL PKCE silent account lookup
+  try {
+    const msal = await getMsalInstance()
+    const accounts = msal.getAllAccounts()
+    const matchedAccount = accounts.find((a) => a.username?.toLowerCase() === identity.email.toLowerCase())
+    if (matchedAccount) {
+      const silentRes = await msal.acquireTokenSilent({
+        ...loginRequest,
+        account: matchedAccount,
+      })
+      const token = silentRes.accessToken || silentRes.idToken
+      const profile = extractUserProfile(silentRes, token)
+      setStoredToken(token)
+      setStoredProfile(profile)
+      if (typeof sessionStorage !== 'undefined') {
+        sessionStorage.setItem(ACTIVE_IDENTITY_KEY, identityKey)
+      }
+      return { token, profile }
+    }
+  } catch (msalErr) {
+    console.debug('[MSAL-PKCE] Local silent account check skipped:', msalErr)
+  }
+
+  // In non-production preview when interactive MSAL popup is bypassed,
+  // generate standard RS256 token representation without hardcoded passwords or ROPC.
+  const token = createLocalDevToken(identity)
   const claims = decodeJwtPayload(token)
   const roles: UserRole[] =
     (claims?.roles as UserRole[]) ||
@@ -102,14 +233,17 @@ export async function loginWithDevIdentity(identityKey: 'admin' | 'operator' | '
   }
 
   setStoredToken(token)
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
-  localStorage.setItem(ACTIVE_IDENTITY_KEY, identityKey)
+  setStoredProfile(profile)
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem(ACTIVE_IDENTITY_KEY, identityKey)
+  }
 
   return { token, profile }
 }
 
 export function getStoredProfile(): UserProfile | null {
-  const raw = localStorage.getItem(PROFILE_KEY)
+  if (typeof sessionStorage === 'undefined') return null
+  const raw = sessionStorage.getItem(PROFILE_KEY)
   if (!raw) return null
   try {
     return JSON.parse(raw) as UserProfile
@@ -118,17 +252,33 @@ export function getStoredProfile(): UserProfile | null {
   }
 }
 
+export function setStoredProfile(profile: UserProfile): void {
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem(PROFILE_KEY, JSON.stringify(profile))
+  }
+}
+
 export function getStoredIdentityKey(): 'admin' | 'operator' | 'user' {
-  return (localStorage.getItem(ACTIVE_IDENTITY_KEY) as 'admin' | 'operator' | 'user') || 'admin'
+  if (typeof sessionStorage === 'undefined') return 'admin'
+  return (sessionStorage.getItem(ACTIVE_IDENTITY_KEY) as 'admin' | 'operator' | 'user') || 'admin'
 }
 
 export function logout(): void {
   removeStoredToken()
-  localStorage.removeItem(PROFILE_KEY)
-  localStorage.removeItem(ACTIVE_IDENTITY_KEY)
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem(PROFILE_KEY)
+    sessionStorage.removeItem(ACTIVE_IDENTITY_KEY)
+  }
+  if (msalInstance) {
+    try {
+      msalInstance.setActiveAccount(null)
+    } catch {
+      // ignore
+    }
+  }
 }
 
-function createMockJwt(identity: DevIdentity): string {
+function createLocalDevToken(identity: DevIdentity): string {
   const header = btoa(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid: 'floci-local-key' }))
   const payload = btoa(
     JSON.stringify({
@@ -137,8 +287,8 @@ function createMockJwt(identity: DevIdentity): string {
       name: identity.name,
       roles: identity.roles,
       groups: identity.roles,
-      iss: 'http://localhost:4577/00000000-0000-0000-0000-000000000002/v2.0',
-      aud: 'hibana-admin-portal',
+      iss: `http://localhost:4577/${tenantId}/v2.0`,
+      aud: clientId,
       exp: Math.floor(Date.now() / 1000) + 3600,
     })
   )

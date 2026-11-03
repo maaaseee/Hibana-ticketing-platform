@@ -6,6 +6,8 @@ import {
   getStoredIdentityKey,
   getStoredProfile,
   loginWithDevIdentity,
+  loginWithPkce,
+  handleMsalRedirect,
   logout as serviceLogout,
 } from '@/services/authService'
 import { getStoredToken } from '@/services/api'
@@ -34,6 +36,17 @@ export const useAuthStore = defineStore('auth', () => {
     return userRoles.value.includes(role)
   }
 
+  async function loginWithMsalPkce(loginHint?: string): Promise<void> {
+    isLoading.value = true
+    try {
+      const result = await loginWithPkce(loginHint)
+      token.value = result.token
+      profile.value = result.profile
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function switchIdentity(identityKey: 'admin' | 'operator' | 'user'): Promise<void> {
     isLoading.value = true
     try {
@@ -47,6 +60,17 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function initialize(): Promise<void> {
+    try {
+      const redirectResult = await handleMsalRedirect()
+      if (redirectResult) {
+        token.value = redirectResult.token
+        profile.value = redirectResult.profile
+        return
+      }
+    } catch (e) {
+      console.warn('[AUTH] Error checking MSAL redirect promise:', e)
+    }
+
     if (!token.value || !profile.value) {
       await switchIdentity(activeIdentityKey.value || 'admin')
     }
@@ -69,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     isOperator,
     currentIdentity,
     hasRole,
+    loginWithMsalPkce,
     switchIdentity,
     initialize,
     logout,

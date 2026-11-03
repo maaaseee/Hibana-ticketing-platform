@@ -61,7 +61,6 @@ export async function request<T>(
     'Accept': 'application/json',
     'Trace-ID': traceId,
     'X-Trace-Id': traceId,
-    'X-User-Id': currentUserId,
     ...(storedToken ? { 'X-Checkout-Token': storedToken } : {}),
     ...(options.headers as Record<string, string>),
   }

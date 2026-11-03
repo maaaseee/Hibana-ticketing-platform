@@ -33,6 +33,24 @@
             Floci-AZ Entra ID
           </span>
         </div>
+        <!-- Corporate MSAL PKCE Login Option -->
+        <div class="mb-4">
+          <button
+            type="button"
+            :disabled="authStore.isLoading"
+            @click="handleMsalLogin"
+            class="w-full flex items-center justify-center gap-2 p-3.5 rounded-2xl bg-primary text-on-primary font-bold hover:bg-primary-hover shadow-lg shadow-primary/20 transition disabled:opacity-50 cursor-pointer"
+          >
+            <span class="material-symbols-outlined text-xl">vpn_key</span>
+            Iniciar Sesión con Entra ID (PKCE)
+          </button>
+        </div>
+
+        <div class="relative flex py-2 items-center mb-3">
+          <div class="flex-grow border-t border-border-subtle"></div>
+          <span class="flex-shrink mx-3 text-[10px] font-mono uppercase text-muted-light">o identidades de desarrollo</span>
+          <div class="flex-grow border-t border-border-subtle"></div>
+        </div>
 
         <div class="space-y-3">
           <button
@@ -89,6 +107,20 @@ import { DEV_IDENTITIES } from '@/services/authService'
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
+
+async function handleMsalLogin() {
+  try {
+    await authStore.loginWithMsalPkce()
+    if (!authStore.isAdmin && !authStore.isOperator) {
+      router.push('/unauthorized')
+      return
+    }
+    const redirect = (route.query.redirect as string) || '/events'
+    router.push(redirect)
+  } catch (err) {
+    console.error('[LOGIN] MSAL PKCE login error:', err)
+  }
+}
 
 async function handleLogin(identityKey: 'admin' | 'operator' | 'user') {
   await authStore.switchIdentity(identityKey)

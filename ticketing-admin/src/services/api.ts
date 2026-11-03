@@ -20,16 +20,28 @@ export class ApiError extends Error {
 
 const TOKEN_KEY = 'hibana_admin_token'
 
+let inMemoryToken: string | null = null
+
 export function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
+  if (inMemoryToken) return inMemoryToken
+  if (typeof sessionStorage !== 'undefined') {
+    return sessionStorage.getItem(TOKEN_KEY)
+  }
+  return null
 }
 
 export function setStoredToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token)
+  inMemoryToken = token
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.setItem(TOKEN_KEY, token)
+  }
 }
 
 export function removeStoredToken(): void {
-  localStorage.removeItem(TOKEN_KEY)
+  inMemoryToken = null
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.removeItem(TOKEN_KEY)
+  }
 }
 
 export async function apiClient<T>(endpoint: string, options: RequestInit = {}): Promise<T> {

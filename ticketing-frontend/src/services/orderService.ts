@@ -153,11 +153,9 @@ export const orderService = {
    */
   async downloadInvoicePdf(orderId: string): Promise<void> {
     try {
-      const currentUserId = getCurrentUserId()
       const response = await fetch(`/api/v1/orders/${orderId}/invoice`, {
         method: 'GET',
         headers: {
-          'X-User-Id': currentUserId,
           'Accept': 'application/pdf',
         },
       })
@@ -194,11 +192,9 @@ export const orderService = {
    */
   async resendConfirmationEmail(orderId: string, email?: string): Promise<ResendConfirmationResponse> {
     try {
-      const currentUserId = getCurrentUserId()
       const response = await apiClient.post<ResendConfirmationResponse>(
         `/api/v1/orders/${orderId}/resend-confirmation`,
-        { email },
-        { headers: { 'X-User-Id': currentUserId } }
+        { email }
       )
       return response
     } catch (err) {
