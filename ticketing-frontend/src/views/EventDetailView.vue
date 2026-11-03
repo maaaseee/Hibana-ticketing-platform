@@ -6,6 +6,7 @@ import { useQueueStore } from '../stores/queue'
 import { getVenueById, getVenueByName } from '../data/mockVenues'
 import type { EventFunction, SectorPricing, PaymentPromotion, VenueParking, VenueTransit } from '../types'
 import { TooltipProvider } from 'radix-vue'
+import { usePageMeta } from '../composables/usePageMeta'
 
 import EventVenueModalCard from '../components/event-detail/EventVenueModalCard.vue'
 import EventScheduleLineup from '../components/event-detail/EventScheduleLineup.vue'
@@ -23,6 +24,15 @@ const queue = useQueueStore()
 const isLoading = ref(true)
 const eventId = computed(() => (route.params.id as string) || 'symphony-of-lights')
 const event = computed(() => catalog.getEventById(eventId.value))
+
+usePageMeta(() => ({
+  title: event.value ? event.value.title : 'Detalle del Espectáculo',
+  description: event.value
+    ? `${event.value.title} en ${event.value.venue}. ${event.value.description || 'Entradas oficiales disponibles en Hibana.tk'}`
+    : undefined,
+  image: event.value?.imageUrl,
+  type: 'event'
+}))
 
 const functions = computed<EventFunction[]>(() => {
   if (event.value?.functions && event.value.functions.length > 0) {

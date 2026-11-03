@@ -4,6 +4,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useCatalogStore } from '../stores/catalog'
 import type { EventItem } from '../types'
 import EventCard from '../components/ui/EventCard.vue'
+import EventCardSkeleton from '../components/ui/EventCardSkeleton.vue'
 import CatalogFilterBar from '../components/catalog/CatalogFilterBar.vue'
 import CatalogEmptyState from '../components/catalog/CatalogEmptyState.vue'
 
@@ -250,8 +251,18 @@ function resetFilters() {
 
     <!-- Listado Simple de Eventos (Ordenados por proximidad a su realización) -->
     <main class="relative z-10 w-full max-w-[80vw] mx-auto px-4 sm:px-6 lg:px-8 pt-10">
+      <!-- Estado de Carga con Shimmer Skeletons (cuando el catálogo está cargando y no hay eventos en memoria) -->
       <div
-        v-if="filteredEvents.length > 0"
+        v-if="catalog.isLoading && catalog.events.length === 0"
+        data-testid="catalog-skeleton-grid"
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-6"
+      >
+        <EventCardSkeleton v-for="n in 6" :key="n" />
+      </div>
+
+      <!-- Listado de Eventos Filtrados -->
+      <div
+        v-else-if="filteredEvents.length > 0"
         class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3 gap-6"
       >
         <EventCard

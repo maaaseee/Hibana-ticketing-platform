@@ -15,6 +15,23 @@ import NotFoundView from '../views/NotFoundView.vue'
 import ProfileSettingsView from '../views/ProfileSettingsView.vue'
 import { useAuthStore } from '../stores/auth'
 import { useLoadingBarStore } from '../stores/loadingBar'
+import { setPageMeta } from '../composables/usePageMeta'
+
+const ROUTE_TITLES: Record<string, string> = {
+  home: 'Inicio',
+  'events-catalog': 'Cartelera de Espectáculos',
+  'event-detail': 'Detalle del Show',
+  queue: 'Sala de Espera Virtual',
+  'seat-selection': 'Selección de Asientos',
+  checkout: 'Checkout Seguro',
+  tickets: 'Mis Entradas Oficiales',
+  'profile-settings': 'Configuración de Perfil',
+  help: 'Centro de Ayuda y FAQ',
+  'support-chat': 'Soporte en Vivo',
+  login: 'Iniciar Sesión',
+  register: 'Crear Cuenta',
+  'not-found': 'Página No Encontrada (404)'
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -176,9 +193,15 @@ router.beforeEach((to) => {
   }
 })
 
-router.afterEach(() => {
+router.afterEach((to) => {
   const loadingBar = useLoadingBarStore()
   loadingBar.finish()
+
+  const routeName = (to.name as string) || ''
+  if (routeName !== 'event-detail') {
+    const title = ROUTE_TITLES[routeName]
+    setPageMeta(title ? { title } : {})
+  }
 })
 
 router.onError(() => {
