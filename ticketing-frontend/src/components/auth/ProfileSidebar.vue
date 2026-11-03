@@ -122,6 +122,16 @@ function handleLogout() {
               </span>
             </button>
 
+            <!-- Configuración y Perfil -->
+            <button
+              type="button"
+              @click="navigateTo('profile-settings')"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#141c27] text-[#cbd5e1] hover:text-white transition-colors cursor-pointer text-left"
+            >
+              <span class="material-symbols-outlined text-xl text-[#86cffb]">manage_accounts</span>
+              <span>Configuración y Perfil</span>
+            </button>
+
             <!-- Explorar Cartelera de Eventos -->
             <button
               type="button"

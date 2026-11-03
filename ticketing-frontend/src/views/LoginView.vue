@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute, RouterLink } from 'vue-router'
 import { useAuthStore, MOCK_USER } from '../stores/auth'
 import AppLogo from '../components/ui/AppLogo.vue'
+import ForgotPasswordModal from '../components/auth/ForgotPasswordModal.vue'
 import { CheckboxRoot, CheckboxIndicator } from 'radix-vue'
 import authBgUrl from '../assets/images/auth_bg.jpg'
 
@@ -16,7 +17,12 @@ const showPassword = ref(false)
 const rememberSession = ref(true)
 const errorMessage = ref('')
 const noticeMessage = ref<string | null>(null)
-const forgotPasswordNotice = ref(false)
+const isForgotPasswordOpen = ref(false)
+
+function onPasswordResetSuccess(payload: { email: string; newPassword: string }) {
+  email.value = payload.email
+  password.value = payload.newPassword
+}
 
 onMounted(() => {
   // Si ya está logueado, redirigir
@@ -185,14 +191,11 @@ function handleQuickDemoLogin() {
             <div class="pt-0.5">
               <button
                 type="button"
-                @click="forgotPasswordNotice = !forgotPasswordNotice"
+                @click="isForgotPasswordOpen = true"
                 class="font-body text-xs text-[#00a3ff] hover:text-[#38bdf8] hover:underline cursor-pointer text-left"
               >
                 Olvidé mi contraseña
               </button>
-              <p v-if="forgotPasswordNotice" class="text-[11px] font-body text-[#86cffb] mt-1.5 p-2 rounded-lg bg-[#00688f]/20 border border-[#38bdf8]/30">
-                Te enviaremos las instrucciones a tu correo para restablecer tu contraseña.
-              </p>
             </div>
 
             <!-- Keep session active checkbox (Radix UI Checkbox) -->
@@ -245,5 +248,11 @@ function handleQuickDemoLogin() {
         <RouterLink to="/help" class="hover:text-white transition-colors">Centro de Ayuda</RouterLink>
       </div>
     </footer>
+    <!-- Modal de Recuperación de Contraseña -->
+    <ForgotPasswordModal
+      v-model:open="isForgotPasswordOpen"
+      :initial-email="email"
+      @password-reset-success="onPasswordResetSuccess"
+    />
   </div>
 </template>

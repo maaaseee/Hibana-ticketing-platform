@@ -12,6 +12,7 @@ import SupportChatView from '../views/SupportChatView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
+import ProfileSettingsView from '../views/ProfileSettingsView.vue'
 import { useAuthStore } from '../stores/auth'
 import { useLoadingBarStore } from '../stores/loadingBar'
 
@@ -73,6 +74,14 @@ const router = createRouter({
           path: 'tickets',
           name: 'tickets',
           component: DashboardTicketsView,
+          meta: {
+            requiresAuth: true
+          }
+        },
+        {
+          path: 'profile',
+          name: 'profile-settings',
+          component: ProfileSettingsView,
           meta: {
             requiresAuth: true
           }

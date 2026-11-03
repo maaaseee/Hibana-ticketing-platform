@@ -2,13 +2,23 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { Router } from 'vue-router'
 
+export interface SavedCard {
+  id: string
+  last4: string
+  brand: string
+  expMonth: string
+  expYear: string
+}
+
 export interface AuthUser {
   id: string
   name: string
   email: string
   documentNumber?: string
+  phone?: string
   avatarUrl?: string
   role?: 'ROLE_USER' | 'ROLE_ADMIN' | 'ROLE_OPERATOR'
+  savedCards?: SavedCard[]
 }
 
 export const MOCK_USER: AuthUser = {
@@ -16,8 +26,18 @@ export const MOCK_USER: AuthUser = {
   name: 'Carlos Mendoza',
   email: 'carlos.m@hibana.tk',
   documentNumber: '38.452.190',
+  phone: '+54 11 4899-2310',
   avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80',
-  role: 'ROLE_USER'
+  role: 'ROLE_USER',
+  savedCards: [
+    {
+      id: 'card_demo_1',
+      brand: 'Visa',
+      last4: '4242',
+      expMonth: '08',
+      expYear: '29'
+    }
+  ]
 }
 
 const STORAGE_KEY = 'hibana_auth_user'
@@ -165,6 +185,48 @@ export const useAuthStore = defineStore('auth', () => {
     isProfileSidebarOpen.value = false
   }
 
+  function updateProfile(data: Partial<AuthUser>): boolean {
+    if (!user.value) return false
+    user.value = {
+      ...user.value,
+      ...data
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
+    }
+    return true
+  }
+
+  function removeSavedCard(cardId: string): boolean {
+    if (!user.value) return false
+    const cards = (user.value.savedCards || []).filter(c => c.id !== cardId)
+    user.value = {
+      ...user.value,
+      savedCards: cards
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
+    }
+    return true
+  }
+
+  function addSavedCard(card: Omit<SavedCard, 'id'>): SavedCard | null {
+    if (!user.value) return null
+    const newCard: SavedCard = {
+      ...card,
+      id: `card_${Date.now().toString(36)}`
+    }
+    const currentCards = user.value.savedCards || []
+    user.value = {
+      ...user.value,
+      savedCards: [...currentCards, newCard]
+    }
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user.value))
+    }
+    return newCard
+  }
+
   return {
     user,
     isAuthenticated,
@@ -177,6 +239,9 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithMock,
     register,
     logout,
+    updateProfile,
+    removeSavedCard,
+    addSavedCard,
     openAuthModal,
     closeAuthModal,
     openProfileSidebar,
