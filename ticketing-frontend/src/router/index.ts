@@ -11,6 +11,7 @@ import HelpCenterView from '../views/HelpCenterView.vue'
 import SupportChatView from '../views/SupportChatView.vue'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '../views/RegisterView.vue'
+import NotFoundView from '../views/NotFoundView.vue'
 import { useAuthStore } from '../stores/auth'
 import { useLoadingBarStore } from '../stores/loadingBar'
 
@@ -126,7 +127,12 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)*',
-      redirect: '/'
+      name: 'not-found',
+      component: NotFoundView,
+      meta: {
+        hideNavbar: true,
+        hideFooter: true
+      }
     }
   ],
   scrollBehavior() {

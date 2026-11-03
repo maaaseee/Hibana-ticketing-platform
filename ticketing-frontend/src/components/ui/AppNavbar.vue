@@ -5,6 +5,7 @@ import { useTicketingStore } from '../../stores/ticketing'
 import { useAuthStore } from '../../stores/auth'
 import ProfileSidebar from '../auth/ProfileSidebar.vue'
 import AppLogo from './AppLogo.vue'
+import GlobalSearchModal from '../search/GlobalSearchModal.vue'
 import {
   DialogRoot,
   DialogPortal,
@@ -23,6 +24,7 @@ const logoUrl = '/logo.png'
 
 // Estado de la Sidebar lateral móvil
 const isMobileSidebarOpen = ref(false)
+const isSearchOpen = ref(false)
 
 // Cerrar automáticamente la sidebar al cambiar de ruta
 watch(
@@ -120,8 +122,21 @@ function handleMobileLogout() {
         <!-- Separador sutil entre links y controles de usuario -->
         <div class="hidden md:block h-6 w-px bg-border-subtle/80"></div>
 
-        <!-- Trailing Actions: Reserva Activa, Login/Registro O Perfil Deslizante (Right) -->
-        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+        <!-- Trailing Actions: Buscador, Reserva Activa, Login/Registro O Perfil Deslizante (Right) -->
+        <div class="flex items-center gap-2.5 sm:gap-3 lg:gap-4 shrink-0">
+          <!-- Buscador Global rápido (Ctrl+K / Cmd+K) -->
+          <button
+            type="button"
+            @click="isSearchOpen = true"
+            class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full bg-surface-card hover:bg-surface-interactive border border-border-subtle hover:border-[#38bdf8]/50 text-medium-emphasis hover:text-white transition-all text-xs font-body cursor-pointer group"
+            title="Buscar shows y artistas (Ctrl+K)"
+            aria-label="Buscar shows y artistas"
+          >
+            <span class="material-symbols-outlined text-[18px] text-[#38bdf8] group-hover:scale-110 transition-transform">search</span>
+            <span class="hidden sm:inline-block">Buscar</span>
+            <kbd class="hidden lg:inline-block text-[10px] font-mono px-1.5 py-0.5 bg-black/40 border border-border-subtle rounded text-muted-light">⌘K</kbd>
+          </button>
+
           <!-- Active Lock Countdown Pill -->
           <RouterLink
             v-if="ticketing.selectedSeats.length > 0"
@@ -253,6 +268,15 @@ function handleMobileLogout() {
 
           <!-- Enlaces Principales de Navegación con Íconos y Estado Activo -->
           <nav class="flex flex-col gap-1.5 font-display text-base font-semibold">
+            <button
+              type="button"
+              @click="isMobileSidebarOpen = false; isSearchOpen = true"
+              class="flex items-center gap-3.5 px-4 py-3 rounded-xl text-medium-emphasis hover:text-white hover:bg-surface-interactive transition-all cursor-pointer text-left"
+            >
+              <span class="material-symbols-outlined text-2xl text-[#38bdf8]">search</span>
+              <span>Buscar Shows</span>
+            </button>
+
             <RouterLink
               to="/"
               @click="isMobileSidebarOpen = false"
@@ -327,6 +351,9 @@ function handleMobileLogout() {
 
   <!-- Componente Perfil Deslizante (Sidebar) -->
   <ProfileSidebar />
+
+  <!-- Buscador Global Cmd+K con Backend Search -->
+  <GlobalSearchModal v-model:open="isSearchOpen" />
 </template>
 
 <style scoped>

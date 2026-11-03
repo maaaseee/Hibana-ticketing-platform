@@ -2,6 +2,7 @@
 import { RouterView, useRoute } from 'vue-router'
 import AppNavbar from '../components/ui/AppNavbar.vue'
 import AppLogo from '../components/ui/AppLogo.vue'
+import SkipToContent from '../components/ui/SkipToContent.vue'
 
 const route = useRoute()
 </script>
@@ -11,12 +12,17 @@ const route = useRoute()
     class="min-h-screen flex flex-col bg-canvas-base text-high-emphasis font-body selection:bg-primary-container selection:text-white"
     :class="{ 'h-screen overflow-hidden': route.meta.fullscreen }"
   >
+    <!-- Accesibilidad: Enlace directo para saltar al contenido principal -->
+    <SkipToContent target-id="main-content" />
+
     <!-- Navbar global encapsulada en su propio componente con soporte de Sidebar móvil -->
     <AppNavbar v-if="!route.meta.hideNavbar" />
 
     <!-- Main View Outlet -->
     <main
-      class="flex-1 w-full"
+      id="main-content"
+      tabindex="-1"
+      class="flex-1 w-full outline-none"
       :class="{
         'pb-16 lg:pb-0': !route.meta.fullscreen,
         'h-full overflow-hidden flex flex-col': route.meta.fullscreen
