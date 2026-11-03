@@ -25,9 +25,6 @@ public class PaymentController {
         if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
             return authentication.getName();
         }
-        if (headerUserId != null && !headerUserId.isBlank()) {
-            return headerUserId;
-        }
         return "anonymous-user";
     }
 

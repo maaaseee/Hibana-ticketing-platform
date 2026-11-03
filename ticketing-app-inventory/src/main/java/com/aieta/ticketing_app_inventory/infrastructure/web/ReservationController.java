@@ -33,11 +33,23 @@ public class ReservationController {
     }
 
     @PostMapping
-    public ResponseEntity<HoldSeatResponse> holdSeat(@Valid @RequestBody HoldSeatRequest request) {
+    public ResponseEntity<HoldSeatResponse> holdSeat(
+            @Valid @RequestBody HoldSeatRequest request,
+            org.springframework.security.core.Authentication authentication
+    ) {
+        // Enforce authentic identity: take userId from verified authenticated principal when present (SEC-03)
+        String effectiveUserId = null;
+        if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+            effectiveUserId = authentication.getName();
+        }
+        if (effectiveUserId == null || effectiveUserId.isBlank()) {
+            effectiveUserId = request.userId();
+        }
+
         HoldSeatCommand command = new HoldSeatCommand(
                 request.eventId(),
                 request.seatId(),
-                request.userId()
+                effectiveUserId
         );
 
         ReservationResult result = mediator.dispatch(command);
@@ -55,6 +67,7 @@ public class ReservationController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
+    @org.springframework.security.access.prepost.PreAuthorize("hasAnyRole('SERVICE', 'ADMIN')")
     @PostMapping("/{reservationId}/confirm")
     public ResponseEntity<ConfirmReservationResponse> confirmReservation(
             @PathVariable("reservationId") String reservationId,
@@ -82,11 +95,29 @@ public class ReservationController {
     @DeleteMapping("/{reservationId}")
     public ResponseEntity<Void> releaseReservation(
             @PathVariable("reservationId") String reservationId,
-            @RequestParam(value = "reason", required = false, defaultValue = "USER_CANCELLED") String reason
+            @RequestParam(value = "reason", required = false, defaultValue = "USER_CANCELLED") String reason,
+            org.springframework.security.core.Authentication authentication
     ) {
         Optional<TicketReservation> reservationOpt = reservationRepositoryPort.findById(ReservationId.of(reservationId));
         if (reservationOpt.isPresent()) {
             TicketReservation res = reservationOpt.get();
+
+            // Ownership & Administrative Access Control Check (SEC-02)
+            boolean isAdmin = false;
+            String currentUserId = null;
+            if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+                currentUserId = authentication.getName();
+                isAdmin = authentication.getAuthorities().stream()
+                        .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_OPERATOR"));
+            }
+
+            boolean isOwner = currentUserId != null && currentUserId.equals(res.getUserId());
+            if (!isOwner && !isAdmin) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "User '" + currentUserId + "' is not authorized to cancel reservation '" + reservationId + "'. Must be owner or admin."
+                );
+            }
+
             ReleaseSeatCommand command = new ReleaseSeatCommand(res.getEventId(), res.getSeatId().value(), reason);
             mediator.dispatch(command);
         }

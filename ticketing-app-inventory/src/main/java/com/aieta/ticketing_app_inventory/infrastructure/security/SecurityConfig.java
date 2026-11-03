@@ -21,11 +21,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final EntraJwtAuthenticationConverter jwtAuthenticationConverter;
+    private final GatewayStampValidator stampValidator;
 
-    public SecurityConfig(@Autowired(required = false) EntraJwtAuthenticationConverter jwtAuthenticationConverter) {
+    public SecurityConfig(
+            @Autowired(required = false) EntraJwtAuthenticationConverter jwtAuthenticationConverter,
+            @Autowired(required = false) GatewayStampValidator stampValidator) {
         this.jwtAuthenticationConverter = jwtAuthenticationConverter != null
                 ? jwtAuthenticationConverter
                 : new EntraJwtAuthenticationConverter();
+        this.stampValidator = stampValidator != null
+                ? stampValidator
+                : new GatewayStampValidator("gateway-internal-hmac-secret-2026-minimum-256-bits!");
     }
 
     @Bean
@@ -45,9 +51,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/events/*/seats/**", "/api/v1/events/**").permitAll()
                         .requestMatchers("/actuator/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
-                        // Seat reservations (guarded by Gateway Checkout Token Filter)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/reservations/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/reservations/**").permitAll()
+                        // Reservation confirmation: ISOLATED for internal service and admin callers only (SEC-CONFIRM-01)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reservations/*/confirm", "/reservations/*/confirm").hasAnyRole("SERVICE", "ADMIN")
+
+                        // Seat reservation hold (guarded by Gateway Checkout Token Filter)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/reservations", "/reservations").permitAll()
+
+                        // Reservation cancellation: requires authentication (ownership / admin check verified in controller)
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/reservations/**", "/reservations/**").authenticated()
 
                         // Administrative seat generation / management
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/**", "/api/v1/seats/bulk/**").hasRole("ADMIN")
@@ -57,7 +68,7 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
                 )
-                .addFilterBefore(new GatewayHeaderAuthFilter(), BearerTokenAuthenticationFilter.class);
+                .addFilterBefore(new GatewayHeaderAuthFilter(stampValidator), BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }

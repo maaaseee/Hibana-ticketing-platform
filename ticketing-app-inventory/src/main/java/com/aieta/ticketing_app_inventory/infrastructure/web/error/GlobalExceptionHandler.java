@@ -116,6 +116,18 @@ public class GlobalExceptionHandler {
         return problem;
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(org.springframework.security.access.AccessDeniedException ex) {
+        log.warn("Access denied on inventory endpoint: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, ex.getMessage());
+        problem.setTitle("Forbidden");
+        problem.setType(URI.create("https://hibana.tk/errors/forbidden"));
+        problem.setProperty("timestamp", Instant.now());
+        problem.setProperty("code", "ACCESS_DENIED");
+        problem.setProperty("errorCode", "ACCESS_DENIED");
+        return problem;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex) {
         log.error("Unhandled internal server error: {}", ex.getMessage(), ex);

@@ -1,5 +1,6 @@
 package com.aieta.ticketing_app_orders.infrastructure.web;
 
+import com.aieta.ticketing_app_orders.infrastructure.config.GatewayStampValidator;
 import com.aieta.ticketing_app_orders.infrastructure.web.dto.CreateOrderRequest;
 import com.aieta.ticketing_app_orders.infrastructure.web.dto.ProcessPaymentRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,14 +39,29 @@ class OrderWebIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private GatewayStampValidator stampValidator;
+
+    private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder withGatewayAuth(
+            org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder builder,
+            String userId,
+            String roles) {
+        long timestamp = System.currentTimeMillis();
+        String signature = stampValidator.generateSignature(userId, roles, timestamp);
+        return builder
+                .header("X-User-Id", userId)
+                .header("X-User-Roles", roles)
+                .header("X-Gateway-Timestamp", String.valueOf(timestamp))
+                .header("X-Gateway-Signature", signature);
+    }
+
     @Test
-    @DisplayName("Should successfully create order via POST /api/v1/orders")
+    @DisplayName("Should successfully create order via POST /api/v1/orders with verified Gateway Stamp")
     void shouldCreateOrder() throws Exception {
         String reservationId = "res-" + UUID.randomUUID();
         CreateOrderRequest request = new CreateOrderRequest(reservationId, "evt-100", "seat-100", new BigDecimal("59.00"));
 
-        mockMvc.perform(post("/api/v1/orders")
-                        .header("X-User-Id", "web-user-1")
+        mockMvc.perform(withGatewayAuth(post("/api/v1/orders"), "web-user-1", "ROLE_USER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -56,6 +72,35 @@ class OrderWebIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should reject order creation with 401 Unauthorized when Gateway Stamp is missing")
+    void shouldRejectOrderCreationWhenGatewayStampMissing() throws Exception {
+        String reservationId = "res-" + UUID.randomUUID();
+        CreateOrderRequest request = new CreateOrderRequest(reservationId, "evt-100", "seat-100", new BigDecimal("59.00"));
+
+        mockMvc.perform(post("/api/v1/orders")
+                        .header("X-User-Id", "attacker-spoofed")
+                        .header("X-User-Roles", "ROLE_USER")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Should reject order creation with 401 Unauthorized when Gateway Stamp is forged")
+    void shouldRejectOrderCreationWhenGatewayStampForged() throws Exception {
+        String reservationId = "res-" + UUID.randomUUID();
+        CreateOrderRequest request = new CreateOrderRequest(reservationId, "evt-100", "seat-100", new BigDecimal("59.00"));
+
+        mockMvc.perform(post("/api/v1/orders")
+                        .header("X-User-Id", "attacker-spoofed")
+                        .header("X-User-Roles", "ROLE_USER")
+                        .header("X-Gateway-Signature", "invalid-forged-hmac-signature")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("Should pay order with Mercado Pago strategy successfully")
     void shouldPayOrderWithMercadoPago() throws Exception {
         String userId = "web-user-mp-" + UUID.randomUUID();
@@ -63,8 +108,7 @@ class OrderWebIntegrationTest {
         // 1. Create order for 45 EUR / Pesos
         String reservationId = "res-" + UUID.randomUUID();
         CreateOrderRequest createReq = new CreateOrderRequest(reservationId, "evt-200", "seat-200", new BigDecimal("45.00"));
-        MvcResult orderResult = mockMvc.perform(post("/api/v1/orders")
-                        .header("X-User-Id", userId)
+        MvcResult orderResult = mockMvc.perform(withGatewayAuth(post("/api/v1/orders"), userId, "ROLE_USER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(createReq)))
                 .andExpect(status().isCreated())
@@ -80,8 +124,7 @@ class OrderWebIntegrationTest {
                 "Comprador Test",
                 "20-30123456-7"
         );
-        mockMvc.perform(post("/api/v1/orders/{orderId}/pay", orderId)
-                        .header("X-User-Id", userId)
+        mockMvc.perform(withGatewayAuth(post("/api/v1/orders/{orderId}/pay", orderId), userId, "ROLE_USER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(payReq)))
                 .andExpect(status().isOk())
@@ -89,15 +132,13 @@ class OrderWebIntegrationTest {
                 .andExpect(jsonPath("$.paymentMethod", is("MERCADO_PAGO")));
 
         // 3. Download Invoice PDF for this paid order
-        mockMvc.perform(get("/api/v1/orders/{orderId}/invoice", orderId)
-                        .header("X-User-Id", userId))
+        mockMvc.perform(withGatewayAuth(get("/api/v1/orders/{orderId}/invoice", orderId), userId, "ROLE_USER"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string("Content-Disposition", containsString("Factura_Hibana_" + orderId)));
 
         // 4. Resend confirmation email
-        mockMvc.perform(post("/api/v1/orders/{orderId}/resend-confirmation", orderId)
-                        .header("X-User-Id", userId))
+        mockMvc.perform(withGatewayAuth(post("/api/v1/orders/{orderId}/resend-confirmation", orderId), userId, "ROLE_USER"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("DISPATCHED")));
     }
@@ -144,8 +185,7 @@ class OrderWebIntegrationTest {
                 }
                 """;
 
-        mockMvc.perform(post("/api/v1/orders")
-                        .header("X-User-Id", "web-user-2")
+        mockMvc.perform(withGatewayAuth(post("/api/v1/orders"), "web-user-2", "ROLE_USER")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())

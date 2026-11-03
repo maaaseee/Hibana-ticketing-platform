@@ -35,13 +35,16 @@ import java.util.List;
 public class EventController {
 
     private final Mediator mediator;
-    private final ObjectMapper objectMapper;
     private final CatalogCacheService cacheService;
+    private final com.aieta.ticketing_app_catalog.infrastructure.api.dto.EventDtoMapper eventDtoMapper;
 
-    public EventController(Mediator mediator, ObjectMapper objectMapper, CatalogCacheService cacheService) {
+    public EventController(
+            Mediator mediator,
+            CatalogCacheService cacheService,
+            com.aieta.ticketing_app_catalog.infrastructure.api.dto.EventDtoMapper eventDtoMapper) {
         this.mediator = mediator;
-        this.objectMapper = objectMapper;
         this.cacheService = cacheService;
+        this.eventDtoMapper = eventDtoMapper;
     }
 
     @GetMapping(version = "1.0")
@@ -50,15 +53,20 @@ public class EventController {
             @RequestParam(name = "q", required = false) String query,
             @RequestParam(name = "venue", required = false) String venue,
             @RequestParam(name = "status", required = false) String status) {
+        // Enforce public restriction: non-public status queries (ALL, DRAFT, CANCELLED) require /admin/events (SEC-04)
+        if (status != null && !status.isBlank() && !status.equalsIgnoreCase("PUBLISHED")) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Querying non-public event states requires administrative access via GET /api/v1/admin/events"
+            );
+        }
+
         List<EventSummary> events;
-        if (status != null && !status.isBlank()) {
-            events = mediator.dispatch(new GetAllEventsQuery(status));
-        } else if ((query != null && !query.isBlank()) || (venue != null && !venue.isBlank())) {
+        if ((query != null && !query.isBlank()) || (venue != null && !venue.isBlank())) {
             events = mediator.dispatch(new SearchEventsQuery(query, venue));
         } else {
             events = mediator.dispatch(new GetUpcomingEventsQuery(category));
         }
-        List<EventResponse> response = events.stream().map(e -> mapToResponse(e)).toList();
+        List<EventResponse> response = events.stream().map(eventDtoMapper::toResponse).toList();
         return ResponseEntity.ok(response);
     }
 
@@ -75,8 +83,8 @@ public class EventController {
                 HomeHighlightsResponse.class,
                 () -> {
                     HomeHighlights highlights = mediator.dispatch(new GetHomeHighlightsQuery(referenceDate));
-                    List<EventResponse> recentResponses = highlights.recentlyAdded().stream().map(e -> mapToResponse(e)).toList();
-                    List<EventResponse> upcomingResponses = highlights.upcoming().stream().map(e -> mapToResponse(e)).toList();
+                    List<EventResponse> recentResponses = highlights.recentlyAdded().stream().map(eventDtoMapper::toResponse).toList();
+                    List<EventResponse> upcomingResponses = highlights.upcoming().stream().map(eventDtoMapper::toResponse).toList();
                     return new HomeHighlightsResponse(recentResponses, upcomingResponses);
                 }
         );
@@ -94,7 +102,7 @@ public class EventController {
                 CatalogMetadataResponse.class,
                 () -> {
                     CatalogMetadata meta = mediator.dispatch(new GetCatalogMetadataQuery());
-                    List<VenueResponse> venueResponses = meta.venues().stream().map(v -> mapVenueResponse(v)).toList();
+                    List<VenueResponse> venueResponses = meta.venues().stream().map(eventDtoMapper::mapVenueResponse).toList();
                     return new CatalogMetadataResponse(meta.furthestEventDate(), venueResponses);
                 }
         );
@@ -109,113 +117,13 @@ public class EventController {
             @RequestParam(name = "q", required = false) String query,
             @RequestParam(name = "venue", required = false) String venue) {
         List<EventSummary> events = mediator.dispatch(new SearchEventsQuery(query, venue));
-        List<EventResponse> response = events.stream().map(e -> mapToResponse(e)).toList();
+        List<EventResponse> response = events.stream().map(eventDtoMapper::toResponse).toList();
         return ResponseEntity.ok(response);
     }
 
     @GetMapping(path = "/{id}", version = "1.0")
     public ResponseEntity<EventResponse> getEventById(@PathVariable("id") String id) {
         EventSummary event = mediator.dispatch(new GetEventByIdQuery(id));
-        return ResponseEntity.ok(mapToResponse(event));
-    }
-
-    private EventResponse mapToResponse(EventSummary event) {
-        List<SectorResponse> sectorResponses = event.sectors() != null
-                ? event.sectors().stream().map(s -> mapSectorResponse(s)).toList()
-                : Collections.emptyList();
-
-        BigDecimal minPrice = sectorResponses.stream()
-                .map(sector -> sector.basePrice())
-                .min((left, right) -> left.compareTo(right))
-                .orElse(BigDecimal.ZERO);
-
-        String currency = sectorResponses.isEmpty() ? "ARS" : sectorResponses.getFirst().currency();
-
-        String bannerUrl = extractJsonField(event.mediaJson(), "bannerUrl");
-        String posterUrl = extractJsonField(event.mediaJson(), "posterUrl");
-        String description = extractJsonField(event.mediaJson(), "description");
-        BigDecimal serviceFeePercentage = extractServiceFeePercentage(event.salesPolicyJson());
-
-        return new EventResponse(
-                event.id(),
-                event.slug(),
-                event.title(),
-                event.status().name(),
-                event.category(),
-                event.genres(),
-                event.doorsOpenAt(),
-                event.startsAt(),
-                event.endsAt(),
-                event.timezone(),
-                event.venue() != null ? event.venue().name() : null,
-                event.venue() != null ? event.venue().city() : null,
-                event.venue() != null ? event.venue().address() : null,
-                event.venue() != null ? event.venue().seatMapUrl() : null,
-                event.venue() != null ? event.venue().imageUrl() : null,
-                minPrice,
-                currency,
-                bannerUrl,
-                posterUrl,
-                description,
-                event.salesPolicyJson(),
-                sectorResponses,
-                serviceFeePercentage
-        );
-    }
-
-    private BigDecimal extractServiceFeePercentage(String salesPolicyJson) {
-        if (salesPolicyJson == null || salesPolicyJson.isBlank()) {
-            return BigDecimal.valueOf(10.0);
-        }
-        try {
-            JsonNode node = objectMapper.readTree(salesPolicyJson);
-            JsonNode field = node.get("serviceFeePercentage");
-            if (field != null && field.isNumber()) {
-                return BigDecimal.valueOf(field.asDouble());
-            }
-        } catch (Exception ignored) {
-        }
-        return BigDecimal.valueOf(10.0);
-    }
-
-    private SectorResponse mapSectorResponse(EventSectorSummary sector) {
-        BigDecimal total = sector.basePrice().add(sector.serviceFee());
-        return new SectorResponse(
-                sector.sectorId(),
-                sector.name(),
-                sector.type(),
-                sector.totalCapacity(),
-                sector.basePrice(),
-                sector.serviceFee(),
-                total,
-                sector.currency()
-        );
-    }
-
-    private VenueResponse mapVenueResponse(VenueSummary venue) {
-        return new VenueResponse(
-                venue.id(),
-                venue.name(),
-                venue.city(),
-                venue.country(),
-                venue.address(),
-                venue.latitude(),
-                venue.longitude(),
-                venue.seatMapUrl(),
-                venue.imageUrl()
-        );
-    }
-
-    private String extractJsonField(String jsonString, String fieldName) {
-        if (jsonString == null || jsonString.isBlank()) {
-            return null;
-        }
-        try {
-            JsonNode node = objectMapper.readTree(jsonString);
-            JsonNode field = node.get(fieldName);
-            return field != null ? field.asString() : null;
-        } catch (Exception e) {
-            return null;
-        }
+        return ResponseEntity.ok(eventDtoMapper.toResponse(event));
     }
 }

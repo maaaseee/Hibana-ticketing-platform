@@ -21,11 +21,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final EntraJwtAuthenticationConverter jwtAuthenticationConverter;
+    private final GatewayStampValidator stampValidator;
 
-    public SecurityConfig(@Autowired(required = false) EntraJwtAuthenticationConverter jwtAuthenticationConverter) {
+    public SecurityConfig(
+            @Autowired(required = false) EntraJwtAuthenticationConverter jwtAuthenticationConverter,
+            @Autowired(required = false) GatewayStampValidator stampValidator) {
         this.jwtAuthenticationConverter = jwtAuthenticationConverter != null
                 ? jwtAuthenticationConverter
                 : new EntraJwtAuthenticationConverter();
+        this.stampValidator = stampValidator != null
+                ? stampValidator
+                : new GatewayStampValidator("gateway-internal-hmac-secret-2026-minimum-256-bits!");
     }
 
     @Bean
@@ -60,7 +66,7 @@ public class SecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
                 )
-                .addFilterBefore(new XUserIdAuthFilter(), BearerTokenAuthenticationFilter.class);
+                .addFilterBefore(new XUserIdAuthFilter(stampValidator), BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }

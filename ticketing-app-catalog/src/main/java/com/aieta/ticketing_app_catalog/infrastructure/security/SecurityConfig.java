@@ -21,11 +21,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final EntraJwtAuthenticationConverter jwtAuthenticationConverter;
+    private final GatewayStampValidator stampValidator;
 
-    public SecurityConfig(@Autowired(required = false) EntraJwtAuthenticationConverter jwtAuthenticationConverter) {
+    public SecurityConfig(
+            @Autowired(required = false) EntraJwtAuthenticationConverter jwtAuthenticationConverter,
+            @Autowired(required = false) GatewayStampValidator stampValidator) {
         this.jwtAuthenticationConverter = jwtAuthenticationConverter != null
                 ? jwtAuthenticationConverter
                 : new EntraJwtAuthenticationConverter();
+        this.stampValidator = stampValidator != null
+                ? stampValidator
+                : new GatewayStampValidator("gateway-internal-hmac-secret-2026-minimum-256-bits!");
     }
 
     @Bean
@@ -41,21 +47,24 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Administrative queries: strictly require ROLE_ADMIN or ROLE_OPERATOR (SEC-04)
+                        .requestMatchers(HttpMethod.GET, "/admin/events/**", "/api/v1/admin/events/**").hasAnyRole("ADMIN", "OPERATOR")
+
                         // Public read endpoints (both versioned and direct paths)
                         .requestMatchers(HttpMethod.GET, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**").permitAll()
                         .requestMatchers("/actuator/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
                         // Administrative mutations
-                        .requestMatchers(HttpMethod.POST, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**", "/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.PUT, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**", "/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/events/**", "/venues/**", "/api/v1/events/**", "/api/v1/venues/**", "/admin/**", "/api/v1/admin/**").hasAnyRole("ADMIN", "OPERATOR")
 
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
                 )
-                .addFilterBefore(new GatewayHeaderAuthFilter(), BearerTokenAuthenticationFilter.class);
+                .addFilterBefore(new GatewayHeaderAuthFilter(stampValidator), BearerTokenAuthenticationFilter.class);
 
         return http.build();
     }
