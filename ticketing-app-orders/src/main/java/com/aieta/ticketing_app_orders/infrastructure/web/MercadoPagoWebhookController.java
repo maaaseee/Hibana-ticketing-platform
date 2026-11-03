@@ -30,22 +30,42 @@ public class MercadoPagoWebhookController {
     private final String webhookSecret;
     private final ObjectMapper objectMapper;
 
+    public static final String DEFAULT_DEV_WEBHOOK_SECRET = "mercadopago-webhook-secret-key-prod-minimum-256-bits!";
+
     @Autowired
     public MercadoPagoWebhookController(
             MercadoPagoClient mercadoPagoClient,
             Mediator mediator,
-            @Value("${mercadopago.webhook.secret:mercadopago-webhook-secret-key-prod-minimum-256-bits!}") String webhookSecret,
+            @Value("${mercadopago.webhook.secret:}") String webhookSecret,
+            @Value("${spring.profiles.active:}") String activeProfiles,
             @Autowired(required = false) ObjectMapper objectMapper) {
         this.mercadoPagoClient = mercadoPagoClient;
         this.mediator = mediator;
-        this.webhookSecret = (webhookSecret != null && !webhookSecret.isBlank())
-                ? webhookSecret
-                : "mercadopago-webhook-secret-key-prod-minimum-256-bits!";
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+
+        boolean isProduction = activeProfiles != null && (activeProfiles.contains("prod") || activeProfiles.contains("production"));
+        if (isProduction && (webhookSecret == null || webhookSecret.isBlank() || DEFAULT_DEV_WEBHOOK_SECRET.equals(webhookSecret))) {
+            throw new IllegalStateException("CRITICAL SECURITY CONFIGURATION ERROR: MERCADO_PAGO_WEBHOOK_SECRET must be explicitly provided in production environments.");
+        }
+
+        if (webhookSecret == null || webhookSecret.isBlank()) {
+            log.warn("[SECURITY] Running with fallback development webhook secret. Set MERCADO_PAGO_WEBHOOK_SECRET for production.");
+            this.webhookSecret = DEFAULT_DEV_WEBHOOK_SECRET;
+        } else {
+            this.webhookSecret = webhookSecret;
+        }
+    }
+
+    public MercadoPagoWebhookController(
+            MercadoPagoClient mercadoPagoClient,
+            Mediator mediator,
+            String webhookSecret,
+            ObjectMapper objectMapper) {
+        this(mercadoPagoClient, mediator, webhookSecret, "test", objectMapper);
     }
 
     public MercadoPagoWebhookController(MercadoPagoClient mercadoPagoClient, Mediator mediator) {
-        this(mercadoPagoClient, mediator, "mercadopago-webhook-secret-key-prod-minimum-256-bits!", new ObjectMapper());
+        this(mercadoPagoClient, mediator, DEFAULT_DEV_WEBHOOK_SECRET, "test", new ObjectMapper());
     }
 
     @PostMapping("/webhook")

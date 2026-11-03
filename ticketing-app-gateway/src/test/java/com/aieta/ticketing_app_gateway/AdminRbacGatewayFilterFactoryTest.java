@@ -249,6 +249,9 @@ class AdminRbacGatewayFilterFactoryTest {
             assertThat(ex.getRequest().getHeaders().getFirst("X-User-Email")).isEqualTo("alex.thorne@hibana.tk");
             assertThat(ex.getRequest().getHeaders().getFirst("X-User-Roles")).contains("ROLE_ADMIN");
             assertThat(ex.getRequest().getHeaders().getFirst("X-Gateway-Auth-Stamp")).isNotBlank();
+            assertThat(ex.getRequest().getHeaders().getFirst("X-Gateway-Timestamp")).isNotBlank();
+            assertThat(ex.getRequest().getHeaders().getFirst("X-Gateway-Signature")).isNotBlank();
+            assertThat(ex.getRequest().getHeaders().getFirst("X-Gateway-Stamp")).isNotBlank();
             return Mono.empty();
         };
 

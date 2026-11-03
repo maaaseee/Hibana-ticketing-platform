@@ -1,12 +1,16 @@
 package com.aieta.ticketing_app_gateway.controller;
 
+import com.aieta.ticketing_app_gateway.auth.FlociEntraJwksProvider;
 import com.aieta.ticketing_app_gateway.dto.QueueJoinRequest;
 import com.aieta.ticketing_app_gateway.dto.QueueStatusResponse;
 import com.aieta.ticketing_app_gateway.service.WaitingRoomService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpCookie;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,7 @@ import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.security.PublicKey;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
@@ -40,15 +45,30 @@ public class WaitingRoomController {
 
     private final WaitingRoomService waitingRoomService;
     private final ObjectMapper objectMapper;
+    private final FlociEntraJwksProvider jwksProvider;
+    private final String expectedIssuer;
+    private final String expectedAudience;
 
     public WaitingRoomController(WaitingRoomService waitingRoomService) {
-        this(waitingRoomService, new ObjectMapper());
+        this(waitingRoomService, new ObjectMapper(), null, null, null);
+    }
+
+    public WaitingRoomController(WaitingRoomService waitingRoomService, ObjectMapper objectMapper) {
+        this(waitingRoomService, objectMapper, null, null, null);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public WaitingRoomController(WaitingRoomService waitingRoomService, ObjectMapper objectMapper) {
+    public WaitingRoomController(
+            WaitingRoomService waitingRoomService,
+            ObjectMapper objectMapper,
+            @org.springframework.beans.factory.annotation.Autowired(required = false) FlociEntraJwksProvider jwksProvider,
+            @Value("${azure.entra.issuer:}") String expectedIssuer,
+            @Value("${azure.entra.audience:}") String expectedAudience) {
         this.waitingRoomService = waitingRoomService;
         this.objectMapper = objectMapper != null ? objectMapper : new ObjectMapper();
+        this.jwksProvider = jwksProvider;
+        this.expectedIssuer = (expectedIssuer != null && !expectedIssuer.isBlank()) ? expectedIssuer : null;
+        this.expectedAudience = (expectedAudience != null && !expectedAudience.isBlank()) ? expectedAudience : null;
     }
 
     private String resolveUserId(String userId) {
@@ -188,27 +208,60 @@ public class WaitingRoomController {
     }
 
     private boolean isBearerTokenMatchingUser(String userId, String token) {
+        if (jwksProvider == null || token == null || token.isBlank()) {
+            return false;
+        }
         try {
             int firstDot = token.indexOf('.');
             int secondDot = token.indexOf('.', firstDot + 1);
-            if (firstDot > 0 && secondDot > firstDot) {
-                String payloadJson = new String(Base64.getUrlDecoder().decode(token.substring(firstDot + 1, secondDot)), StandardCharsets.UTF_8);
-                JsonNode node = objectMapper.readTree(payloadJson);
-                String sub = node.path("sub").asText(null);
-                String oid = node.path("oid").asText(null);
-                String preferredUsername = node.path("preferred_username").asText(null);
-                String email = node.path("email").asText(null);
-                String upn = node.path("upn").asText(null);
-
-                return userId.equalsIgnoreCase(sub)
-                        || userId.equalsIgnoreCase(oid)
-                        || userId.equalsIgnoreCase(preferredUsername)
-                        || userId.equalsIgnoreCase(email)
-                        || userId.equalsIgnoreCase(upn);
+            if (firstDot <= 0 || secondDot <= firstDot) {
+                return false;
             }
+
+            String headerJson = new String(Base64.getUrlDecoder().decode(token.substring(0, firstDot)), StandardCharsets.UTF_8);
+            JsonNode headerNode = objectMapper.readTree(headerJson);
+            String kid = headerNode.path("kid").asText(null);
+            if (kid == null || kid.isBlank()) {
+                log.debug("[SECURITY] Bearer token missing kid in header");
+                return false;
+            }
+
+            PublicKey publicKey = null;
+            try {
+                publicKey = jwksProvider.getPublicKey(kid);
+            } catch (Exception ex) {
+                log.debug("[SECURITY] Could not resolve public key for kid: {}", kid);
+                return false;
+            }
+            if (publicKey == null) {
+                log.debug("[SECURITY] Could not resolve public key for kid: {}", kid);
+                return false;
+            }
+
+            var parser = Jwts.parser().verifyWith(publicKey);
+            if (expectedIssuer != null) {
+                parser.requireIssuer(expectedIssuer);
+            }
+            if (expectedAudience != null) {
+                parser.requireAudience(expectedAudience);
+            }
+
+            Claims claims = parser.build().parseSignedClaims(token).getPayload();
+
+            String sub = claims.getSubject();
+            String oid = claims.get("oid", String.class);
+            String preferredUsername = claims.get("preferred_username", String.class);
+            String email = claims.get("email", String.class);
+            String upn = claims.get("upn", String.class);
+
+            return userId.equalsIgnoreCase(sub)
+                    || userId.equalsIgnoreCase(oid)
+                    || userId.equalsIgnoreCase(preferredUsername)
+                    || userId.equalsIgnoreCase(email)
+                    || userId.equalsIgnoreCase(upn);
         } catch (Exception e) {
-            log.debug("Error inspecting bearer token for queue ownership check: {}", e.getMessage());
+            log.debug("[SECURITY] Cryptographic verification failed for bearer token on queue check: {}", e.getMessage());
+            return false;
         }
-        return false;
     }
 }

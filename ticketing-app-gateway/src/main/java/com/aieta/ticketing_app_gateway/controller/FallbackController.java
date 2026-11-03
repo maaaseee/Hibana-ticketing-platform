@@ -42,4 +42,23 @@ public class FallbackController {
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(problem);
     }
+
+    @RequestMapping(value = "/blocked", produces = MediaType.APPLICATION_PROBLEM_JSON_VALUE)
+    public ResponseEntity<ProblemDetail> handleBlocked(ServerWebExchange exchange) {
+        String path = exchange.getRequest().getURI().getPath();
+        log.warn("[PERIMETER-BLOCK] Blocked external access attempt to internal route: {}", path);
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                "The requested resource is an internal endpoint and cannot be accessed via the public Gateway."
+        );
+        problem.setType(URI.create("https://hibana.tk/errors/not-found"));
+        problem.setTitle("Endpoint Not Found");
+        problem.setInstance(URI.create(path));
+        problem.setProperty("timestamp", Instant.now().toString());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(problem);
+    }
 }

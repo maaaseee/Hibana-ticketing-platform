@@ -183,4 +183,31 @@ class MercadoPagoWebhookControllerTest {
         assertFalse(controller.verifySignature("wrong-hash", String.valueOf(nowSeconds), reqId, paymentId, null, null));
         assertFalse(controller.verifySignature(validHmac, String.valueOf(nowSeconds), "different-req", paymentId, null, null));
     }
+
+    @Test
+    @DisplayName("Should fail fast on startup in production when webhook secret is missing")
+    void shouldFailFastInProductionWhenSecretMissing() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                new MercadoPagoWebhookController(mercadoPagoClient, mediator, "", "prod", objectMapper)
+        );
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                new MercadoPagoWebhookController(mercadoPagoClient, mediator, null, "production", objectMapper)
+        );
+    }
+
+    @Test
+    @DisplayName("Should fail fast on startup in production when default dev secret is used")
+    void shouldFailFastInProductionWhenDefaultDevSecretUsed() {
+        org.junit.jupiter.api.Assertions.assertThrows(IllegalStateException.class, () ->
+                new MercadoPagoWebhookController(mercadoPagoClient, mediator, MercadoPagoWebhookController.DEFAULT_DEV_WEBHOOK_SECRET, "prod", objectMapper)
+        );
+    }
+
+    @Test
+    @DisplayName("Should initialize successfully in production when genuine custom secret is provided")
+    void shouldInitializeInProductionWithCustomSecret() {
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() ->
+                new MercadoPagoWebhookController(mercadoPagoClient, mediator, "custom-production-secret-key-32-bytes!", "prod", objectMapper)
+        );
+    }
 }

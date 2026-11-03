@@ -49,6 +49,24 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
     @Value("${waiting-room.url:https://www.hibana.tk/waiting-room}")
     private String defaultWaitingRoomUrl;
 
+    public static final String DEFAULT_GATEWAY_HMAC_SECRET = "gateway-internal-hmac-secret-2026-minimum-256-bits!";
+
+    @Value("${gateway.hmac.secret:${GATEWAY_HMAC_SECRET:" + DEFAULT_GATEWAY_HMAC_SECRET + "}}")
+    private String gatewayHmacSecret = DEFAULT_GATEWAY_HMAC_SECRET;
+
+    private String computeHmacSha256(String data, String secret) {
+        try {
+            String effectiveSecret = (secret != null && !secret.isBlank()) ? secret : DEFAULT_GATEWAY_HMAC_SECRET;
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec spec = new javax.crypto.spec.SecretKeySpec(effectiveSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(spec);
+            byte[] raw = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(raw);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to calculate HMAC-SHA256 signature", e);
+        }
+    }
+
     public CheckoutTokenFilterFactory(ObjectMapper objectMapper) {
         this(objectMapper, null);
     }
@@ -110,14 +128,18 @@ public class CheckoutTokenFilterFactory extends AbstractGatewayFilterFactory<Che
                 log.debug("[WAITING-ROOM] Successfully validated checkout token for user: {}", userId);
 
                 // Cryptographic Gateway Stamp to prevent internal header spoofing (SEC-INV-01)
-                String stampPayload = (userId != null ? userId : "anonymous") + ":" + token.hashCode();
-                String gatewayStamp = Integer.toHexString(stampPayload.hashCode());
+                long timestamp = System.currentTimeMillis();
+                String roles = "ROLE_USER";
+                String signature = computeHmacSha256((userId != null ? userId : "anonymous") + ":" + roles + ":" + timestamp, gatewayHmacSecret);
 
                 ServerHttpRequest mutatedRequest = request.mutate()
                         .headers(h -> {
                             h.set(HEADER_USER_ID, userId != null ? userId : "anonymous");
+                            h.set("X-User-Roles", roles);
                             h.set(HEADER_WAITING_ROOM_VALIDATED, "true");
-                            h.set(HEADER_GATEWAY_STAMP, gatewayStamp);
+                            h.set("X-Gateway-Timestamp", String.valueOf(timestamp));
+                            h.set("X-Gateway-Signature", signature);
+                            h.set(HEADER_GATEWAY_STAMP, signature);
                         })
                         .build();
 

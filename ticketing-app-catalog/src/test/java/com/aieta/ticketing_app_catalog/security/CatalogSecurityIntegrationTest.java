@@ -141,6 +141,25 @@ public class CatalogSecurityIntegrationTest {
     }
 
     @Test
+    @DisplayName("Admin endpoint: POST /api/v1/events with keyless hashCode stamp returns HTTP 401 Unauthorized (Candidate 4 rejection)")
+    void postEvents_withKeylessHashCodeStamp_shouldReturn401() {
+        String hexHash = Integer.toHexString("usr-alex-admin:ROLE_ADMIN".hashCode());
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-User-Id", "usr-alex-admin");
+        headers.set("X-User-Roles", "ROLE_ADMIN");
+        headers.set("X-Gateway-Stamp", hexHash);
+        HttpEntity<String> entity = new HttpEntity<>("{}", headers);
+
+        HttpClientErrorException ex = assertThrows(HttpClientErrorException.class, () ->
+                restTemplate.postForEntity(getBaseUrl() + "/api/v1/events", entity, String.class)
+        );
+
+        assertThat(ex.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
     @DisplayName("Admin endpoint: POST /api/v1/events with verified ROLE_USER returns HTTP 403 Forbidden")
     void postEvents_withUserRole_shouldReturn403() {
         String userId = "usr-lucia-regular";

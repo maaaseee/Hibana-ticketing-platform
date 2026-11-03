@@ -101,6 +101,23 @@ class OrderWebIntegrationTest {
     }
 
     @Test
+    @DisplayName("Should reject order creation when keyless hashCode stamp is supplied (Candidate 4 rejection)")
+    void shouldRejectOrderCreationWhenKeylessHashCodeStampSupplied() throws Exception {
+        String reservationId = "res-" + UUID.randomUUID();
+        CreateOrderRequest request = new CreateOrderRequest(reservationId, "evt-100", "seat-100", new BigDecimal("59.00"));
+
+        String hexHash = Integer.toHexString("attacker-spoofed:ROLE_USER".hashCode());
+
+        mockMvc.perform(post("/api/v1/orders")
+                        .header("X-User-Id", "attacker-spoofed")
+                        .header("X-User-Roles", "ROLE_USER")
+                        .header("X-Gateway-Stamp", hexHash)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("Should pay order with Mercado Pago strategy successfully")
     void shouldPayOrderWithMercadoPago() throws Exception {
         String userId = "web-user-mp-" + UUID.randomUUID();

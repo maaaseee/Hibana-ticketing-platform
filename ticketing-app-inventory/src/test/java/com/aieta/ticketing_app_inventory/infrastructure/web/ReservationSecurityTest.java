@@ -128,6 +128,20 @@ class ReservationSecurityTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    @DisplayName("POST /confirm with keyless hashCode stamp returns 401 Unauthorized (Candidate 4 rejection)")
+    void confirmReservation_withKeylessHashCodeStamp_returns401() throws Exception {
+        String hexHash = Integer.toHexString("attacker:ROLE_SERVICE".hashCode());
+
+        mockMvc.perform(post("/api/v1/reservations/res_123/confirm")
+                        .header("X-User-Id", "attacker")
+                        .header("X-User-Roles", "ROLE_SERVICE")
+                        .header("X-Gateway-Stamp", hexHash)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"orderId\": \"ord_123\"}"))
+                .andExpect(status().isUnauthorized());
+    }
+
     // --- Task 3: Access control & ownership in DELETE reservations ---
 
     @Test

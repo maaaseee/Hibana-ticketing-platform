@@ -51,9 +51,27 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
     @org.springframework.beans.factory.annotation.Value("${azure.entra.audience:${AZURE_ENTRA_AUDIENCE:" + DEFAULT_AUDIENCE + "}}")
     private String defaultAudience = DEFAULT_AUDIENCE;
 
+    public static final String DEFAULT_HMAC_SECRET = "gateway-internal-hmac-secret-2026-minimum-256-bits!";
+
+    @org.springframework.beans.factory.annotation.Value("${gateway.hmac.secret:${GATEWAY_HMAC_SECRET:" + DEFAULT_HMAC_SECRET + "}}")
+    private String gatewayHmacSecret = DEFAULT_HMAC_SECRET;
+
+    private String computeHmacSha256(String data, String secret) {
+        try {
+            String effectiveSecret = (secret != null && !secret.isBlank()) ? secret : DEFAULT_HMAC_SECRET;
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec spec = new javax.crypto.spec.SecretKeySpec(effectiveSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(spec);
+            byte[] raw = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+            return java.util.HexFormat.of().formatHex(raw);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to calculate HMAC-SHA256 signature", e);
+        }
+    }
+
     @org.springframework.beans.factory.annotation.Autowired
     public AdminRbacGatewayFilterFactory(FlociEntraJwksProvider jwksProvider, ObjectMapper objectMapper) {
-        this(jwksProvider, objectMapper, DEFAULT_ISSUER, DEFAULT_AUDIENCE);
+        this(jwksProvider, objectMapper, DEFAULT_ISSUER, DEFAULT_AUDIENCE, DEFAULT_HMAC_SECRET);
     }
 
     public AdminRbacGatewayFilterFactory(
@@ -61,11 +79,21 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
             ObjectMapper objectMapper,
             String defaultIssuer,
             String defaultAudience) {
+        this(jwksProvider, objectMapper, defaultIssuer, defaultAudience, DEFAULT_HMAC_SECRET);
+    }
+
+    public AdminRbacGatewayFilterFactory(
+            FlociEntraJwksProvider jwksProvider,
+            ObjectMapper objectMapper,
+            String defaultIssuer,
+            String defaultAudience,
+            String gatewayHmacSecret) {
         super(Config.class);
         this.jwksProvider = jwksProvider;
         this.objectMapper = objectMapper;
         this.defaultIssuer = defaultIssuer != null ? defaultIssuer : DEFAULT_ISSUER;
         this.defaultAudience = defaultAudience != null ? defaultAudience : DEFAULT_AUDIENCE;
+        this.gatewayHmacSecret = (gatewayHmacSecret != null && !gatewayHmacSecret.isBlank()) ? gatewayHmacSecret : DEFAULT_HMAC_SECRET;
     }
 
     @Override
@@ -200,11 +228,18 @@ public class AdminRbacGatewayFilterFactory extends AbstractGatewayFilterFactory<
                 email = claims.get("upn", String.class);
             }
 
+            String rolesStr = String.join(",", userRoles);
+            long timestamp = System.currentTimeMillis();
+            String signature = computeHmacSha256((userId != null ? userId : "") + ":" + rolesStr + ":" + timestamp, gatewayHmacSecret);
+
             ServerHttpRequest mutatedRequest = request.mutate()
                     .header("X-User-Id", userId != null ? userId : "")
-                    .header("X-User-Roles", String.join(",", userRoles))
+                    .header("X-User-Roles", rolesStr)
                     .header("X-User-Email", email != null ? email : "")
                     .header("X-Gateway-Auth-Stamp", Instant.now().toString())
+                    .header("X-Gateway-Timestamp", String.valueOf(timestamp))
+                    .header("X-Gateway-Signature", signature)
+                    .header("X-Gateway-Stamp", signature)
                     .build();
 
             return chain.filter(exchange.mutate().request(mutatedRequest).build());

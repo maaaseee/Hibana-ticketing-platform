@@ -119,15 +119,6 @@ public class GatewayStampValidator {
             return true;
         }
 
-        // 4. Candidate: waiting room stamp hash code
-        if (cleanSig.matches("^[0-9a-fA-F]+$")) {
-            String stampPayload = userId + ":" + roles;
-            String hexHash = Integer.toHexString(stampPayload.hashCode());
-            if (cleanSig.equalsIgnoreCase(hexHash)) {
-                return true;
-            }
-        }
-
         return false;
     }
 

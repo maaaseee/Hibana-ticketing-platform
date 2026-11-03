@@ -82,6 +82,13 @@ spring:
                     name: inventoryCircuitBreaker
                     fallbackUri: forward:/fallback/inventory
 
+            # 1b. Block external access to /confirm (Order 55 - Defense-in-Depth Perimeter Block)
+            - id: inventory-block-external-confirm
+              uri: forward:/fallback/blocked
+              order: 55
+              predicates:
+                - Path=/api/v1/reservations/*/confirm
+
             # 2. Inventory Reservations (Order 60 - Gated by Virtual Waiting Room CheckoutToken)
             - id: inventory-reservations
               uri: ${INVENTORY_SERVICE_URL:http://localhost:8082}
@@ -241,7 +248,7 @@ waiting-room:
 
 gateway:
   hmac:
-    secret: ${GATEWAY_HMAC_SECRET:}
+    secret: ${GATEWAY_HMAC_SECRET:gateway-internal-hmac-secret-2026-minimum-256-bits!}
 
 azure:
   keyvault:

@@ -33,13 +33,39 @@ class WaitingRoomControllerTest {
     @Mock
     private WaitingRoomService waitingRoomService;
 
+    private com.aieta.ticketing_app_gateway.auth.FlociEntraJwksProvider jwksProvider;
+    private java.security.interfaces.RSAPrivateKey privateKey;
+    private java.security.interfaces.RSAPublicKey publicKey;
+    private static final String TEST_KID = "test-kid-waiting-room";
+
     @BeforeEach
-    void setUp() {
-        WaitingRoomController controller = new WaitingRoomController(waitingRoomService);
+    void setUp() throws Exception {
+        java.security.KeyPairGenerator generator = java.security.KeyPairGenerator.getInstance("RSA");
+        generator.initialize(2048);
+        java.security.KeyPair pair = generator.generateKeyPair();
+        this.privateKey = (java.security.interfaces.RSAPrivateKey) pair.getPrivate();
+        this.publicKey = (java.security.interfaces.RSAPublicKey) pair.getPublic();
+
+        com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        this.jwksProvider = new com.aieta.ticketing_app_gateway.auth.FlociEntraJwksProvider(
+                com.aieta.ticketing_app_gateway.auth.FlociEntraJwksProvider.DEFAULT_JWKS_URL, objectMapper);
+        this.jwksProvider.registerKey(TEST_KID, this.publicKey);
+
+        WaitingRoomController controller = new WaitingRoomController(waitingRoomService, objectMapper, jwksProvider, null, null);
         this.webTestClient = WebTestClient.bindToController(controller).build();
 
         WaitingRoomDebugController debugController = new WaitingRoomDebugController(waitingRoomService);
         this.debugWebTestClient = WebTestClient.bindToController(debugController).build();
+    }
+
+    private String createBearerToken(String sub) {
+        return io.jsonwebtoken.Jwts.builder()
+                .header().keyId(TEST_KID).and()
+                .subject(sub)
+                .issuedAt(java.util.Date.from(Instant.now()))
+                .expiration(java.util.Date.from(Instant.now().plusSeconds(3600)))
+                .signWith(privateKey, io.jsonwebtoken.Jwts.SIG.RS256)
+                .compact();
     }
 
     @Test
@@ -219,5 +245,71 @@ class WaitingRoomControllerTest {
                 .expectCookie().maxAge("HIBANA_QUEUE_SESSION", Duration.ZERO);
 
         verify(waitingRoomService).leaveQueue(eventId, userId);
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/queue/status allows access when valid cryptographically signed Bearer token matches userId")
+    void shouldAllowWhenCryptographicallySignedBearerTokenMatches() {
+        String eventId = "chronos-fest-2026";
+        String userId = "usr-test-100";
+        String validBearerToken = createBearerToken(userId);
+
+        when(waitingRoomService.getQueueStatus(eq(eventId), eq(userId)))
+                .thenReturn(Mono.just(QueueStatusResponse.waiting(eventId, userId, 5L, 50L, 10L)));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/queue/status")
+                        .queryParam("eventId", eventId)
+                        .queryParam("userId", userId)
+                        .build())
+                .header("Authorization", "Bearer " + validBearerToken)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.status").isEqualTo("WAITING");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/queue/status rejects with 403 when unsigned / forged Bearer token is provided")
+    void shouldRejectWhenUnsignedBearerTokenProvided() {
+        String eventId = "chronos-fest-2026";
+        String userId = "usr-victim-100";
+        // Unsigned JWT with alg: none or dummy signature
+        String forgedToken = "eyJhbGciOiJub25lIn0.eyJzdWIiOiJ1c3ItdmljdGltLTEwMCJ9.";
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/queue/status")
+                        .queryParam("eventId", eventId)
+                        .queryParam("userId", userId)
+                        .build())
+                .header("Authorization", "Bearer " + forgedToken)
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Queue State Access Denied");
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/queue/status rejects with 403 when valid Bearer token has mismatched subject")
+    void shouldRejectWhenBearerTokenSubjectMismatched() {
+        String eventId = "chronos-fest-2026";
+        String requestedUserId = "usr-victim-100";
+        String attackerToken = createBearerToken("usr-attacker-200");
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/queue/status")
+                        .queryParam("eventId", eventId)
+                        .queryParam("userId", requestedUserId)
+                        .build())
+                .header("Authorization", "Bearer " + attackerToken)
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectBody()
+                .jsonPath("$.title").isEqualTo("Queue State Access Denied");
     }
 }
