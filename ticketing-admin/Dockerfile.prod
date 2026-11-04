@@ -1,10 +1,10 @@
-# Multi-stage production build for Hibana.tk Back-Office Admin Portal (B2B)
+# Multi-stage production build for Hibana Back-Office Admin Portal (B2B)
 FROM oven/bun:1.2-alpine AS builder
 WORKDIR /app
 COPY package.json bun.lockb* bun.lock* ./
 RUN bun install
 COPY . .
-ARG VITE_API_BASE_URL=https://api.hibana.tk
+ARG VITE_API_BASE_URL=/api/v1
 ARG VITE_ENTRA_CLIENT_ID
 ARG VITE_ENTRA_TENANT_ID
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL

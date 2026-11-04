@@ -1,10 +1,10 @@
-# Multi-stage production build for Hibana.tk Front-Office (B2C)
+# Multi-stage production build for Hibana Front-Office (B2C)
 FROM oven/bun:1.2-alpine AS builder
 WORKDIR /app
 COPY package.json bun.lockb* bun.lock* ./
 RUN bun install
 COPY . .
-ARG VITE_API_BASE_URL=https://api.hibana.tk
+ARG VITE_API_BASE_URL=/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN bun run build-only
 
