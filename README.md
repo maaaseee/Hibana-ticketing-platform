@@ -7,12 +7,12 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Java-21%20%7C%2025-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java">
-  <img src="https://img.shields.io/badge/Spring_Boot-3%20%7C%204-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot">
-  <img src="https://img.shields.io/badge/Vue.js-3.x-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Java-25-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java">
+  <img src="https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?style=for-the-badge&logo=springboot&logoColor=white" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Vue.js-3.5.44-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white" alt="Vue 3.5.44">
   <img src="https://img.shields.io/badge/PostgreSQL-17_%2B_pgvector-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL">
   <img src="https://img.shields.io/badge/Redis-Redlock_%26_Queue-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis">
-  <img src="https://img.shields.io/badge/Azure-Cloud_Native-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="Azure">
+  <img src="https://img.shields.io/badge/Azure-Cloud_Native-0078D4?style=for-the-badge&amp;logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA5NiA5NiI%2BPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTMzLjMgNmgyOC42TDMyLjIgOTBINnpNNjIuOSA2MS42SDI3LjRMMjQgNzEgNTQgOTBoMzJ6TTU4LjYgNiAzOC41IDY1LjdsMjQuNCAwTDg2IDkwIDY4LjUgNnoiIG9wYWNpdHk9IjAiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMzUgNmgyN0wzMiA5MEg1ek02NSA2MkgyOS42bC0zLjcgOS42TDU2IDkwaDM1ek02NCA2IDM3LjUgNjZINjVMODggOTAgNjkgNnoiIG9wYWNpdHk9IjAiLz48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMzYuNCA2aDI1LjhMMzUuNCA4Mi4zYTQuMSA0LjEgMCAwIDEtMy45IDIuOEg4LjdhNC4xIDQuMSAwIDAgMS0zLjktNS40TDMyLjUgOC44QTQuMSA0LjEgMCAwIDEgMzYuNCA2ek02Ny42IDYySDMxLjlhMS45IDEuOSAwIDAgMC0xLjMgMy4zbDIyLjkgMjEuNGE0LjEgNC4xIDAgMCAwIDIuOCAxLjFoMjAuMnpNNjIgNi4yIDU0LjEgMjkuNyA3NiA2Mkg5MXpNNTEuNyA2NSAzMi41IDYwbC0uMSAweiIvPjwvc3ZnPg%3D%3D" alt="Azure">
 </p>
 
 ---
@@ -67,15 +67,15 @@ El ecosistema sigue los principios de **Domain-Driven Design (DDD)** con fronter
 ```mermaid
 flowchart TD
     subgraph Clients["Capas de Clientes"]
-        B2C["Front-Office B2C<br/>(Vue 3 / Vite :5173)"]
-        B2B["Back-Office Admin B2B<br/>(Vue 3 / Canvas :5174)"]
+        B2C["Front-Office B2C<br/>(Vue 3.5.44 / Vite 8 :5173)"]
+        B2B["Back-Office Admin B2B<br/>(Vue 3.5.44 / Canvas :5174)"]
     end
 
     subgraph Edge["Perímetro & Gateway"]
         Gateway["Spring Cloud Gateway (:8080)<br/>• Rate Limiter (Token Bucket)<br/>• Virtual Waiting Room Filter<br/>• JWT / Stamp Validator"]
     end
 
-    subgraph Microservices["Ecosistema de Microservicios Backend (Java / Spring Boot)"]
+    subgraph Microservices["Ecosistema de Microservicios Backend (Java 25 / Spring Boot 4.1.1)"]
         Catalog["Catalog Service (:8081)<br/>• Eventos, Recintos, Sectores<br/>• Búsqueda Vectorial (pgvector)"]
         Inventory["Inventory Service (:8082)<br/>• Bloqueo Atómico Redlock<br/>• Ciclo de Vida del Asiento"]
         Orders["Orders & Financial Engine (:8083)<br/>• Carrito y Checkout<br/>• Doble Entrada Contable<br/>• Facturación PDF y Emails"]
@@ -108,7 +108,7 @@ flowchart TD
 ## 📦 Ecosistema de Microservicios y Clientes
 
 ### 1. Clientes Frontend (Aislamiento B2C vs B2B)
-* **`ticketing-frontend` (Front-Office B2C):** Cliente público para compradores. Interfaz reactiva en Vue 3 con Tailwind CSS, exploración de eventos, sala de espera interactiva en tiempo real y flujo de compra guiado.
+* **`ticketing-frontend` (Front-Office B2C):** Cliente público para compradores. Interfaz reactiva en Vue 3.5.44 con Tailwind CSS, exploración de eventos, sala de espera interactiva en tiempo real y flujo de compra guiado.
 * **`ticketing-admin` (Back-Office B2B):** Portal exclusivo para productores, administradores y operadores de soporte técnico. Aislado para operar independientemente de la carga pública, con canvas de recintos y paneles de métricas.
 
 ### 2. Microservicios Backend
@@ -121,8 +121,8 @@ flowchart TD
 
 ## 🛠️ Stack Tecnológico Integral
 
-* **Lenguaje & Plataforma:** Java 21 / 25 con **Spring Boot 3 / 4**, aprovechando **Virtual Threads (Project Loom)** para I/O concurrente sin saturar hilos del sistema operativo.
-* **Frontend:** Vue 3 (Composition API con `<script setup>`), TypeScript, Pinia, Vite, Tailwind CSS y HTML5 Canvas.
+* **Lenguaje & Plataforma:** **Java 25** con **Spring Boot 4.1.1**, aprovechando **Virtual Threads (Project Loom)** para I/O concurrente sin saturar hilos del sistema operativo.
+* **Frontend:** Vue 3.5.44 (Composition API con `<script setup>`), TypeScript, Pinia 4, Vite 8, Tailwind CSS y HTML5 Canvas.
 * **Bases de Datos & Persistencia:** 
   - **PostgreSQL 17**: Persistencia relacional ACID, esquemas versionados con **Flyway**, columnas semiestructuradas **JSONB** para configuración de medios y políticas de venta.
   - **pgvector**: Búsqueda vectorial semántica con indexación **HNSW** para recomendaciones de espectáculos basadas en distancia coseno.
