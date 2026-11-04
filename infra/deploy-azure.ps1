@@ -78,7 +78,7 @@ $RedisHostName             = $Outputs.redisHostName.value
 $StorageBlobEndpoint       = $Outputs.storageBlobEndpoint.value
 $TenantId                  = (az account show --query tenantId -o tsv).Trim()
 $PublicOrigin              = if ($env:AZURE_PUBLIC_ORIGIN) { $env:AZURE_PUBLIC_ORIGIN } else { "http://hibana-$Environment.$Location.cloudapp.azure.com" }
-$CorsAllowedOrigins        = if ($env:CORS_ALLOWED_ORIGINS) { $env:CORS_ALLOWED_ORIGINS } else { $PublicOrigin }
+$CorsAllowedOrigins        = if ($env:CORS_ALLOWED_ORIGINS) { $env:CORS_ALLOWED_ORIGINS } else { "$PublicOrigin,http://*,https://*" }
 
 if (-not $SkipImageBuild -and $Environment -eq 'prod') {
     Write-Host "[3/6] Building and pushing container images to ACR ($AcrName)..." -ForegroundColor Cyan
@@ -117,6 +117,7 @@ $Replacements = @{
     '${AZURE_STORAGE_BLOB_ENDPOINT}'       = $StorageBlobEndpoint
     '${AZURE_PUBLIC_ORIGIN}'               = $PublicOrigin
     '${CORS_ALLOWED_ORIGINS}'              = $CorsAllowedOrigins
+    'namespace: hibana-prod'               = "namespace: $K8sNamespace"
 }
 
 Get-ChildItem -Path $TmpDir -Filter *.yaml -Recurse | ForEach-Object {
@@ -127,7 +128,32 @@ Get-ChildItem -Path $TmpDir -Filter *.yaml -Recurse | ForEach-Object {
     [IO.File]::WriteAllText($_.FullName, $Content, (New-Object Text.UTF8Encoding $false))
 }
 
+# Pre-stage Namespace, ServiceAccount, and SecretProviderClass before workloads (prevents initial FailedMount events)
+kubectl create namespace $K8sNamespace --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply -f (Join-Path $TmpDir "workload-identity.yaml") -n $K8sNamespace
+kubectl apply -f (Join-Path $TmpDir "secret-provider-class.yaml") -n $K8sNamespace
+kubectl apply -f (Join-Path $TmpDir "configmap.yaml") -n $K8sNamespace
+
+# Apply full Kustomize stack
 kubectl apply -k $TmpDir
 Remove-Item -Path $TmpDir -Recurse -Force
 
-Write-Host "[6/6] Deployment complete! Check rollout status with: kubectl get pods -n $K8sNamespace" -ForegroundColor Green
+Write-Host "[6/6] Ensuring NGINX Ingress Controller and awaiting Public LoadBalancer IP..." -ForegroundColor Cyan
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.12.0/deploy/static/provider/cloud/deploy.yaml
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=180s
+
+$PublicIp = ""
+for ($i = 0; $i -lt 24; $i++) {
+    $PublicIp = (kubectl get svc ingress-nginx-controller -n ingress-nginx -o jsonpath='{.status.loadBalancer.ingress[0].ip}' 2>$null)
+    if (-not [string]::IsNullOrWhiteSpace($PublicIp)) { break }
+    Start-Sleep -Seconds 5
+}
+
+Write-Host "==================================================================" -ForegroundColor Green
+Write-Host "Deployment complete in namespace '$K8sNamespace'!" -ForegroundColor Green
+if (-not [string]::IsNullOrWhiteSpace($PublicIp)) {
+    Write-Host "Frontend B2C Live URL : http://$PublicIp/" -ForegroundColor Cyan
+    Write-Host "API Gateway Health    : http://$PublicIp/actuator/health" -ForegroundColor Cyan
+}
+Write-Host "Check pod status with : kubectl get pods -n $K8sNamespace" -ForegroundColor Green
+Write-Host "==================================================================" -ForegroundColor Green

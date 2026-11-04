@@ -244,19 +244,38 @@ async function handleCompleteOrder() {
       : 'MERCADO_PAGO'
 
   try {
+    const appliedParkingFee = includeParkingPass.value ? parkingPassPrice.value : 0
+
     // 2. Call Orders Backend: POST /api/v1/orders
     const createdOrder = await orderService.createOrder({
       reservationId,
       eventId: eventId.value,
       seatId,
       totalAmount: grandTotal.value,
-      subtotalAmount: subtotal.value,
+      subtotalAmount: subtotal.value + appliedParkingFee,
       serviceFeeAmount: serviceFee.value,
     })
 
     const realOrderId = createdOrder.orderId
     orderId.value = realOrderId
     checkoutStore.lastOrderId = realOrderId
+
+    const invoiceItems = selectedSeats.value.map((s) => ({
+      description: `Entrada Oficial - ${eventTitle.value}`,
+      sectorAndSeat: `${s.sector} • ${s.row} - Asiento ${s.number}`,
+      quantity: 1,
+      unitPrice: s.price,
+      totalPrice: s.price,
+    }))
+    if (appliedParkingFee > 0) {
+      invoiceItems.push({
+        description: `Pase de Estacionamiento Oficial - ${eventVenue.value}`,
+        sectorAndSeat: 'Estacionamiento Cubierto Exclusivo',
+        quantity: 1,
+        unitPrice: appliedParkingFee,
+        totalPrice: appliedParkingFee,
+      })
+    }
 
     // 3. Call Orders Backend Settlement: POST /api/v1/orders/{orderId}/pay
     const paymentResult = await orderService.processPayment(realOrderId, {
@@ -266,13 +285,19 @@ async function handleCompleteOrder() {
       buyerTaxId: checkoutStore.buyerDni,
       installments: installments.value,
       issuingBank: issuingBank.value,
+      eventTitle: eventTitle.value,
+      eventDate: eventDateFormatted.value,
+      venueName: eventVenue.value,
+      currency: currency.value,
+      subtotalAmount: subtotal.value + appliedParkingFee,
+      serviceFeeAmount: serviceFee.value,
+      vatTaxAmount: taxes.value,
+      items: invoiceItems,
     })
 
     if (paymentResult.status === 'PAID') {
-      // 4. Confirm remote reservation holds in Inventory (Redlock hold -> Booked)
-      if (selectedSeats.value.length > 0) {
-        await ticketingStore.confirmAllActiveReservations(realOrderId)
-      }
+      // 4. Reservation confirmation is handled backend-to-backend by Orders Service via Saga
+      ticketingStore.activeHolds = []
 
       // 5. Add issued tickets into the user's digital wallet in Pinia
       const seatsToIssue: Seat[] =

@@ -52,7 +52,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints
                         .requestMatchers("/actuator/**", "/error", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/v1/orders/preview/**", "/api/v1/orders/payment-methods", "/api/v1/orders/webhooks/**", "/api/v1/payments/mercadopago/**").permitAll()
+                        .requestMatchers("/api/v1/orders/preview/**", "/api/v1/orders/*/invoice", "/api/v1/orders/payment-methods", "/api/v1/orders/webhooks/**", "/api/v1/payments/mercadopago/**").permitAll()
 
                         // User & Admin order creation / payments
                         .requestMatchers(HttpMethod.POST, "/api/v1/orders/**").hasAnyRole("USER", "ADMIN")

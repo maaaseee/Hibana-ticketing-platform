@@ -47,7 +47,7 @@ data:
   WAITING_ROOM_URL: "/waiting-room"
 
   # Transactional Mailing & Payment Gateways
-  MAILING_PROVIDER: "acs"
+  MAILING_PROVIDER: "azure-acs"
   MAILING_FROM_EMAIL: "no-reply@azure-ticketing.local"
   PAYMENT_DEBIT_ENABLED: "true"
   PAYMENT_CREDIT_ENABLED: "true"

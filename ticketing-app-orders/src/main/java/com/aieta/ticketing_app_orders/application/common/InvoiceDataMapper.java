@@ -1,5 +1,6 @@
 package com.aieta.ticketing_app_orders.application.common;
 
+import com.aieta.ticketing_app_orders.application.commands.process_payment.ProcessPaymentCommand;
 import com.aieta.ticketing_app_orders.application.dto.InvoiceData;
 import com.aieta.ticketing_app_orders.domain.model.Order;
 import com.aieta.ticketing_app_orders.domain.model.OrderItem;
@@ -9,19 +10,53 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class InvoiceDataMapper {
+
+    private static final Map<String, InvoiceData> INVOICE_METADATA_CACHE = new ConcurrentHashMap<>();
 
     private InvoiceDataMapper() {}
 
     public static InvoiceData fromOrder(Order order, String buyerName, String buyerEmail, String buyerTaxId) {
+        InvoiceData cached = INVOICE_METADATA_CACHE.get(order.getId().toString());
+        if (cached != null) {
+            if (buyerEmail != null && !buyerEmail.isBlank() && !buyerEmail.equals(cached.buyerEmail())) {
+                return new InvoiceData(
+                        cached.invoiceNumber(), cached.orderId(), cached.issuedAt(), cached.caeNumber(),
+                        cached.caeExpiresAt(), cached.buyerName(), buyerEmail, cached.buyerTaxId(),
+                        cached.paymentMethod(), cached.eventId(), cached.eventTitle(), cached.eventDate(),
+                        cached.venueName(), cached.venueAddress(), cached.items(), cached.subtotal(),
+                        cached.serviceFee(), cached.vatTax(), cached.grandTotal(), cached.currency()
+                );
+            }
+            return cached;
+        }
+        return fromOrder(order, new ProcessPaymentCommand(
+                order.getId().toString(),
+                order.getUserId(),
+                order.getPaymentMethod(),
+                buyerEmail,
+                buyerName,
+                buyerTaxId
+        ));
+    }
+
+    public static InvoiceData fromOrder(Order order, ProcessPaymentCommand cmd) {
+        String buyerName = cmd != null ? cmd.buyerName() : null;
+        String buyerEmail = cmd != null ? cmd.buyerEmail() : null;
+        String buyerTaxId = cmd != null ? cmd.buyerTaxId() : null;
+
         String effectiveBuyerName = (buyerName != null && !buyerName.isBlank()) ? buyerName : "Cliente Hibana";
         String effectiveEmail = (buyerEmail != null && !buyerEmail.isBlank())
                 ? buyerEmail
                 : (order.getUserId().contains("@") ? order.getUserId() : order.getUserId() + "@hibana.tk");
         String effectiveTaxId = (buyerTaxId != null && !buyerTaxId.isBlank())
-                ? buyerTaxId
-                : "Consumidor Final (DNI: 35.882.109)";
+                ? (buyerTaxId.toUpperCase().startsWith("DNI") || buyerTaxId.toUpperCase().startsWith("CUIT") || buyerTaxId.toUpperCase().startsWith("CUIL")
+                    ? buyerTaxId
+                    : "DNI / CUIL: " + buyerTaxId)
+                : "Consumidor Final";
 
         Instant issuedAt = order.getUpdatedAt() != null ? order.getUpdatedAt() : Instant.now();
         Instant caeExpiresAt = issuedAt.plusSeconds(10L * 86400L); // 10 days validity
@@ -31,16 +66,42 @@ public final class InvoiceDataMapper {
         String caeNum = "74123890" + String.format("%06d", hash % 1_000_000);
 
         BigDecimal grandTotal = order.getTotal().amount();
-        BigDecimal subtotal = order.getSubtotal() != null ? order.getSubtotal().amount() : grandTotal.multiply(new BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP);
-        BigDecimal serviceFee = order.getServiceFee() != null ? order.getServiceFee().amount() : grandTotal.subtract(subtotal);
-        BigDecimal vatTax = grandTotal.subtract(subtotal).subtract(serviceFee);
+        BigDecimal subtotal = (cmd != null && cmd.subtotalAmount() != null)
+                ? cmd.subtotalAmount()
+                : (order.getSubtotal() != null ? order.getSubtotal().amount() : grandTotal.multiply(new BigDecimal("0.90")).setScale(2, RoundingMode.HALF_UP));
+        BigDecimal serviceFee = (cmd != null && cmd.serviceFeeAmount() != null)
+                ? cmd.serviceFeeAmount()
+                : (order.getServiceFee() != null ? order.getServiceFee().amount() : grandTotal.subtract(subtotal));
+        BigDecimal vatTax = (cmd != null && cmd.vatTaxAmount() != null)
+                ? cmd.vatTaxAmount()
+                : grandTotal.subtract(subtotal).subtract(serviceFee).max(BigDecimal.ZERO);
+
+        String eventTitle = (cmd != null && cmd.eventTitle() != null && !cmd.eventTitle().isBlank())
+                ? cmd.eventTitle()
+                : "Hibana Live Experience - " + order.getEventId();
+        String eventDate = (cmd != null && cmd.eventDate() != null && !cmd.eventDate().isBlank())
+                ? cmd.eventDate()
+                : "Fecha Confirmada en Ticket Oficial";
+        String venueName = (cmd != null && cmd.venueName() != null && !cmd.venueName().isBlank())
+                ? cmd.venueName()
+                : "Estadio Hibana Arena";
+        String venueAddress = (cmd != null && cmd.venueAddress() != null && !cmd.venueAddress().isBlank())
+                ? cmd.venueAddress()
+                : "Acceso Oficial - Validación QR";
+        String currency = (cmd != null && cmd.currency() != null && !cmd.currency().isBlank())
+                ? cmd.currency()
+                : "ARS";
 
         List<InvoiceData.InvoiceItem> items = new ArrayList<>();
-        if (order.getItems() != null && !order.getItems().isEmpty()) {
+        if (cmd != null && cmd.items() != null && !cmd.items().isEmpty()) {
+            items.addAll(cmd.items());
+        } else if (order.getItems() != null && !order.getItems().isEmpty()) {
             for (OrderItem item : order.getItems()) {
-                String seatLabel = item.getSeatId() != null ? "Butaca " + item.getSeatId() : "Sector General";
+                String seatLabel = item.getSeatId() != null ? "Ubicación: " + item.getSeatId() : "Sector General";
                 items.add(new InvoiceData.InvoiceItem(
-                        item.getDescription() != null ? item.getDescription() : "Entrada para evento " + order.getEventId(),
+                        item.getDescription() != null && !item.getDescription().startsWith("Ticket for event")
+                                ? item.getDescription()
+                                : "Entrada Oficial - " + eventTitle,
                         seatLabel,
                         item.getQuantity(),
                         item.getUnitPrice(),
@@ -49,15 +110,20 @@ public final class InvoiceDataMapper {
             }
         } else {
             items.add(new InvoiceData.InvoiceItem(
-                    "Entrada Oficial Hibana - Acceso General",
-                    "Butaca " + order.getSeatId(),
+                    "Entrada Oficial - " + eventTitle,
+                    "Ubicación: " + order.getSeatId(),
                     1,
                     subtotal,
                     subtotal
             ));
         }
 
-        return new InvoiceData(
+        String paymentMethodLabel = order.getPaymentMethod() != null ? order.getPaymentMethod().name() : "TARJETA_CREDITO";
+        if (cmd != null && cmd.installments() != null && cmd.installments() > 1) {
+            paymentMethodLabel += " (" + cmd.installments() + " cuotas)";
+        }
+
+        InvoiceData result = new InvoiceData(
                 invoiceNum,
                 order.getId().toString(),
                 issuedAt,
@@ -66,19 +132,21 @@ public final class InvoiceDataMapper {
                 effectiveBuyerName,
                 effectiveEmail,
                 effectiveTaxId,
-                order.getPaymentMethod() != null ? order.getPaymentMethod().name() : "POCKET_WALLET",
+                paymentMethodLabel,
                 order.getEventId(),
-                "Hibana Live Experience - " + order.getEventId(),
-                "Sábado 15 de Noviembre, 2026 - 21:00 hs",
-                "Estadio Hibana Arena",
-                "Av. del Libertador 7401, CABA",
+                eventTitle,
+                eventDate,
+                venueName,
+                venueAddress,
                 items,
                 subtotal,
                 serviceFee,
                 vatTax,
                 grandTotal,
-                "EUR"
+                currency
         );
+        INVOICE_METADATA_CACHE.put(order.getId().toString(), result);
+        return result;
     }
 
     public static InvoiceData createSampleInvoice() {

@@ -731,8 +731,9 @@ onMounted(async () => {
   if (catalogStore.events.length <= 1) {
     await catalogStore.fetchEvents()
   }
-  if (!queueStore.checkoutToken) {
-    queueStore.checkoutToken = `tkn_auto_${Date.now()}`
+  if (!queueStore.checkoutToken || !queueStore.checkoutToken.includes('.')) {
+    queueStore.currentEventId = eventId.value
+    await queueStore.skipQueueForDemo()
   }
   if (!ticketingStore.isLockActive) {
     ticketingStore.startLockTimer(600)

@@ -249,8 +249,14 @@ public class OpenPdfInvoiceGeneratorAdapter implements InvoicePdfPort {
         Font venueFont = getBodyFont(8.5f, Font.NORMAL, COLOR_TEXT_MUTED);
 
         Paragraph nameP = new Paragraph(data.buyerName().toUpperCase(), nameFont);
-        nameP.setSpacingAfter(4f);
+        nameP.setSpacingAfter(2f);
         leftCell.addElement(nameP);
+
+        if (data.buyerTaxId() != null && !data.buyerTaxId().isBlank()) {
+            Paragraph taxP = new Paragraph(data.buyerTaxId() + (data.buyerEmail() != null ? " • " + data.buyerEmail() : ""), venueFont);
+            taxP.setSpacingAfter(4f);
+            leftCell.addElement(taxP);
+        }
 
         Paragraph invP = new Paragraph("FACTURA Nº " + (data.invoiceNumber() != null ? data.invoiceNumber() : "001"), invoiceNoFont);
         invP.setSpacingAfter(8f);
@@ -467,8 +473,11 @@ public class OpenPdfInvoiceGeneratorAdapter implements InvoicePdfPort {
         totalsTable.setWidthPercentage(100);
         totalsTable.setWidths(new float[]{55f, 45f});
 
-        addSummaryLine(totalsTable, "IMPORTE TOTAL:", formatCurrency(data.subtotal()), totLabelFont, totValFont);
-        addSummaryLine(totalsTable, "IVA (21%):", formatCurrency(data.vatTax()), totLabelFont, totValFont);
+        addSummaryLine(totalsTable, "SUBTOTAL CONCEPTOS:", formatCurrency(data.subtotal()), totLabelFont, totValFont);
+        if (data.serviceFee() != null && data.serviceFee().compareTo(BigDecimal.ZERO) > 0) {
+            addSummaryLine(totalsTable, "CARGO POR SERVICIO:", formatCurrency(data.serviceFee()), totLabelFont, totValFont);
+        }
+        addSummaryLine(totalsTable, "IMPUESTOS / IVA:", formatCurrency(data.vatTax()), totLabelFont, totValFont);
         addSummaryLine(totalsTable, "IMPORTE A PAGAR:", formatCurrency(data.grandTotal()), grandLabelFont, grandValFont);
 
         rightCell.addElement(totalsTable);

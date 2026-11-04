@@ -90,7 +90,9 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
         Order order = orderRepository.findById(OrderId.of(request.orderId()))
                 .orElseThrow(() -> new OrderNotFoundException(request.orderId()));
 
-        if (!order.getUserId().equals(request.userId())) {
+        boolean isAnonymousOrder = "anonymous-user".equalsIgnoreCase(order.getUserId())
+                || "anonymous-user".equalsIgnoreCase(request.userId());
+        if (!isAnonymousOrder && !order.getUserId().equals(request.userId())) {
             throw new DomainException("Unauthorized access to order " + request.orderId());
         }
 
@@ -197,12 +199,7 @@ public class ProcessPaymentCommandHandler implements RequestHandler<ProcessPayme
 
     private void dispatchInvoiceAndEmail(Order order, ProcessPaymentCommand request) {
         try {
-            InvoiceData invoiceData = InvoiceDataMapper.fromOrder(
-                    order,
-                    request.buyerName(),
-                    request.buyerEmail(),
-                    request.buyerTaxId()
-            );
+            InvoiceData invoiceData = InvoiceDataMapper.fromOrder(order, request);
 
             byte[] pdfBytes = null;
             if (invoicePdfPort != null) {

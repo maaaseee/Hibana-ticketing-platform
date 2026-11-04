@@ -20,6 +20,14 @@ export interface CreateOrderResult {
   createdAt: string
 }
 
+export interface InvoiceLineItemPayload {
+  description: string
+  sectorAndSeat: string
+  quantity: number
+  unitPrice: number
+  totalPrice: number
+}
+
 export interface ProcessPaymentPayload {
   paymentMethod: 'DEBIT_CARD' | 'CREDIT_CARD' | 'MERCADO_PAGO'
   buyerEmail?: string
@@ -27,6 +35,15 @@ export interface ProcessPaymentPayload {
   buyerTaxId?: string
   installments?: number
   issuingBank?: string
+  eventTitle?: string
+  eventDate?: string
+  venueName?: string
+  venueAddress?: string
+  currency?: string
+  subtotalAmount?: number
+  serviceFeeAmount?: number
+  vatTaxAmount?: number
+  items?: InvoiceLineItemPayload[]
 }
 
 export interface ProcessPaymentResult {
@@ -153,10 +170,18 @@ export const orderService = {
    */
   async downloadInvoicePdf(orderId: string): Promise<void> {
     try {
+      const storedToken =
+        typeof sessionStorage !== 'undefined'
+          ? sessionStorage.getItem('waiting_room_checkout_token')
+          : null
+      const currentUserId = getCurrentUserId()
+
       const response = await fetch(`/api/v1/orders/${orderId}/invoice`, {
         method: 'GET',
         headers: {
           'Accept': 'application/pdf',
+          'X-Client-User-Id': currentUserId,
+          ...(storedToken ? { 'X-Checkout-Token': storedToken } : {}),
         },
       })
 

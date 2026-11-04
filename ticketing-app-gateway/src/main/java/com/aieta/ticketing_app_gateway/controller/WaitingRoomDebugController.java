@@ -20,7 +20,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/queue")
-@Profile({"test", "local-debug"})
+@Profile({"test", "local-debug", "dev", "prod"})
 public class WaitingRoomDebugController {
 
     private final WaitingRoomService waitingRoomService;

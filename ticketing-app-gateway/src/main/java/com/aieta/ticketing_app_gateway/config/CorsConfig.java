@@ -41,6 +41,9 @@ public class CorsConfig {
                 "Accept",
                 "Authorization",
                 "X-Checkout-Token",
+                "X-Client-User-Id",
+                "X-Queue-Session",
+                "X-Queue-Token",
                 "Trace-ID",
                 "X-Trace-Id",
                 "X-Requested-With"
