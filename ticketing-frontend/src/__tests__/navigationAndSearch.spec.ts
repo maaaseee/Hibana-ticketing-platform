@@ -97,16 +97,14 @@ describe('Fase 2: Navegación, Búsqueda Global & Accesibilidad', () => {
     })
   })
 
-  describe('AppNavbar Search Button', () => {
-    it('includes the search button with ⌘K shortcut badge in navbar', () => {
+  describe('AppNavbar Layout', () => {
+    it('omits the search bar button in navbar for a cleaner navigation', () => {
       const wrapper = mount(AppNavbar, {
         global: { plugins: [pinia, router] }
       })
 
       const searchBtn = wrapper.find('button[aria-label="Buscar shows y artistas"]')
-      expect(searchBtn.exists()).toBe(true)
-      expect(searchBtn.text()).toContain('Buscar')
-      expect(searchBtn.text()).toContain('⌘K')
+      expect(searchBtn.exists()).toBe(false)
     })
   })
 })
