@@ -36,6 +36,8 @@ infra/*
 !infra/bicep/*
 !infra/k8s/
 !infra/k8s/*
+!infra/observability/
+!infra/observability/*
 !infra/README.md
 !infra/deploy-azure.ps1
 !infra/deploy-azure.sh

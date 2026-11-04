@@ -1,0 +1,37 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: ticketing-prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: ticketing-grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: hibana_admin_2026
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/hibana-stress-dashboard.json
+    volumes:
+      - ./infra/observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ./infra/observability/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ./infra/observability/hibana-stress-dashboard.json:/var/lib/grafana/dashboards/hibana-stress-dashboard.json:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - ticketing-net
+
+networks:
+  ticketing-net:
+    external: false
