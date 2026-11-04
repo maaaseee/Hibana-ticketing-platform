@@ -31,7 +31,7 @@ param gatewayHmacSecret string
 param mercadoPagoWebhookSecret string = ''
 
 @description('AKS VM SKU for application node pool')
-param aksNodeVmSize string = 'Standard_D4s_v5'
+param aksNodeVmSize string = 'Standard_D4s_v6'
 
 var uniqueSuffix = uniqueString(resourceGroup().id, environmentName)
 var keyVaultName = take('kv-hibana-${environmentName}-${uniqueSuffix}', 24)
@@ -186,9 +186,12 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 }
 
 // =============================================================================
-// 3. Azure Container Registry (ACR)
+// 3. Container Registry (ACR in 'prod'; GitHub Container Registry ghcr.io in 'dev')
 // =============================================================================
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+@description('GitHub Container Registry namespace used when environmentName != prod')
+param ghcrNamespace string = 'ghcr.io/maaaseee'
+
+resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = if (environmentName == 'prod') {
   name: acrName
   location: location
   tags: commonTags
@@ -244,14 +247,14 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
         }
       }
     }
-    agentPoolProfiles: [
+    agentPoolProfiles: environmentName == 'prod' ? [
       {
         name: 'systempool'
         count: 2
         minCount: 2
         maxCount: 3
         enableAutoScaling: true
-        vmSize: 'Standard_D2s_v5'
+        vmSize: 'Standard_D2s_v6'
         osType: 'Linux'
         osSKU: 'Ubuntu'
         mode: 'System'
@@ -279,14 +282,26 @@ resource aksCluster 'Microsoft.ContainerService/managedClusters@2024-02-01' = {
           '3'
         ]
       }
+    ] : [
+      {
+        name: 'systempool'
+        count: 1
+        enableAutoScaling: false
+        vmSize: aksNodeVmSize
+        maxPods: 60
+        osType: 'Linux'
+        osSKU: 'Ubuntu'
+        mode: 'System'
+        vnetSubnetID: vnet.properties.subnets[1].id
+      }
     ]
   }
 }
 
-// Grant AKS Kubelet Identity AcrPull permission on ACR
+// Grant AKS Kubelet Identity AcrPull permission on ACR (only in 'prod')
 var acrPullRoleId = '7f951dda-4ed3-4680-a7ca-43fe172d538d'
-resource aksAcrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(acr.id, aksCluster.id, acrPullRoleId)
+resource aksAcrPullRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (environmentName == 'prod') {
+  name: guid(resourceGroup().id, aksCluster.id, acrPullRoleId)
   scope: acr
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', acrPullRoleId)
@@ -320,8 +335,9 @@ resource federatedCredential 'Microsoft.ManagedIdentity/userAssignedIdentities/f
 
 // =============================================================================
 // 6. Azure Database for PostgreSQL Flexible Server (PostgreSQL 17 + pgvector)
+//    Provisioned as managed PaaS in 'prod'; runs in-cluster on AKS in 'dev'
 // =============================================================================
-resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = if (environmentName == 'prod') {
   name: postgresServerName
   location: location
   tags: commonTags
@@ -347,7 +363,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-pr
   }
 }
 
-resource postgresExtensions 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2023-12-01-preview' = {
+resource postgresExtensions 'Microsoft.DBforPostgreSQL/flexibleServers/configurations@2023-12-01-preview' = if (environmentName == 'prod') {
   parent: postgresServer
   name: 'azure.extensions'
   properties: {
@@ -356,7 +372,7 @@ resource postgresExtensions 'Microsoft.DBforPostgreSQL/flexibleServers/configura
   }
 }
 
-resource postgresDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
+resource postgresDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = if (environmentName == 'prod') {
   parent: postgresServer
   name: 'ticketing_db'
   properties: {
@@ -365,7 +381,7 @@ resource postgresDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2
   }
 }
 
-resource postgresAllowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = {
+resource postgresAllowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = if (environmentName == 'prod') {
   parent: postgresServer
   name: 'AllowAllAzureServicesAndResourcesWithinAzureIps'
   properties: {
@@ -376,8 +392,9 @@ resource postgresAllowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/f
 
 // =============================================================================
 // 7. Azure Cache for Redis (Redlock & Virtual Waiting Room ZSETs)
+//    Provisioned as managed PaaS in 'prod'; runs in-cluster on AKS in 'dev'
 // =============================================================================
-resource redisCache 'Microsoft.Cache/redis@2023-08-01' = {
+resource redisCache 'Microsoft.Cache/redis@2023-08-01' = if (environmentName == 'prod') {
   name: redisCacheName
   location: location
   tags: commonTags
@@ -550,8 +567,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     }
     enableRbacAuthorization: true
     enableSoftDelete: true
-    softDeleteRetentionInDays: 90
-    enablePurgeProtection: true
+    softDeleteRetentionInDays: environmentName == 'prod' ? 90 : 7
+    enablePurgeProtection: environmentName == 'prod' ? true : null
     networkAcls: {
       bypass: 'AzureServices'
       defaultAction: 'Allow'
@@ -613,7 +630,7 @@ resource secretRedisPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'redis-password'
   properties: {
     contentType: 'text/plain'
-    value: redisCache.listKeys().primaryKey
+    value: environmentName == 'prod' ? redisCache!.listKeys().primaryKey : postgresAdminPassword
   }
 }
 
@@ -650,13 +667,13 @@ resource secretAppInsights 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 // =============================================================================
 output aksClusterName string = aksCluster.name
 output aksOidcIssuerUrl string = aksCluster.properties.oidcIssuerProfile.issuerURL
-output acrLoginServer string = acr.properties.loginServer
+output acrLoginServer string = environmentName == 'prod' ? acr!.properties.loginServer : ghcrNamespace
 output keyVaultName string = keyVault.name
 output keyVaultUri string = keyVault.properties.vaultUri
 output managedIdentityClientId string = backendManagedIdentity.properties.clientId
 output managedIdentityPrincipalId string = backendManagedIdentity.properties.principalId
-output postgresFqdn string = postgresServer.properties.fullyQualifiedDomainName
-output redisHostName string = redisCache.properties.hostName
+output postgresFqdn string = environmentName == 'prod' ? postgresServer!.properties.fullyQualifiedDomainName : 'hibana-postgres.${k8sNamespace}.svc.cluster.local'
+output redisHostName string = environmentName == 'prod' ? redisCache!.properties.hostName : 'hibana-redis.${k8sNamespace}.svc.cluster.local'
 output serviceBusFqdn string = '${serviceBusNamespace.name}.servicebus.windows.net'
 output storageBlobEndpoint string = storageAccount.properties.primaryEndpoints.blob
 output appInsightsConnectionString string = appInsights.properties.ConnectionString

@@ -1,0 +1,193 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: hibana-dev
+
+resources:
+  - workload-identity.yaml
+  - secret-provider-class.yaml
+  - configmap.yaml
+  - network-policy.yaml
+  - dev-data-services.yaml
+  - catalog-deployment.yaml
+  - inventory-deployment.yaml
+  - orders-deployment.yaml
+  - gateway-deployment.yaml
+  - frontend-deployment.yaml
+  - hpa-autoscaling.yaml
+  - ingress.yaml
+
+patches:
+  # 0. Namespace: rename hibana-prod to hibana-dev
+  - target:
+      kind: Namespace
+      name: hibana-prod
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: hibana-dev
+      - op: replace
+        path: /metadata/labels/environment
+        value: dev
+
+  # 1. ConfigMap: point internal service discovery URLs & in-cluster data settings to hibana-dev
+  - target:
+      kind: ConfigMap
+      name: hibana-config
+    patch: |-
+      - op: replace
+        path: /data/CATALOG_SERVICE_URL
+        value: "http://ticketing-catalog.hibana-dev.svc.cluster.local:8081"
+      - op: replace
+        path: /data/INVENTORY_SERVICE_URL
+        value: "http://ticketing-inventory.hibana-dev.svc.cluster.local:8082"
+      - op: replace
+        path: /data/ORDERS_SERVICE_URL
+        value: "http://ticketing-orders.hibana-dev.svc.cluster.local:8083"
+      - op: replace
+        path: /data/DB_SSL_MODE
+        value: "disable"
+      - op: replace
+        path: /data/REDIS_PORT
+        value: "6379"
+      - op: replace
+        path: /data/REDIS_SSL
+        value: "false"
+
+  # 2. Inventory Deployment: lower baseline CPU/RAM requests so 1x 4-vCPU node can scale up to 10+ pods under k6 load
+  - target:
+      kind: Deployment
+      name: ticketing-inventory
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 2
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "150m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "384Mi"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/cpu
+        value: "1500m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: "1024Mi"
+
+  # 3. Gateway, Catalog, Orders Deployments: 1 baseline replica with 100m CPU request (bursts up to 1000m)
+  - target:
+      kind: Deployment
+      name: ticketing-gateway
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "384Mi"
+
+  - target:
+      kind: Deployment
+      name: ticketing-catalog
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "384Mi"
+
+  - target:
+      kind: Deployment
+      name: ticketing-orders
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "100m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "384Mi"
+
+  # 4. Frontends B2C & Admin: 1 baseline replica with 50m CPU request
+  - target:
+      kind: Deployment
+      name: ticketing-frontend
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "50m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "64Mi"
+
+  - target:
+      kind: Deployment
+      name: ticketing-admin
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/cpu
+        value: "50m"
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: "64Mi"
+
+  # 5. HPA Autoscaling tuned for 1x 4-vCPU node k6 burst testing (scales up to ~20 total pods)
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ticketing-inventory-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 2
+      - op: replace
+        path: /spec/maxReplicas
+        value: 8
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ticketing-gateway-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 4
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ticketing-catalog-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 3
+
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: ticketing-orders-hpa
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 4

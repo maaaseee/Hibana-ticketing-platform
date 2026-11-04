@@ -1,0 +1,173 @@
+# =============================================================================
+# In-Cluster Data Services for 'dev' / Load Testing Profile
+# Runs PostgreSQL 17 (pgvector) & Redis 7 inside the AKS single node
+# when Azure Free Trial restricts managed PostgreSQL / Redis PaaS creation.
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hibana-postgres
+  namespace: hibana-dev
+  labels:
+    app: hibana-postgres
+    app.kubernetes.io/part-of: hibana-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hibana-postgres
+  template:
+    metadata:
+      labels:
+        app: hibana-postgres
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: hibana-backend-sa
+      containers:
+        - name: postgres
+          image: pgvector/pgvector:pg17
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: "ticketing_db"
+            - name: POSTGRES_USER
+              value: "ticketing_admin"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: DB_PASSWORD
+            - name: PGDATA
+              value: "/var/lib/postgresql/data/pgdata"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: postgres-data
+          emptyDir: {}
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-keyvault-secrets-provider"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hibana-postgres
+  namespace: hibana-dev
+  labels:
+    app: hibana-postgres
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+  selector:
+    app: hibana-postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hibana-redis
+  namespace: hibana-dev
+  labels:
+    app: hibana-redis
+    app.kubernetes.io/part-of: hibana-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hibana-redis
+  template:
+    metadata:
+      labels:
+        app: hibana-redis
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: hibana-backend-sa
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command: ["sh", "-c", "redis-server --requirepass \"$REDIS_PASSWORD\" --maxmemory-policy volatile-lru"]
+          ports:
+            - containerPort: 6379
+              name: redis
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: REDIS_PASSWORD
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-keyvault-secrets-provider"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hibana-redis
+  namespace: hibana-dev
+  labels:
+    app: hibana-redis
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    app: hibana-redis
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backend-to-incluster-data
+  namespace: hibana-dev
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app, operator: In, values: ["hibana-postgres", "hibana-redis"] }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - { key: app, operator: In, values: ["ticketing-gateway", "ticketing-catalog", "ticketing-inventory", "ticketing-orders"] }
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379

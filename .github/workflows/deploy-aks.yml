@@ -11,14 +11,14 @@ on:
         options:
           - prod
           - staging
+          - dev
 
 permissions:
   id-token: write
   contents: read
 
 env:
-  AZURE_RESOURCE_GROUP: rg-hibana-prod
-  AZURE_LOCATION: eastus
+  AZURE_LOCATION: eastus2
 
 jobs:
   provision-and-deploy:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Execute Azure Bicep & AKS Deployment Pipeline
         env:
-          RESOURCE_GROUP: ${{ env.AZURE_RESOURCE_GROUP }}
+          RESOURCE_GROUP: rg-hibana-${{ inputs.environment || 'prod' }}
           LOCATION: ${{ env.AZURE_LOCATION }}
           ENVIRONMENT: ${{ inputs.environment || 'prod' }}
           HIBANA_POSTGRES_PASSWORD: ${{ secrets.HIBANA_POSTGRES_PASSWORD }}

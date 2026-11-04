@@ -4,7 +4,7 @@ param environmentName = 'prod'
 param k8sNamespace = 'hibana-prod'
 param k8sServiceAccountName = 'hibana-backend-sa'
 param postgresAdminLogin = 'ticketing_admin'
-param aksNodeVmSize = 'Standard_D4s_v5'
+param aksNodeVmSize = 'Standard_D4s_v6'
 
 // Provide secrets securely via environment variables during deployment
 param postgresAdminPassword = readEnvironmentVariable('HIBANA_POSTGRES_PASSWORD', 'ChangeMe_StrongPsqlPass_2026!')

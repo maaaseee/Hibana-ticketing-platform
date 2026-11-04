@@ -1,121 +1,133 @@
 <#
 .SYNOPSIS
-    Automated End-to-End Azure Infrastructure & AKS Deployment Script for Hibana.tk
-.DESCRIPTION
-    1. Provisions Azure PaaS & AKS infrastructure via Bicep (infra/bicep/main.bicep).
-    2. Builds & pushes backend (Java 25 / Spring Boot 4) and frontend (Vue 3) images to ACR.
-    3. Uploads initial venue seatmap JSON files to Azure Blob Storage.
-    4. Hydrates Kubernetes manifests with Bicep outputs and deploys to AKS.
+  Deploys Hibana.tk Azure Infrastructure (Bicep) and Kubernetes Manifests (Kustomize)
+  supporting both Production ('prod') and Single-Node Load-Testing ('dev') workflows.
+
+.EXAMPLE
+  # 1. Dry-run (What-If) for dev/test (1x 4-vCPU node for k6 load testing):
+  .\infra\deploy-azure.ps1 -Environment dev -WhatIf
+
+  # 2. Full deployment for dev/test:
+  .\infra\deploy-azure.ps1 -Environment dev
+
+  # 3. Full deployment for production (Multi-pool HA):
+  .\infra\deploy-azure.ps1 -Environment prod
 #>
 param(
-    [string]$ResourceGroupName = "rg-hibana-prod",
-    [string]$Location = "eastus",
-    [string]$EnvironmentName = "prod",
-    [string]$PublicOrigin = "",
-    [string]$CorsAllowedOrigins = "",
-    [Parameter(Mandatory=$true)][string]$PostgresPassword,
-    [Parameter(Mandatory=$true)][string]$WaitingRoomJwtSecret,
-    [Parameter(Mandatory=$true)][string]$GatewayHmacSecret
+    [ValidateSet('prod', 'staging', 'dev')]
+    [string]$Environment = 'dev',
+
+    [string]$Location = 'eastus2',
+
+    [string]$ResourceGroup = "rg-hibana-$Environment",
+
+    [switch]$WhatIf,
+
+    [switch]$SkipImageBuild
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-Write-Host "==========================================================" -ForegroundColor Cyan
-Write-Host " Hibana.tk - Azure AKS Cloud-Native Deployment Pipeline" -ForegroundColor Cyan
-Write-Host "==========================================================" -ForegroundColor Cyan
+$K8sNamespace = "hibana-$Environment"
+$BicepParamFile = if ($Environment -eq 'prod') { 'infra/bicep/main.bicepparam' } else { 'infra/bicep/dev.bicepparam' }
+$KustomizeMode = if ($Environment -eq 'prod') { 'kustomization.yaml (prod)' } else { 'kustomization.dev.yaml (single-node k6 profile)' }
 
-# 1. Ensure Resource Group exists
-Write-Host "[1/6] Creating Resource Group '$ResourceGroupName' in '$Location'..." -ForegroundColor Yellow
-az group create --name $ResourceGroupName --location $Location --output none
+# Ensure default secrets exist in environment if not already set by user
+if (-not $env:HIBANA_POSTGRES_PASSWORD)        { $env:HIBANA_POSTGRES_PASSWORD        = 'Hibana_StrongPsqlPass_2026!' }
+if (-not $env:HIBANA_WAITING_ROOM_JWT_SECRET) { $env:HIBANA_WAITING_ROOM_JWT_SECRET = 'Hibana_WaitingRoomJwtSecret_256Bit_2026_SecureKey!' }
+if (-not $env:HIBANA_GATEWAY_HMAC_SECRET)     { $env:HIBANA_GATEWAY_HMAC_SECRET     = 'Hibana_GatewayInternalHmacSecret_256Bit_2026_Key!' }
+if (-not $env:HIBANA_MP_WEBHOOK_SECRET)       { $env:HIBANA_MP_WEBHOOK_SECRET       = 'Hibana_MercadoPagoWebhookSecret_2026!' }
 
-# 2. Deploy Bicep Infrastructure
-Write-Host "[2/6] Deploying Azure Infrastructure via Bicep (AKS, PostgreSQL 17, Redis, Service Bus, Key Vault, ACR, Storage)..." -ForegroundColor Yellow
-$deploymentJson = az deployment group create `
-    --resource-group $ResourceGroupName `
-    --template-file "infra/bicep/main.bicep" `
-    --parameters `
-        environmentName=$EnvironmentName `
-        postgresAdminPassword=$PostgresPassword `
-        waitingRoomJwtSecret=$WaitingRoomJwtSecret `
-        gatewayHmacSecret=$GatewayHmacSecret `
+Write-Host "[1/6] Ensuring Resource Group '$ResourceGroup' in '$Location'..." -ForegroundColor Cyan
+az group create --name $ResourceGroup --location $Location --output none
+
+if ($WhatIf) {
+    Write-Host "[2/6] Running Azure Bicep What-If Simulation ($BicepParamFile)..." -ForegroundColor Yellow
+    az deployment group what-if `
+        --resource-group $ResourceGroup `
+        --template-file infra/bicep/main.bicep `
+        --parameters $BicepParamFile `
+        --parameters environmentName=$Environment k8sNamespace=$K8sNamespace
+    Write-Host "What-If complete. Re-run without -WhatIf to provision resources." -ForegroundColor Green
+    return
+}
+
+Write-Host "[2/6] Deploying Azure Infrastructure via Bicep ($BicepParamFile)..." -ForegroundColor Cyan
+$OutputsJson = az deployment group create `
+    --resource-group $ResourceGroup `
+    --template-file infra/bicep/main.bicep `
+    --parameters $BicepParamFile `
+    --parameters environmentName=$Environment k8sNamespace=$K8sNamespace `
     --query "properties.outputs" `
-    --output json | ConvertFrom-Json
+    --output json
 
-$aksClusterName       = $deploymentJson.aksClusterName.value
-$acrLoginServer       = $deploymentJson.acrLoginServer.value
-$acrName              = $acrLoginServer.Split('.')[0]
-$keyVaultName         = $deploymentJson.keyVaultName.value
-$keyVaultUri          = $deploymentJson.keyVaultUri.value
-$workloadClientId     = $deploymentJson.managedIdentityClientId.value
-$postgresFqdn         = $deploymentJson.postgresFqdn.value
-$redisHostName        = $deploymentJson.redisHostName.value
-$storageBlobEndpoint  = $deploymentJson.storageBlobEndpoint.value
-$tenantId             = (az account show --query tenantId -o tsv).Trim()
-if ([string]::IsNullOrWhiteSpace($PublicOrigin)) {
-    $PublicOrigin = "http://hibana-$EnvironmentName.$Location.cloudapp.azure.com"
-}
-if ([string]::IsNullOrWhiteSpace($CorsAllowedOrigins)) {
-    $CorsAllowedOrigins = $PublicOrigin
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($OutputsJson)) {
+    throw "Bicep deployment failed (exit code $LASTEXITCODE). Aborting script before ACR/Kubernetes steps."
 }
 
-Write-Host "  -> AKS Cluster:    $aksClusterName" -ForegroundColor Green
-Write-Host "  -> ACR Server:     $acrLoginServer" -ForegroundColor Green
-Write-Host "  -> Key Vault:      $keyVaultName" -ForegroundColor Green
-Write-Host "  -> PostgreSQL:     $postgresFqdn" -ForegroundColor Green
-Write-Host "  -> Redis Cache:    $redisHostName" -ForegroundColor Green
+$Outputs = $OutputsJson | ConvertFrom-Json
 
-# 3. Build & Push Container Images to ACR
-Write-Host "[3/6] Building and pushing microservice & frontend images to ACR ($acrName)..." -ForegroundColor Yellow
-az acr build --registry $acrName --image "ticketing-gateway:latest" ./ticketing-app-gateway
-az acr build --registry $acrName --image "ticketing-catalog:latest" ./ticketing-app-catalog
-az acr build --registry $acrName --image "ticketing-inventory:latest" ./ticketing-app-inventory
-az acr build --registry $acrName --image "ticketing-orders:latest" ./ticketing-app-orders
-az acr build --registry $acrName --image "ticketing-frontend:latest" --file ./ticketing-frontend/Dockerfile.prod ./ticketing-frontend
-az acr build --registry $acrName --image "ticketing-admin:latest" --file ./ticketing-admin/Dockerfile.prod ./ticketing-admin
+$AksClusterName            = $Outputs.aksClusterName.value
+$AcrLoginServer            = $Outputs.acrLoginServer.value
+$AcrName                   = ($AcrLoginServer -split '\.')[0]
+$KeyVaultName              = $Outputs.keyVaultName.value
+$KeyVaultUri               = $Outputs.keyVaultUri.value
+$WorkloadIdentityClientId  = $Outputs.managedIdentityClientId.value
+$PostgresFqdn              = $Outputs.postgresFqdn.value
+$RedisHostName             = $Outputs.redisHostName.value
+$StorageBlobEndpoint       = $Outputs.storageBlobEndpoint.value
+$TenantId                  = (az account show --query tenantId -o tsv).Trim()
+$PublicOrigin              = if ($env:AZURE_PUBLIC_ORIGIN) { $env:AZURE_PUBLIC_ORIGIN } else { "http://hibana-$Environment.$Location.cloudapp.azure.com" }
+$CorsAllowedOrigins        = if ($env:CORS_ALLOWED_ORIGINS) { $env:CORS_ALLOWED_ORIGINS } else { $PublicOrigin }
 
-# 4. Seed Venue Seat Map JSON files to Azure Blob Storage
-Write-Host "[4/6] Uploading venue seat map layouts (.json) to Azure Blob Storage..." -ForegroundColor Yellow
-$storageAccountName = ($storageBlobEndpoint -replace "https://", "").Split('.')[0]
-Get-ChildItem -Path "infra/local-dev/seat-maps/*.json" | ForEach-Object {
-    az storage blob upload `
-        --account-name $storageAccountName `
-        --container-name "venues" `
-        --name "seatmaps/$($_.Name)" `
-        --file $_.FullName `
-        --auth-mode login `
-        --overwrite true `
-        --output none
+if (-not $SkipImageBuild -and $Environment -eq 'prod') {
+    Write-Host "[3/6] Building and pushing container images to ACR ($AcrName)..." -ForegroundColor Cyan
+    az acr build --registry $AcrName --image "ticketing-gateway:latest" ./ticketing-app-gateway
+    az acr build --registry $AcrName --image "ticketing-catalog:latest" ./ticketing-app-catalog
+    az acr build --registry $AcrName --image "ticketing-inventory:latest" ./ticketing-app-inventory
+    az acr build --registry $AcrName --image "ticketing-orders:latest" ./ticketing-app-orders
+    az acr build --registry $AcrName --image "ticketing-frontend:latest" --file ./ticketing-frontend/Dockerfile.prod ./ticketing-frontend
+    az acr build --registry $AcrName --image "ticketing-admin:latest" --file ./ticketing-admin/Dockerfile.prod ./ticketing-admin
+} else {
+    Write-Host "[3/6] Using pre-built cloud images from Container Registry ($AcrLoginServer)." -ForegroundColor Yellow
 }
 
-# 5. Fetch AKS Credentials
-Write-Host "[5/6] Configuring kubectl context for '$aksClusterName'..." -ForegroundColor Yellow
-az aks get-credentials --resource-group $ResourceGroupName --name $aksClusterName --overwrite-existing
-
-# 6. Hydrate & Apply Kubernetes Manifests
-Write-Host "[6/6] Hydrating and applying Kubernetes manifests to AKS..." -ForegroundColor Yellow
-$tempDir = Join-Path $env:TEMP "hibana-k8s-hydrated"
-if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
-Copy-Item -Path "infra/k8s" -Destination $tempDir -Recurse
-
-Get-ChildItem -Path $tempDir -Filter "*.yaml" | ForEach-Object {
-    $content = Get-Content $_.FullName -Raw
-    $content = $content.Replace('${AZURE_ACR_LOGIN_SERVER}', $acrLoginServer)
-    $content = $content.Replace('${AZURE_WORKLOAD_IDENTITY_CLIENT_ID}', $workloadClientId)
-    $content = $content.Replace('${AZURE_KEYVAULT_NAME}', $keyVaultName)
-    $content = $content.Replace('${AZURE_KEYVAULT_URI}', $keyVaultUri)
-    $content = $content.Replace('${AZURE_TENANT_ID}', $tenantId)
-    $content = $content.Replace('${AZURE_POSTGRES_FQDN}', $postgresFqdn)
-    $content = $content.Replace('${AZURE_REDIS_HOSTNAME}', $redisHostName)
-    $content = $content.Replace('${AZURE_STORAGE_BLOB_ENDPOINT}', $storageBlobEndpoint)
-    $content = $content.Replace('${AZURE_PUBLIC_ORIGIN}', $PublicOrigin)
-    $content = $content.Replace('${CORS_ALLOWED_ORIGINS}', $CorsAllowedOrigins)
-    Set-Content -Path $_.FullName -Value $content -Encoding UTF8
+Write-Host "[4/6] Configuring kubectl credentials for '$AksClusterName'..." -ForegroundColor Cyan
+az aks get-credentials --resource-group $ResourceGroup --name $AksClusterName --overwrite-existing
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to get AKS credentials for '$AksClusterName'. Aborting kubectl apply."
 }
 
-kubectl apply -k $tempDir
-Remove-Item $tempDir -Recurse -Force
+Write-Host "[5/6] Hydrating and applying Kubernetes manifests ($KustomizeMode)..." -ForegroundColor Cyan
+$TmpDir = Join-Path ([IO.Path]::GetTempPath()) ("hibana-k8s-" + [Guid]::NewGuid().ToString("N"))
+Copy-Item -Path "infra/k8s" -Destination $TmpDir -Recurse
 
-Write-Host "==========================================================" -ForegroundColor Green
-Write-Host " Deployment Complete! Verify pods with:" -ForegroundColor Green
-Write-Host "   kubectl get pods -n hibana-prod" -ForegroundColor White
-Write-Host "==========================================================" -ForegroundColor Green
+if ($Environment -ne 'prod') {
+    Move-Item -Path (Join-Path $TmpDir "kustomization.dev.yaml") -Destination (Join-Path $TmpDir "kustomization.yaml") -Force
+}
+
+$Replacements = @{
+    '${AZURE_ACR_LOGIN_SERVER}'            = $AcrLoginServer
+    '${AZURE_WORKLOAD_IDENTITY_CLIENT_ID}' = $WorkloadIdentityClientId
+    '${AZURE_KEYVAULT_NAME}'               = $KeyVaultName
+    '${AZURE_KEYVAULT_URI}'                = $KeyVaultUri
+    '${AZURE_TENANT_ID}'                   = $TenantId
+    '${AZURE_POSTGRES_FQDN}'               = $PostgresFqdn
+    '${AZURE_REDIS_HOSTNAME}'              = $RedisHostName
+    '${AZURE_STORAGE_BLOB_ENDPOINT}'       = $StorageBlobEndpoint
+    '${AZURE_PUBLIC_ORIGIN}'               = $PublicOrigin
+    '${CORS_ALLOWED_ORIGINS}'              = $CorsAllowedOrigins
+}
+
+Get-ChildItem -Path $TmpDir -Filter *.yaml -Recurse | ForEach-Object {
+    $Content = [IO.File]::ReadAllText($_.FullName)
+    foreach ($Key in $Replacements.Keys) {
+        $Content = $Content.Replace($Key, $Replacements[$Key])
+    }
+    [IO.File]::WriteAllText($_.FullName, $Content, (New-Object Text.UTF8Encoding $false))
+}
+
+kubectl apply -k $TmpDir
+Remove-Item -Path $TmpDir -Recurse -Force
+
+Write-Host "[6/6] Deployment complete! Check rollout status with: kubectl get pods -n $K8sNamespace" -ForegroundColor Green
