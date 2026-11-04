@@ -1,5 +1,6 @@
 package com.aieta.ticketing_app_gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -14,20 +15,21 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
+    @Value("${gateway.cors.allowed-origins:${CORS_ALLOWED_ORIGINS:}}")
+    private String allowedOriginsProperty;
+
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allowed Origins: B2C (5173 / www) and B2B (5174 / admin)
-        config.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://www.hibana.tk",
-                "http://localhost:5174",
-                "https://admin.hibana.tk",
-                "http://127.0.0.1:5173",
-                "http://127.0.0.1:5174"
-        ));
+        // Strictly accept only origins configured via CORS_ALLOWED_ORIGINS (.env / ConfigMap)
+        List<String> allowedOrigins = Arrays.stream(allowedOriginsProperty.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .toList();
+
+        config.setAllowedOriginPatterns(allowedOrigins);
 
         // Allowed Methods
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));

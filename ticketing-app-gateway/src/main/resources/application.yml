@@ -100,7 +100,7 @@ spring:
                   args:
                     secretKey: ${WAITING_ROOM_JWT_SECRET:}
                     issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
-                    waitingRoomUrl: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
+                    waitingRoomUrl: ${WAITING_ROOM_URL:/waiting-room}
                 - name: RequestRateLimiter
                   args:
                     redis-rate-limiter.replenishRate: 100
@@ -244,9 +244,11 @@ waiting-room:
   jwt:
     secret: ${WAITING_ROOM_JWT_SECRET:}
     issuer: ${WAITING_ROOM_JWT_ISSUER:waiting-room-engine}
-  url: ${WAITING_ROOM_URL:https://www.hibana.tk/waiting-room}
+  url: ${WAITING_ROOM_URL:/waiting-room}
 
 gateway:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   hmac:
     secret: ${GATEWAY_HMAC_SECRET:gateway-internal-hmac-secret-2026-minimum-256-bits!}
 

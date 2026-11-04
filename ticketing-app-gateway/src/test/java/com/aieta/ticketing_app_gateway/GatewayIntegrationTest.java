@@ -81,6 +81,7 @@ class GatewayIntegrationTest {
         registry.add("IAM_SERVICE_URL", () -> "http://localhost:" + wireMockServer.port());
         registry.add("waiting-room.jwt.secret", () -> TEST_SECRET);
         registry.add("waiting-room.jwt.issuer", () -> TEST_ISSUER);
+        registry.add("gateway.cors.allowed-origins", () -> "http://localhost:5173,http://localhost:5174");
         registry.add("resilience4j.timelimiter.instances.catalogCircuitBreaker.timeout-duration", () -> "1200ms");
     }
 

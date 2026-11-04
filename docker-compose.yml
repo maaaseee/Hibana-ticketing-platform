@@ -230,6 +230,8 @@ services:
       AZURE_KEYVAULT_ENDPOINT: ${AZURE_KEYVAULT_ENDPOINT:-http://floci-az:4577/devstoreaccount1-keyvault/}
       AZURE_ENTRA_JWKS_URL: ${AZURE_ENTRA_JWKS_URL:-http://floci-az:4577/00000000-0000-0000-0000-000000000002/discovery/v2.0/keys}
       WAITING_ROOM_JWT_SECRET: ${WAITING_ROOM_JWT_SECRET:?WAITING_ROOM_JWT_SECRET environment variable required}
+      WAITING_ROOM_URL: ${WAITING_ROOM_URL:-/waiting-room}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS environment variable required}
       GATEWAY_HMAC_SECRET: ${GATEWAY_HMAC_SECRET:?GATEWAY_HMAC_SECRET environment variable required}
     depends_on:
       redis:
