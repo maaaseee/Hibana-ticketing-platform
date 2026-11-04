@@ -1,0 +1,136 @@
+# =============================================================================
+# 1. Front-Office B2C Public Client (www.hibana.tk)
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-frontend
+  namespace: hibana-prod
+  labels:
+    app: ticketing-frontend
+    tier: b2c-frontend
+    app.kubernetes.io/part-of: hibana-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ticketing-frontend
+  template:
+    metadata:
+      labels:
+        app: ticketing-frontend
+        tier: b2c-frontend
+    spec:
+      containers:
+        - name: ticketing-frontend
+          image: "${AZURE_ACR_LOGIN_SERVER}/ticketing-frontend:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticketing-frontend
+  namespace: hibana-prod
+  labels:
+    app: ticketing-frontend
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: ticketing-frontend
+---
+# =============================================================================
+# 2. Back-Office B2B Admin & Operations Portal (admin.hibana.tk)
+#    Logically isolated from B2C public traffic
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-admin
+  namespace: hibana-prod
+  labels:
+    app: ticketing-admin
+    tier: b2b-admin
+    app.kubernetes.io/part-of: hibana-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ticketing-admin
+  template:
+    metadata:
+      labels:
+        app: ticketing-admin
+        tier: b2b-admin
+    spec:
+      containers:
+        - name: ticketing-admin
+          image: "${AZURE_ACR_LOGIN_SERVER}/ticketing-admin:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticketing-admin
+  namespace: hibana-prod
+  labels:
+    app: ticketing-admin
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: ticketing-admin

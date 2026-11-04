@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-gateway
+  namespace: hibana-prod
+  labels:
+    app: ticketing-gateway
+    app.kubernetes.io/name: ticketing-gateway
+    app.kubernetes.io/part-of: hibana-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ticketing-gateway
+  template:
+    metadata:
+      labels:
+        app: ticketing-gateway
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: hibana-backend-sa
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: ticketing-gateway
+          image: "${AZURE_ACR_LOGIN_SERVER}/ticketing-gateway:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: hibana-config
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: REDIS_PASSWORD
+            - name: WAITING_ROOM_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: WAITING_ROOM_JWT_SECRET
+            - name: GATEWAY_HMAC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: GATEWAY_HMAC_SECRET
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: APPLICATIONINSIGHTS_CONNECTION_STRING
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "1000m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-keyvault-secrets-provider"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticketing-gateway
+  namespace: hibana-prod
+  labels:
+    app: ticketing-gateway
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app: ticketing-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ticketing-gateway-pdb
+  namespace: hibana-prod
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ticketing-gateway

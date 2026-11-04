@@ -11,6 +11,24 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: allow-ingress-controller-to-edge
+  namespace: hibana-prod
+spec:
+  podSelector:
+    matchExpressions:
+      - { key: app, operator: In, values: ["ticketing-gateway", "ticketing-frontend", "ticketing-admin"] }
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: allow-gateway-to-backend
   namespace: hibana-prod
 spec:
@@ -45,7 +63,7 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # Allow Feign communication from orders service to inventory
+    # Allow synchronous Saga settlement communication from orders service to inventory
     - from:
         - podSelector:
             matchLabels:

@@ -22,15 +22,23 @@ PROJECT.md
 .env.*.local
 
 .vscode/
-.github
+.github/*
+!.github/workflows/
+!.github/workflows/*
 infra/*
-infra/local-dev/*
+!infra/local-dev/
 !infra/local-dev/entra-seed.json
+!infra/local-dev/postgres-init/
+!infra/local-dev/postgres-init/*
+!infra/local-dev/seat-maps/
+!infra/local-dev/seat-maps/*
 !infra/bicep/
 !infra/bicep/*
 !infra/k8s/
 !infra/k8s/*
 !infra/README.md
+!infra/deploy-azure.ps1
+!infra/deploy-azure.sh
 
 .gemini
 .worktrees/

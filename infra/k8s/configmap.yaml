@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hibana-config
+  namespace: hibana-prod
+  labels:
+    app.kubernetes.io/part-of: hibana-platform
+data:
+  # CoreDNS Internal Service Discovery URLs
+  CATALOG_SERVICE_URL: "http://ticketing-catalog.hibana-prod.svc.cluster.local:8081"
+  INVENTORY_SERVICE_URL: "http://ticketing-inventory.hibana-prod.svc.cluster.local:8082"
+  ORDERS_SERVICE_URL: "http://ticketing-orders.hibana-prod.svc.cluster.local:8083"
+
+  # Azure Database for PostgreSQL Flexible Server (pgvector)
+  DB_HOST: "${AZURE_POSTGRES_FQDN}"
+  DB_PORT: "5432"
+  DB_NAME: "ticketing_db"
+  DB_USER: "ticketing_admin"
+  DB_SSL_MODE: "require"
+
+  # Azure Cache for Redis (Premium / Standard TLS)
+  REDIS_HOST: "${AZURE_REDIS_HOSTNAME}"
+  REDIS_PORT: "6380"
+  REDIS_SSL: "true"
+
+  # Microsoft Entra ID (OIDC / OAuth2 Resource Server)
+  AZURE_ENTRA_JWKS_URL: "https://login.microsoftonline.com/${AZURE_TENANT_ID}/discovery/v2.0/keys"
+  AZURE_ENTRA_ISSUER: "https://login.microsoftonline.com/${AZURE_TENANT_ID}/v2.0"
+  AZURE_ENTRA_AUDIENCE: "api://hibana-api"
+
+  # Azure Key Vault
+  AZURE_KEYVAULT_ENABLED: "true"
+  AZURE_KEYVAULT_ENDPOINT: "${AZURE_KEYVAULT_URI}"
+
+  # Azure Service Bus (Asynchronous Saga & Outbox Relay)
+  AZURE_SERVICEBUS_ENABLED: "true"
+
+  # Azure Blob Storage (Venue Seat Maps & Official PDF Invoices)
+  AZURE_STORAGE_BLOB_ENDPOINT: "${AZURE_STORAGE_BLOB_ENDPOINT}"
+  AZURE_STORAGE_VENUES_CONTAINER: "venues"
+  AZURE_BLOB_ENABLED: "true"
+  AZURE_BLOB_CONTAINER_NAME: "hibana-invoices"
+
+  # Virtual Waiting Room & Checkout Redirects
+  WAITING_ROOM_JWT_ISSUER: "waiting-room-engine"
+  WAITING_ROOM_URL: "https://www.hibana.tk/waiting-room"
+
+  # Transactional Mailing & Payment Gateways
+  MAILING_PROVIDER: "acs"
+  MAILING_FROM_EMAIL: "no-reply@hibana.tk"
+  PAYMENT_DEBIT_ENABLED: "true"
+  PAYMENT_CREDIT_ENABLED: "true"
+  PAYMENT_MERCADOPAGO_ENABLED: "false"
+  MERCADO_PAGO_BACK_URL_SUCCESS: "https://www.hibana.tk/checkout/success"
+  MERCADO_PAGO_BACK_URL_FAILURE: "https://www.hibana.tk/checkout/failure"
+  MERCADO_PAGO_BACK_URL_PENDING: "https://www.hibana.tk/checkout/pending"
+  MERCADO_PAGO_NOTIFICATION_URL: "https://api.hibana.tk/api/v1/payments/mercadopago/webhook"

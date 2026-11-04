@@ -1,0 +1,48 @@
+name: Deploy Hibana.tk to Azure AKS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Azure Environment'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - staging
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: rg-hibana-prod
+  AZURE_LOCATION: eastus
+
+jobs:
+  provision-and-deploy:
+    name: Provision Azure IaC & Deploy to AKS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login (OIDC Federated Credentials)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Execute Azure Bicep & AKS Deployment Pipeline
+        env:
+          RESOURCE_GROUP: ${{ env.AZURE_RESOURCE_GROUP }}
+          LOCATION: ${{ env.AZURE_LOCATION }}
+          ENVIRONMENT: ${{ inputs.environment || 'prod' }}
+          HIBANA_POSTGRES_PASSWORD: ${{ secrets.HIBANA_POSTGRES_PASSWORD }}
+          HIBANA_WAITING_ROOM_JWT_SECRET: ${{ secrets.HIBANA_WAITING_ROOM_JWT_SECRET }}
+          HIBANA_GATEWAY_HMAC_SECRET: ${{ secrets.HIBANA_GATEWAY_HMAC_SECRET }}
+        run: |
+          chmod +x infra/deploy-azure.sh
+          ./infra/deploy-azure.sh

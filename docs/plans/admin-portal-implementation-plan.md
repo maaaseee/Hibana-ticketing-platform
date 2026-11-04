@@ -15,11 +15,11 @@
    * No debe permitir el acceso a ningún usuario que no posea los roles `ROLE_ADMIN` o `ROLE_OPERATOR`.
 
 2. **Fidelidad Estética (*Abyssal Luminescence*):**
-   * Utilizar la misma paleta oficial de [DESIGN.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/wireframe/paleta_de_colores/DESIGN.md):
+   * Utilizar la misma paleta oficial de [DESIGN.md](../../wireframe/paleta_de_colores/DESIGN.md):
      * Fondo / Superficies: `surface: #0c141f`, `surface-container-lowest: #070f19`, `surface-container: #18202b`, `surface-container-high: #232a36`.
      * Acentos: `primary: #86cffb`, `secondary: #4fdbc8`, `tertiary: #7bd0ff`, `error: #ffb4ab`.
      * Tipografías: `Space Grotesk` (encabezados/display), `Hanken Grotesk` (cuerpo/lectura), `JetBrains Mono` (labels/métricas/IDs).
-   * Layout maestro basado en el wireframe corporativo **Amaryllis Ops Portal** ([wireframe/creacion_evento/paso 1/code.html](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/wireframe/creacion_evento/paso%201/code.html)).
+   * Layout maestro basado en el wireframe corporativo **Amaryllis Ops Portal** ([wireframe/creacion_evento/paso 1/code.html](../../wireframe/creacion_evento/paso%201/code.html)).
 
 3. **Seguridad y Paridad con Azure Entra ID (Floci-AZ):**
    * El backend ya tiene activo el emulador nativo de Entra ID en `http://localhost:4577/common/v2.0/`.
@@ -134,7 +134,7 @@ ticketing-admin/
    * Si la respuesta es HTTP 403: muestra notificación toast de "Acceso Denegado por Política RBAC".
 
 ### 3.3 Módulo 3: Shell Amaryllis Ops Portal (`AdminLayout.vue`)
-Basado en [wireframe/creacion_evento/paso 1/code.html](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/wireframe/creacion_evento/paso%201/code.html):
+Basado en [wireframe/creacion_evento/paso 1/code.html](../../wireframe/creacion_evento/paso%201/code.html):
 * **Sidebar lateral fija (ancho 64 / 256px, `bg-surface-container-low`):**
   * Logo de marca: Ícono de gema / token con texto `AMARYLLIS` y subtítulo `Ops Portal`.
   * Navegación con íconos de Material Symbols:

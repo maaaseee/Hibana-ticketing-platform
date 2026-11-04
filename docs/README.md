@@ -45,12 +45,12 @@ docs/
 
 ## Core References
 
-1. **System Architecture Specification:** [Ticketing-app.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/architecture/Ticketing-app.md)
-2. **Azure Auth & Entra ID Emulation Guide:** [azure-authentication-floci-emulation.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/architecture/azure-authentication-floci-emulation.md)
-3. **B2B Admin Portal Implementation Plan:** [admin-portal-implementation-plan.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/plans/admin-portal-implementation-plan.md)
-4. **API & Event Documentation Guide:** [api-documentation-guide.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/api-documentation-guide.md)
-5. **OpenAPI 3.1 Gateway Contract:** [gateway-api.yaml](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/specs/openapi/gateway-api.yaml)
-6. **AsyncAPI 3.0 Event Bus Contract:** [servicebus-events.yaml](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/specs/asyncapi/servicebus-events.yaml)
-7. **Architecture Diagrams:** [docs/architecture/diagrams/](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/architecture/diagrams/)
-8. **Spec-Driven Development Template:** [SDD-TASK-SPEC-TEMPLATE.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/plans/templates/SDD-TASK-SPEC-TEMPLATE.md)
-9. **Active Implementation Plan:** [frontend-catalog-browse-and-filters-sdd.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/docs/plans/frontend-catalog-browse-and-filters-sdd.md)
+1. **System Architecture Specification:** [Ticketing-app.md](./architecture/Ticketing-app.md)
+2. **Azure Auth & Entra ID Emulation Guide:** [azure-authentication-floci-emulation.md](./architecture/azure-authentication-floci-emulation.md)
+3. **B2B Admin Portal Implementation Plan:** [admin-portal-implementation-plan.md](./plans/admin-portal-implementation-plan.md)
+4. **API & Event Documentation Guide:** [api-documentation-guide.md](./api-documentation-guide.md)
+5. **OpenAPI 3.1 Gateway Contract:** [gateway-api.yaml](./specs/openapi/gateway-api.yaml)
+6. **AsyncAPI 3.0 Event Bus Contract:** [servicebus-events.yaml](./specs/asyncapi/servicebus-events.yaml)
+7. **Architecture Diagrams:** [docs/architecture/diagrams/](./architecture/diagrams/)
+8. **Spec-Driven Development Template:** [SDD-TASK-SPEC-TEMPLATE.md](./plans/templates/SDD-TASK-SPEC-TEMPLATE.md)
+9. **Active Implementation Plan:** [frontend-catalog-browse-and-filters-sdd.md](./plans/frontend-catalog-browse-and-filters-sdd.md)

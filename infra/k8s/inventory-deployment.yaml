@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-inventory
+  namespace: hibana-prod
+  labels:
+    app: ticketing-inventory
+    app.kubernetes.io/name: ticketing-inventory
+    app.kubernetes.io/part-of: hibana-platform
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ticketing-inventory
+  template:
+    metadata:
+      labels:
+        app: ticketing-inventory
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: hibana-backend-sa
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: ticketing-inventory
+          image: "${AZURE_ACR_LOGIN_SERVER}/ticketing-inventory:latest"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8082
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: hibana-config
+          env:
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: DB_PASSWORD
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: REDIS_PASSWORD
+            - name: GATEWAY_HMAC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: GATEWAY_HMAC_SECRET
+            - name: AZURE_SERVICEBUS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: AZURE_SERVICEBUS_CONNECTION_STRING
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: hibana-secrets
+                  key: APPLICATIONINSIGHTS_CONNECTION_STRING
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "768Mi"
+            limits:
+              cpu: "2000m"
+              memory: "1536Mi"
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            initialDelaySeconds: 35
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8082
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: "azure-keyvault-secrets-provider"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticketing-inventory
+  namespace: hibana-prod
+  labels:
+    app: ticketing-inventory
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
+  selector:
+    app: ticketing-inventory
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ticketing-inventory-pdb
+  namespace: hibana-prod
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ticketing-inventory

@@ -8,7 +8,7 @@
 
 ## 1. Visión General y Objetivo "Costo Cero"
 
-De acuerdo con las reglas de arquitectura de Hibana.tk ([GEMINI.md](file:///C:/Users/maxe1/Documents/Repos/Spring%20projects%20on%20Github/Ticketing%20app/GEMINI.md)), el desarrollo y las pruebas locales deben funcionar bajo el principio de **costo cero**, sin requerir suscripciones activas de Azure ni conexión obligatoria a internet.
+De acuerdo con las reglas de arquitectura de Hibana.tk ([GEMINI.md](../../GEMINI.md)), el desarrollo y las pruebas locales deben funcionar bajo el principio de **costo cero**, sin requerir suscripciones activas de Azure ni conexión obligatoria a internet.
 
 A diferencia de un mock manual en código Java, **Floci-AZ incorpora un emulador nativo y oficial de Microsoft Entra ID (OIDC)** en el puerto unificado `4577`, proveyendo llaves criptográficas RS256, discovery OIDC y endpoints de autorización y emisión de tokens.
 
