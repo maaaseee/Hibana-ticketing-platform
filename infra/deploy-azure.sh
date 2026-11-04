@@ -38,6 +38,8 @@ export AZURE_POSTGRES_FQDN=$(echo "${OUTPUTS}" | jq -r '.postgresFqdn.value')
 export AZURE_REDIS_HOSTNAME=$(echo "${OUTPUTS}" | jq -r '.redisHostName.value')
 export AZURE_STORAGE_BLOB_ENDPOINT=$(echo "${OUTPUTS}" | jq -r '.storageBlobEndpoint.value')
 export AZURE_TENANT_ID=$(az account show --query tenantId -o tsv)
+export AZURE_PUBLIC_ORIGIN="${AZURE_PUBLIC_ORIGIN:-http://hibana-${ENVIRONMENT}.${LOCATION}.cloudapp.azure.com}"
+export CORS_ALLOWED_ORIGINS="${CORS_ALLOWED_ORIGINS:-${AZURE_PUBLIC_ORIGIN}}"
 
 echo "[3/6] Building and pushing container images to ACR (${ACR_NAME})..."
 az acr build --registry "${ACR_NAME}" --image "ticketing-gateway:latest" ./ticketing-app-gateway
@@ -55,7 +57,7 @@ TMP_DIR=$(mktemp -d)
 cp -r infra/k8s/* "${TMP_DIR}/"
 
 for f in "${TMP_DIR}"/*.yaml; do
-  envsubst '${AZURE_ACR_LOGIN_SERVER} ${AZURE_WORKLOAD_IDENTITY_CLIENT_ID} ${AZURE_KEYVAULT_NAME} ${AZURE_KEYVAULT_URI} ${AZURE_TENANT_ID} ${AZURE_POSTGRES_FQDN} ${AZURE_REDIS_HOSTNAME} ${AZURE_STORAGE_BLOB_ENDPOINT}' < "$f" > "$f.tmp"
+  envsubst '${AZURE_ACR_LOGIN_SERVER} ${AZURE_WORKLOAD_IDENTITY_CLIENT_ID} ${AZURE_KEYVAULT_NAME} ${AZURE_KEYVAULT_URI} ${AZURE_TENANT_ID} ${AZURE_POSTGRES_FQDN} ${AZURE_REDIS_HOSTNAME} ${AZURE_STORAGE_BLOB_ENDPOINT} ${AZURE_PUBLIC_ORIGIN} ${CORS_ALLOWED_ORIGINS}' < "$f" > "$f.tmp"
   mv "$f.tmp" "$f"
 done
 

@@ -11,6 +11,8 @@ param(
     [string]$ResourceGroupName = "rg-hibana-prod",
     [string]$Location = "eastus",
     [string]$EnvironmentName = "prod",
+    [string]$PublicOrigin = "",
+    [string]$CorsAllowedOrigins = "",
     [Parameter(Mandatory=$true)][string]$PostgresPassword,
     [Parameter(Mandatory=$true)][string]$WaitingRoomJwtSecret,
     [Parameter(Mandatory=$true)][string]$GatewayHmacSecret
@@ -49,6 +51,12 @@ $postgresFqdn         = $deploymentJson.postgresFqdn.value
 $redisHostName        = $deploymentJson.redisHostName.value
 $storageBlobEndpoint  = $deploymentJson.storageBlobEndpoint.value
 $tenantId             = (az account show --query tenantId -o tsv).Trim()
+if ([string]::IsNullOrWhiteSpace($PublicOrigin)) {
+    $PublicOrigin = "http://hibana-$EnvironmentName.$Location.cloudapp.azure.com"
+}
+if ([string]::IsNullOrWhiteSpace($CorsAllowedOrigins)) {
+    $CorsAllowedOrigins = $PublicOrigin
+}
 
 Write-Host "  -> AKS Cluster:    $aksClusterName" -ForegroundColor Green
 Write-Host "  -> ACR Server:     $acrLoginServer" -ForegroundColor Green
@@ -99,6 +107,8 @@ Get-ChildItem -Path $tempDir -Filter "*.yaml" | ForEach-Object {
     $content = $content.Replace('${AZURE_POSTGRES_FQDN}', $postgresFqdn)
     $content = $content.Replace('${AZURE_REDIS_HOSTNAME}', $redisHostName)
     $content = $content.Replace('${AZURE_STORAGE_BLOB_ENDPOINT}', $storageBlobEndpoint)
+    $content = $content.Replace('${AZURE_PUBLIC_ORIGIN}', $PublicOrigin)
+    $content = $content.Replace('${CORS_ALLOWED_ORIGINS}', $CorsAllowedOrigins)
     Set-Content -Path $_.FullName -Value $content -Encoding UTF8
 }
 

@@ -4,7 +4,7 @@ metadata:
   name: hibana-platform-ingress
   namespace: hibana-prod
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
@@ -12,29 +12,11 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-buffering: "off"
 spec:
   ingressClassName: nginx
-  tls:
-    - hosts:
-        - www.hibana.tk
-        - admin.hibana.tk
-        - api.hibana.tk
-      secretName: hibana-tls-cert
   rules:
-    # 1. API Gateway Perimeter (REST, SSE Queue Stream & WebSockets)
-    - host: api.hibana.tk
-      http:
+    # Default hostless rule: accepts Azure Free DNS (*.cloudapp.azure.com), nip.io, or Public LoadBalancer IP
+    - http:
         paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: ticketing-gateway
-                port:
-                  number: 8080
-
-    # 2. Front-Office B2C Public Client
-    - host: www.hibana.tk
-      http:
-        paths:
+          # 1. API Gateway Perimeter (REST APIs)
           - path: /api
             pathType: Prefix
             backend:
@@ -42,29 +24,19 @@ spec:
                 name: ticketing-gateway
                 port:
                   number: 8080
+          # 2. Live Support Chat WebSockets
+          - path: /ws
+            pathType: Prefix
+            backend:
+              service:
+                name: ticketing-gateway
+                port:
+                  number: 8080
+          # 3. Front-Office B2C Public Client (SPA)
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: ticketing-frontend
-                port:
-                  number: 80
-
-    # 3. Back-Office B2B Admin & Operations Portal (Isolated Host)
-    - host: admin.hibana.tk
-      http:
-        paths:
-          - path: /api
-            pathType: Prefix
-            backend:
-              service:
-                name: ticketing-gateway
-                port:
-                  number: 8080
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: ticketing-admin
                 port:
                   number: 80

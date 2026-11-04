@@ -41,17 +41,18 @@ data:
   AZURE_BLOB_ENABLED: "true"
   AZURE_BLOB_CONTAINER_NAME: "hibana-invoices"
 
-  # Virtual Waiting Room & Checkout Redirects
+  # Strict Gateway CORS Origin List & Virtual Waiting Room Redirects (Azure Free Domain / Public URL)
+  CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS}"
   WAITING_ROOM_JWT_ISSUER: "waiting-room-engine"
-  WAITING_ROOM_URL: "https://www.hibana.tk/waiting-room"
+  WAITING_ROOM_URL: "/waiting-room"
 
   # Transactional Mailing & Payment Gateways
   MAILING_PROVIDER: "acs"
-  MAILING_FROM_EMAIL: "no-reply@hibana.tk"
+  MAILING_FROM_EMAIL: "no-reply@azure-ticketing.local"
   PAYMENT_DEBIT_ENABLED: "true"
   PAYMENT_CREDIT_ENABLED: "true"
   PAYMENT_MERCADOPAGO_ENABLED: "false"
-  MERCADO_PAGO_BACK_URL_SUCCESS: "https://www.hibana.tk/checkout/success"
-  MERCADO_PAGO_BACK_URL_FAILURE: "https://www.hibana.tk/checkout/failure"
-  MERCADO_PAGO_BACK_URL_PENDING: "https://www.hibana.tk/checkout/pending"
-  MERCADO_PAGO_NOTIFICATION_URL: "https://api.hibana.tk/api/v1/payments/mercadopago/webhook"
+  MERCADO_PAGO_BACK_URL_SUCCESS: "${AZURE_PUBLIC_ORIGIN}/checkout/success"
+  MERCADO_PAGO_BACK_URL_FAILURE: "${AZURE_PUBLIC_ORIGIN}/checkout/failure"
+  MERCADO_PAGO_BACK_URL_PENDING: "${AZURE_PUBLIC_ORIGIN}/checkout/pending"
+  MERCADO_PAGO_NOTIFICATION_URL: "${AZURE_PUBLIC_ORIGIN}/api/v1/payments/mercadopago/webhook"
